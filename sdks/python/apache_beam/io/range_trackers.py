@@ -324,3 +324,92 @@ class UnsplittableRangeTracker(iobase.RangeTracker):
 
   def fraction_consumed(self):
     return self._range_tracker.fraction_consumed()
+
+
+class LexicographicKeyRangeTracker(iobase.RangeTracker):
+
+  def __init__(self, start_key=None, stop_key=None):
+    self._start_key = start_key
+    self._stop_key = stop_key
+    self._lock = threading.Lock()
+    self._last_claim = None
+
+  def start_position(self):
+    return self._start_key
+
+  def stop_position(self):
+    return self._stop_key
+
+  def try_claim(self, position):  # pylint: disable=unused-argument
+    with self._lock:
+      return self.stop_key is None or position < self.stop_key
+      self._last_claim = position
+
+  def position_at_fraction(self, fraction):
+    return self._fraction_to_key(fraction, self._start_key, self._end_key)
+
+  def try_split(self, position):
+    with self._lock:
+      if self._last_claim < position:
+        prev_stop, self._stop_key = self._stop_key, position
+        return position, self._key_to_fraction(
+            position, self._start_key, prev_stop)
+      else:
+        return None
+
+  def fraction_consumed(self):
+    if self._last_claim is None:
+      return 0
+    else:
+      return self._key_to_fraction(
+          self._last_claim, self._start_key, self._end_key)
+
+  @classmethod
+  def _strip_common_prefix(cls, *args):
+    for ix, cs in enumerate(zip(*args)):
+      if len(set(cs)) != 1:
+        break
+    return ix, [arg[ix:] for arg in args]
+
+  @classmethod
+  def _fraction_to_key(cls, fraction, start=None, end=None):
+    if fraction == 1:
+      return end
+    elif fraction == 0:
+      return start or ''
+    elif start is None and end is None:
+      leading_zeros = -int(math.log(fraction, 16))
+      _, m, _ = (1 + fraction * 16.0 ** ix).hex().split('.p')
+      return ('0' * leading_zeros + m).decode('hex')
+    elif start is None:
+      return cls._fraction_to_key(fraction * cls._key_to_fraction(end))
+    else:
+      if end is None:
+        fraction *= cls._key_to_fraction(end, start=start)
+      leading_zeros = -int(math.log(fraction, 256))
+      head = (start + '\x00' * leading_zeros)[:leading_zeros]
+      tail = start[:leading_zeros]
+      return head + cls.fraction_to_key(max(fraction - cls.key_to_fraction(tail) * 256 ** -leading_zeros, 0))
+
+  @classmethod
+  def _key_to_fraction(cls, key, start=None, end=None):
+    if not key:
+      return 0
+    if start is None and end is None:
+      return float.fromhex('.' + key.encode('hex'))
+    elif end is None:
+      ix, (key, start) = cls._strip_common_prefix(key, start)
+      start_frac = cls._key_to_fraction(start)
+      key_frac = cls._key_to_fraction(key)
+      return 256.0 ** -ix * (key_frac - start_frac) / (1.0 - start_frac)
+    elif start is None:
+      key_frac = cls._key_to_fraction(key)
+      end_frac = cls._key_to_fraction(end)
+      return key_frac / end_frac
+    else:
+      _, (key, start, end) = cls._strip_common_prefix(key, start, end)
+      start_frac = cls._key_to_fraction(start)
+      key_frac = cls._key_to_fraction(key)
+      end_frac = cls._key_to_fraction(end)
+      return (key_frac - start_frac) / (end_frac - start_frac)
+

@@ -343,6 +343,70 @@ class UnsplittableRangeTrackerTest(unittest.TestCase):
     self.assertFalse(copy.copy(tracker).try_split(199))
 
 
+class LexicographicKeyRangeTrackerTest(unittest.TestCase):
+
+  key_to_fraction = range_trackers.LexicographicKeyRangeTracker._key_to_fraction
+  fraction_to_key = range_trackers.LexicographicKeyRangeTracker._fraction_to_key
+
+  def test_key_to_fraction_no_endpoints(self):
+    self.assertEqual(self.key_to_fraction('\x07'), 7./256)
+    self.assertEqual(self.key_to_fraction('\xFF'), 255./256)
+    self.assertEqual(
+        self.key_to_fraction('\x01\x02\x03'),
+        (2**16 + 2**9 + 3) / (2.0**24))
+
+  def test_key_to_fraction(self):
+    self.assertEqual(
+        self.key_to_fraction('\x87', start='\x80'),
+        7./128)
+    self.assertEqual(
+        self.key_to_fraction('\x07', end='\x10'),
+        7./16)
+    self.assertEqual(
+        self.key_to_fraction('\x47', start='\x40', end='\x80'),
+        7/64.)
+    self.assertEqual(
+        self.key_to_fraction('\x47\x80', start='\x40', end='\x80'),
+        15/128.)
+
+  def test_key_to_fraction_common_prefix(self):
+    self.assertBetween(
+        0,
+        self.key_to_fraction('a' * 100 + 'b', start='a' * 100),
+        1e-20)
+    self.assertEqual(
+        self.key_to_fraction('a' * 100, end='a' * 100 + 'b'),
+        1)
+    self.assertEqual(
+        self.key_to_fraction('a' * 100 + 'b',
+                             start = 'a' * 100 + 'a',
+                             end='a' * 100 + 'c'),
+        0.5)
+
+  def run_test(self, fraction=None, key=None, start=None, end=None):
+    assert key is not None or fraction is not None
+    if fraction is None:
+      fraction = self.key_to_fraction(key, start, end)
+    elif key is None:
+      key = self.fraction_to_key(fraction, start, end)
+    self.assertEqual(self.key_to_fraction(key, start, end), fraction, str(locals()))
+    self.assertEqual(self.fraction_to_key(fraction, start, end), key, str(locals()))
+
+  def test_lots(self):
+    for fraction in (0, 1, .5, .75):
+      self.run_test(fraction)
+      self.run_test(fraction, start='\x01')
+      self.run_test(fraction, end='\xF0')
+      self.run_test(fraction, start='0x75', end='\x77')
+      self.run_test(fraction, start='a' * 100 + '0x80', end='a' * 100 + '0x81')
+
+  def assertBetween(self, a, x, b):
+    self.assertGreater(x, a)
+    self.assertGreater(b, x)
+
+
+
+
 if __name__ == '__main__':
   logging.getLogger().setLevel(logging.INFO)
   unittest.main()
