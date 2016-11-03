@@ -379,17 +379,34 @@ class LexicographicKeyRangeTracker(iobase.RangeTracker):
       return start or ''
     elif start is None and end is None:
       leading_zeros = -int(math.log(fraction, 16))
-      _, m, _ = (1 + fraction * 16.0 ** ix).hex().split('.p')
-      return ('0' * leading_zeros + m).decode('hex')
+      m = (1 + fraction * 16.0 ** leading_zeros).hex().split('.')[1].split('p')[0]
+      s = '0' * leading_zeros + m
+      return (s + '0' * (len(s) % 2)).decode('hex')
     elif start is None:
       return cls._fraction_to_key(fraction * cls._key_to_fraction(end))
     else:
-      if end is None:
+      if end is not None:
         fraction *= cls._key_to_fraction(end, start=start)
-      leading_zeros = -int(math.log(fraction, 256))
-      head = (start + '\x00' * leading_zeros)[:leading_zeros]
-      tail = start[:leading_zeros]
-      return head + cls.fraction_to_key(max(fraction - cls.key_to_fraction(tail) * 256 ** -leading_zeros, 0))
+      diff = fraction * (1 - cls._key_to_fraction(start))
+      same_digits = -int(math.log(diff, 256))
+      start_head = (start + '\x00' * same_digits)[:same_digits]
+      start_tail = start[same_digits:]
+      tail = cls._fraction_to_key(diff * 256. ** same_digits + cls._key_to_fraction(start_tail)) or ''
+
+      start_frac = cls._key_to_fraction(start)
+      end_frac = 1 if end is None else cls._key_to_fraction(end)
+
+      print "_fraction_to_key", locals()
+      print "naive", start_frac + fraction * (end_frac - start_frac)
+      print "naive key", repr(cls._fraction_to_key(start_frac + fraction * (end_frac - start_frac)))
+      return start_head + tail
+
+
+      tail = start[leading_zeros:]
+      print locals()
+      print "adjusted", fraction - cls._key_to_fraction(tail) * 256 ** -leading_zeros
+      print "tail key", repr(cls._fraction_to_key(max(fraction - cls._key_to_fraction(tail) * 256 ** -leading_zeros, 0)))
+      return head + cls._fraction_to_key(max(fraction - cls._key_to_fraction(tail) * 256 ** -leading_zeros, 0))
 
   @classmethod
   def _key_to_fraction(cls, key, start=None, end=None):

@@ -383,21 +383,25 @@ class LexicographicKeyRangeTrackerTest(unittest.TestCase):
                              end='a' * 100 + 'c'),
         0.5)
 
-  def run_test(self, fraction=None, key=None, start=None, end=None):
-    assert key is not None or fraction is not None
-    if fraction is None:
-      fraction = self.key_to_fraction(key, start, end)
-    elif key is None:
-      key = self.fraction_to_key(fraction, start, end)
-    self.assertEqual(self.key_to_fraction(key, start, end), fraction, str(locals()))
-    self.assertEqual(self.fraction_to_key(fraction, start, end), key, str(locals()))
+  def run_test(self, expected_fraction=None, expected_key=None, start=None, end=None):
+    assert expected_key is not None or expected_fraction is not None
+    if expected_fraction is None:
+      expected_fraction = self.key_to_fraction(expected_key, start, end)
+    elif expected_key is None:
+      expected_key = self.fraction_to_key(expected_fraction, start, end)
+
+    actual_fraction = self.key_to_fraction(expected_key, start, end)
+    self.assertEqual(actual_fraction, expected_fraction, str(locals()))
+
+    actual_key = self.fraction_to_key(expected_fraction, start, end)
+    self.assertEqual(actual_key, expected_key, str(locals()))
 
   def test_lots(self):
-    for fraction in (0, 1, .5, .75):
+    for fraction in (0, .5, .75, 7./512):
       self.run_test(fraction)
       self.run_test(fraction, start='\x01')
       self.run_test(fraction, end='\xF0')
-      self.run_test(fraction, start='0x75', end='\x77')
+      self.run_test(fraction, start='\x75', end='\x77')
       self.run_test(fraction, start='a' * 100 + '0x80', end='a' * 100 + '0x81')
 
   def assertBetween(self, a, x, b):
