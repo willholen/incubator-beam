@@ -123,7 +123,9 @@ class FileBasedSource(iobase.BoundedSource):
       # with each _SingleFileSource. To prevent this FileBasedSource from having
       # a reference to ConcatSource (resulting in quadratic space complexity)
       # we clone it here.
+      print "HERE", self
       file_based_source_ref = pickler.loads(pickler.dumps(self))
+      print "REF", file_based_source_ref
 
       for file_metadata in files_metadata:
         file_name = file_metadata.path
