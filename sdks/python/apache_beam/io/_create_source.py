@@ -50,8 +50,6 @@ class _CreateSource(iobase.BoundedSource):
 
   def split(self, desired_bundle_size, start_position=None,
             stop_position=None):
-    from apache_beam.io import iobase
-
     if len(self._serialized_values) < 2:
       yield iobase.SourceBundle(
           weight=0, source=self, start_position=0,
@@ -74,7 +72,7 @@ class _CreateSource(iobase.BoundedSource):
         if remaining < (num_values_per_split / 4):
           end = stop_position
 
-        sub_source = Create._create_source(
+        sub_source = _CreateSource(
             self._serialized_values[start:end], self._coder)
 
         yield iobase.SourceBundle(weight=(end - start),
