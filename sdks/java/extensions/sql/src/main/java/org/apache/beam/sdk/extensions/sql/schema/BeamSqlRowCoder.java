@@ -37,10 +37,10 @@ import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.extensions.sql.impl.utils.CalciteUtils;
 
 /**
- *  A {@link Coder} encodes {@link BeamSqlRow}.
+ *  A {@link Coder} encodes {@link BeamRecord}.
  */
-public class BeamSqlRowCoder extends CustomCoder<BeamSqlRow> {
-  private BeamSqlRowType tableSchema;
+public class BeamRecordCoder extends CustomCoder<BeamRecord> {
+  private BeamRecordType tableSchema;
 
   private static final ListCoder<Integer> listCoder = ListCoder.of(BigEndianIntegerCoder.of());
 
@@ -52,12 +52,12 @@ public class BeamSqlRowCoder extends CustomCoder<BeamSqlRow> {
   private static final BigDecimalCoder bigDecimalCoder = BigDecimalCoder.of();
   private static final ByteCoder byteCoder = ByteCoder.of();
 
-  public BeamSqlRowCoder(BeamSqlRowType tableSchema) {
+  public BeamRecordCoder(BeamRecordType tableSchema) {
     this.tableSchema = tableSchema;
   }
 
   @Override
-  public void encode(BeamSqlRow value, OutputStream outStream) throws CoderException, IOException {
+  public void encode(BeamRecord value, OutputStream outStream) throws CoderException, IOException {
     listCoder.encode(value.getNullFields(), outStream);
     for (int idx = 0; idx < value.size(); ++idx) {
       if (value.getNullFields().contains(idx)) {
@@ -112,10 +112,10 @@ public class BeamSqlRowCoder extends CustomCoder<BeamSqlRow> {
   }
 
   @Override
-  public BeamSqlRow decode(InputStream inStream) throws CoderException, IOException {
+  public BeamRecord decode(InputStream inStream) throws CoderException, IOException {
     List<Integer> nullFields = listCoder.decode(inStream);
 
-    BeamSqlRow record = new BeamSqlRow(tableSchema);
+    BeamRecord record = new BeamRecord(tableSchema);
     record.setNullFields(nullFields);
     for (int idx = 0; idx < tableSchema.size(); ++idx) {
       if (nullFields.contains(idx)) {
@@ -174,7 +174,7 @@ public class BeamSqlRowCoder extends CustomCoder<BeamSqlRow> {
     return record;
   }
 
-  public BeamSqlRowType getTableSchema() {
+  public BeamRecordType getTableSchema() {
     return tableSchema;
   }
 

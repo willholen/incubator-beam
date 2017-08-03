@@ -26,7 +26,7 @@ import org.apache.beam.sdk.extensions.sql.TestUtils;
 import org.apache.beam.sdk.extensions.sql.impl.transform.BeamSqlOutputToConsoleFn;
 import org.apache.beam.sdk.extensions.sql.mock.MockedBoundedTable;
 import org.apache.beam.sdk.extensions.sql.mock.MockedUnboundedTable;
-import org.apache.beam.sdk.extensions.sql.schema.BeamSqlRow;
+import org.apache.beam.sdk.extensions.sql.schema.BeamRecord;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -98,8 +98,8 @@ public class BeamJoinRelUnboundedVsBoundedTest {
         + " o1.order_id=o2.order_id"
         ;
 
-    PCollection<BeamSqlRow> rows = BeamSqlCli.compilePipeline(sql, pipeline, beamSqlEnv);
-    PAssert.that(rows.apply(ParDo.of(new TestUtils.BeamSqlRow2StringDoFn())))
+    PCollection<BeamRecord> rows = BeamSqlCli.compilePipeline(sql, pipeline, beamSqlEnv);
+    PAssert.that(rows.apply(ParDo.of(new TestUtils.BeamRecord2StringDoFn())))
         .containsInAnyOrder(
             TestUtils.RowsBuilder.of(
                 Types.INTEGER, "order_id",
@@ -124,8 +124,8 @@ public class BeamJoinRelUnboundedVsBoundedTest {
         + " o1.order_id=o2.order_id"
         ;
 
-    PCollection<BeamSqlRow> rows = BeamSqlCli.compilePipeline(sql, pipeline, beamSqlEnv);
-    PAssert.that(rows.apply(ParDo.of(new TestUtils.BeamSqlRow2StringDoFn())))
+    PCollection<BeamRecord> rows = BeamSqlCli.compilePipeline(sql, pipeline, beamSqlEnv);
+    PAssert.that(rows.apply(ParDo.of(new TestUtils.BeamRecord2StringDoFn())))
         .containsInAnyOrder(
             TestUtils.RowsBuilder.of(
                 Types.INTEGER, "order_id",
@@ -150,9 +150,9 @@ public class BeamJoinRelUnboundedVsBoundedTest {
         + " o1.order_id=o2.order_id"
         ;
 
-    PCollection<BeamSqlRow> rows = BeamSqlCli.compilePipeline(sql, pipeline, beamSqlEnv);
+    PCollection<BeamRecord> rows = BeamSqlCli.compilePipeline(sql, pipeline, beamSqlEnv);
     rows.apply(ParDo.of(new BeamSqlOutputToConsoleFn("helloworld")));
-    PAssert.that(rows.apply(ParDo.of(new TestUtils.BeamSqlRow2StringDoFn())))
+    PAssert.that(rows.apply(ParDo.of(new TestUtils.BeamRecord2StringDoFn())))
         .containsInAnyOrder(
             TestUtils.RowsBuilder.of(
                 Types.INTEGER, "order_id",
@@ -192,8 +192,8 @@ public class BeamJoinRelUnboundedVsBoundedTest {
         + " on "
         + " o1.order_id=o2.order_id"
         ;
-    PCollection<BeamSqlRow> rows = BeamSqlCli.compilePipeline(sql, pipeline, beamSqlEnv);
-    PAssert.that(rows.apply(ParDo.of(new TestUtils.BeamSqlRow2StringDoFn())))
+    PCollection<BeamRecord> rows = BeamSqlCli.compilePipeline(sql, pipeline, beamSqlEnv);
+    PAssert.that(rows.apply(ParDo.of(new TestUtils.BeamRecord2StringDoFn())))
         .containsInAnyOrder(
             TestUtils.RowsBuilder.of(
                 Types.INTEGER, "order_id",

@@ -37,7 +37,7 @@ import org.joda.time.Instant;
  * Represent a generic ROW record in Beam SQL.
  *
  */
-public class BeamSqlRow implements Serializable {
+public class BeamRecord implements Serializable {
   private static final Map<Integer, Class> SQL_TYPE_TO_JAVA_CLASS = new HashMap<>();
   static {
     SQL_TYPE_TO_JAVA_CLASS.put(Types.TINYINT, Byte.class);
@@ -61,12 +61,12 @@ public class BeamSqlRow implements Serializable {
 
   private List<Integer> nullFields = new ArrayList<>();
   private List<Object> dataValues;
-  private BeamSqlRowType dataType;
+  private BeamRecordType dataType;
 
   private Instant windowStart = new Instant(TimeUnit.MICROSECONDS.toMillis(Long.MIN_VALUE));
   private Instant windowEnd = new Instant(TimeUnit.MICROSECONDS.toMillis(Long.MAX_VALUE));
 
-  public BeamSqlRow(BeamSqlRowType dataType) {
+  public BeamRecord(BeamRecordType dataType) {
     this.dataType = dataType;
     this.dataValues = new ArrayList<>();
     for (int idx = 0; idx < dataType.size(); ++idx) {
@@ -75,14 +75,14 @@ public class BeamSqlRow implements Serializable {
     }
   }
 
-  public BeamSqlRow(BeamSqlRowType dataType, List<Object> dataValues) {
+  public BeamRecord(BeamRecordType dataType, List<Object> dataValues) {
     this(dataType);
     for (int idx = 0; idx < dataValues.size(); ++idx) {
       addField(idx, dataValues.get(idx));
     }
   }
 
-  public void updateWindowRange(BeamSqlRow upstreamRecord, BoundedWindow window){
+  public void updateWindowRange(BeamRecord upstreamRecord, BoundedWindow window){
     windowStart = upstreamRecord.windowStart;
     windowEnd = upstreamRecord.windowEnd;
 
@@ -237,11 +237,11 @@ public class BeamSqlRow implements Serializable {
     this.dataValues = dataValues;
   }
 
-  public BeamSqlRowType getDataType() {
+  public BeamRecordType getDataType() {
     return dataType;
   }
 
-  public void setDataType(BeamSqlRowType dataType) {
+  public void setDataType(BeamRecordType dataType) {
     this.dataType = dataType;
   }
 
@@ -278,7 +278,7 @@ public class BeamSqlRow implements Serializable {
 
   @Override
   public String toString() {
-    return "BeamSqlRow [nullFields=" + nullFields + ", dataValues=" + dataValues + ", dataType="
+    return "BeamRecord [nullFields=" + nullFields + ", dataValues=" + dataValues + ", dataType="
         + dataType + ", windowStart=" + windowStart + ", windowEnd=" + windowEnd + "]";
   }
 
@@ -304,7 +304,7 @@ public class BeamSqlRow implements Serializable {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    BeamSqlRow other = (BeamSqlRow) obj;
+    BeamRecord other = (BeamRecord) obj;
     return toString().equals(other.toString());
   }
 

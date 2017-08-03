@@ -21,8 +21,8 @@ import com.google.auto.value.AutoValue;
 import org.apache.beam.sdk.annotations.Experimental;
 import org.apache.beam.sdk.extensions.sql.impl.rel.BeamRelNode;
 import org.apache.beam.sdk.extensions.sql.schema.BeamPCollectionTable;
-import org.apache.beam.sdk.extensions.sql.schema.BeamSqlRow;
-import org.apache.beam.sdk.extensions.sql.schema.BeamSqlRowCoder;
+import org.apache.beam.sdk.extensions.sql.schema.BeamRecord;
+import org.apache.beam.sdk.extensions.sql.schema.BeamRecordCoder;
 import org.apache.beam.sdk.extensions.sql.schema.BeamSqlUdaf;
 import org.apache.beam.sdk.extensions.sql.schema.BeamSqlUdf;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -47,21 +47,21 @@ PipelineOptions options = PipelineOptionsFactory.create();
 Pipeline p = Pipeline.create(options);
 
 //create table from TextIO;
-PCollection<BeamSqlRow> inputTableA = p.apply(TextIO.read().from("/my/input/patha"))
+PCollection<BeamRecord> inputTableA = p.apply(TextIO.read().from("/my/input/patha"))
     .apply(...);
-PCollection<BeamSqlRow> inputTableB = p.apply(TextIO.read().from("/my/input/pathb"))
+PCollection<BeamRecord> inputTableB = p.apply(TextIO.read().from("/my/input/pathb"))
     .apply(...);
 
 //run a simple query, and register the output as a table in BeamSql;
 String sql1 = "select MY_FUNC(c1), c2 from PCOLLECTION";
-PCollection<BeamSqlRow> outputTableA = inputTableA.apply(
+PCollection<BeamRecord> outputTableA = inputTableA.apply(
     BeamSql.simpleQuery(sql1)
     .withUdf("MY_FUNC", MY_FUNC.class, "FUNC"));
 
 //run a JOIN with one table from TextIO, and one table from another query
-PCollection<BeamSqlRow> outputTableB = PCollectionTuple.of(
-    new TupleTag<BeamSqlRow>("TABLE_O_A"), outputTableA)
-                .and(new TupleTag<BeamSqlRow>("TABLE_B"), inputTableB)
+PCollection<BeamRecord> outputTableB = PCollectionTuple.of(
+    new TupleTag<BeamRecord>("TABLE_O_A"), outputTableA)
+                .and(new TupleTag<BeamRecord>("TABLE_B"), inputTableB)
     .apply(BeamSql.query("select * from TABLE_O_A JOIN TABLE_B where ..."));
 
 //output the final result with TextIO
@@ -77,9 +77,9 @@ public class BeamSql {
    * Transforms a SQL query into a {@link PTransform} representing an equivalent execution plan.
    *
    * <p>The returned {@link PTransform} can be applied to a {@link PCollectionTuple} representing
-   * all the input tables and results in a {@code PCollection<BeamSqlRow>} representing the output
+   * all the input tables and results in a {@code PCollection<BeamRecord>} representing the output
    * table. The {@link PCollectionTuple} contains the mapping from {@code table names} to
-   * {@code PCollection<BeamSqlRow>}, each representing an input table.
+   * {@code PCollection<BeamRecord>}, each representing an input table.
    *
    * <p>It is an error to apply a {@link PCollectionTuple} missing any {@code table names}
    * referenced within the query.
@@ -111,7 +111,7 @@ public class BeamSql {
    */
   @AutoValue
   public abstract static class QueryTransform extends
-      PTransform<PCollectionTuple, PCollection<BeamSqlRow>> {
+      PTransform<PCollectionTuple, PCollection<BeamRecord>> {
     abstract BeamSqlEnv getSqlEnv();
     abstract String getSqlQuery();
 
@@ -143,7 +143,7 @@ public class BeamSql {
      }
 
     @Override
-    public PCollection<BeamSqlRow> expand(PCollectionTuple input) {
+    public PCollection<BeamRecord> expand(PCollectionTuple input) {
       registerTables(input);
 
       BeamRelNode beamRelNode = null;
@@ -163,8 +163,8 @@ public class BeamSql {
     //register tables, related with input PCollections.
     private void registerTables(PCollectionTuple input){
       for (TupleTag<?> sourceTag : input.getAll().keySet()) {
-        PCollection<BeamSqlRow> sourceStream = (PCollection<BeamSqlRow>) input.get(sourceTag);
-        BeamSqlRowCoder sourceCoder = (BeamSqlRowCoder) sourceStream.getCoder();
+        PCollection<BeamRecord> sourceStream = (PCollection<BeamRecord>) input.get(sourceTag);
+        BeamRecordCoder sourceCoder = (BeamRecordCoder) sourceStream.getCoder();
 
         getSqlEnv().registerTable(sourceTag.getId(),
             new BeamPCollectionTable(sourceStream, sourceCoder.getTableSchema()));
@@ -178,7 +178,7 @@ public class BeamSql {
    */
   @AutoValue
   public abstract static class SimpleQueryTransform
-      extends PTransform<PCollection<BeamSqlRow>, PCollection<BeamSqlRow>> {
+      extends PTransform<PCollection<BeamRecord>, PCollection<BeamRecord>> {
     private static final String PCOLLECTION_TABLE_NAME = "PCOLLECTION";
     abstract BeamSqlEnv getSqlEnv();
     abstract String getSqlQuery();
@@ -232,9 +232,9 @@ public class BeamSql {
     }
 
     @Override
-    public PCollection<BeamSqlRow> expand(PCollection<BeamSqlRow> input) {
+    public PCollection<BeamRecord> expand(PCollection<BeamRecord> input) {
       validateQuery();
-      return PCollectionTuple.of(new TupleTag<BeamSqlRow>(PCOLLECTION_TABLE_NAME), input)
+      return PCollectionTuple.of(new TupleTag<BeamRecord>(PCOLLECTION_TABLE_NAME), input)
           .apply(QueryTransform.builder()
               .setSqlEnv(getSqlEnv())
               .setSqlQuery(getSqlQuery())

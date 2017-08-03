@@ -22,16 +22,16 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Field type information in {@link BeamSqlRow}.
+ * Field type information in {@link BeamRecord}.
  *
  */
 @AutoValue
-public abstract class BeamSqlRowType implements Serializable {
+public abstract class BeamRecordType implements Serializable {
   public abstract List<String> getFieldsName();
   public abstract List<Integer> getFieldsType();
 
-  public static BeamSqlRowType create(List<String> fieldNames, List<Integer> fieldTypes) {
-    return new AutoValue_BeamSqlRowType(fieldNames, fieldTypes);
+  public static BeamRecordType create(List<String> fieldNames, List<Integer> fieldTypes) {
+    return new AutoValue_BeamRecordType(fieldNames, fieldTypes);
   }
 
   public int size() {

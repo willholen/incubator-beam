@@ -24,19 +24,19 @@ import org.apache.beam.sdk.values.PCollection.IsBounded;
 import org.apache.beam.sdk.values.PDone;
 
 /**
- * {@code BeamPCollectionTable} converts a {@code PCollection<BeamSqlRow>} as a virtual table,
+ * {@code BeamPCollectionTable} converts a {@code PCollection<BeamRecord>} as a virtual table,
  * then a downstream query can query directly.
  */
 public class BeamPCollectionTable extends BaseBeamTable {
   private BeamIOType ioType;
-  private transient PCollection<BeamSqlRow> upstream;
+  private transient PCollection<BeamRecord> upstream;
 
-  protected BeamPCollectionTable(BeamSqlRowType beamSqlRowType) {
+  protected BeamPCollectionTable(BeamRecordType beamSqlRowType) {
     super(beamSqlRowType);
   }
 
-  public BeamPCollectionTable(PCollection<BeamSqlRow> upstream,
-      BeamSqlRowType beamSqlRowType){
+  public BeamPCollectionTable(PCollection<BeamRecord> upstream,
+      BeamRecordType beamSqlRowType){
     this(beamSqlRowType);
     ioType = upstream.isBounded().equals(IsBounded.BOUNDED)
         ? BeamIOType.BOUNDED : BeamIOType.UNBOUNDED;
@@ -49,12 +49,12 @@ public class BeamPCollectionTable extends BaseBeamTable {
   }
 
   @Override
-  public PCollection<BeamSqlRow> buildIOReader(Pipeline pipeline) {
+  public PCollection<BeamRecord> buildIOReader(Pipeline pipeline) {
     return upstream;
   }
 
   @Override
-  public PTransform<? super PCollection<BeamSqlRow>, PDone> buildIOWriter() {
+  public PTransform<? super PCollection<BeamRecord>, PDone> buildIOWriter() {
     throw new IllegalArgumentException("cannot use [BeamPCollectionTable] as target");
   }
 
