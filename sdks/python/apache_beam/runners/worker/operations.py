@@ -295,14 +295,6 @@ class DoOperation(Operation):
         sources.append(si.source)
       iterator_fn = sideinputs.get_iterator_fn_for_sources(sources)
 
-      # Backwards compatibility for pre BEAM-733 SDKs.
-      if isinstance(view_options, tuple):
-        if view_class == pvalue.AsSingleton:
-          has_default, default = view_options
-          view_options = {'default': default} if has_default else {}
-        else:
-          view_options = {}
-
       yield apache_sideinputs.SideInputMap(
           view_class, view_options, sideinputs.EmulatedIterable(iterator_fn))
 
