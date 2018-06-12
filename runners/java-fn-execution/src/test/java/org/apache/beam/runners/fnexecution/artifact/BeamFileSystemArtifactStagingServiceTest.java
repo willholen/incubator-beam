@@ -17,6 +17,8 @@
  */
 package org.apache.beam.runners.fnexecution.artifact;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -43,6 +45,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import org.apache.beam.model.jobmanagement.v1.ArtifactApi;
 import org.apache.beam.model.jobmanagement.v1.ArtifactApi.ArtifactChunk;
 import org.apache.beam.model.jobmanagement.v1.ArtifactApi.ArtifactMetadata;
 import org.apache.beam.model.jobmanagement.v1.ArtifactApi.CommitManifestRequest;
@@ -378,5 +382,53 @@ public class BeamFileSystemArtifactStagingServiceTest {
           .join(Files.readAllLines(Paths.get(location.getUri()), CHARSET));
       Assert.assertEquals(expectedContent, actualContent);
     }
+  }
+
+  // TODO: Create common testutils?
+
+  public String getArtifactContents(ArtifactSource artifactSource, String name) throws Exception {
+    StringBuilder contents = new StringBuilder();
+    Throwable[] error = new Throwable[1];
+    artifactSource.getArtifact(name, new StreamObserver<ArtifactChunk>() {
+      @Override public void onNext(ArtifactChunk artifactChunk) {
+        contents.append(artifactChunk.getData().toString(CHARSET));
+      }
+      @Override public void onError(Throwable throwable) {
+        error[0] = throwable;
+      }
+      @Override public void onCompleted() { }
+    });
+    if (error[0] != null) {
+      throw new Exception(error[0]);
+    } else {
+      return contents.toString();
+    }
+  }
+
+  @Test
+  public void testStagingService() throws Exception {
+    String stagingSession = "stagingSession";
+    String stagingSessionToken = BeamFileSystemArtifactStagingService
+        .generateStagingSessionToken(stagingSession, destDir.toUri().getPath());
+    List<ArtifactMetadata> metadata = new ArrayList<>();
+
+    Path file1 = Paths.get(srcDir.toString(), "file1").toAbsolutePath();
+    metadata.add(ArtifactMetadata.newBuilder().setName("file1").build());
+    Files.write(file1, "first".getBytes(CHARSET));
+    putArtifact(stagingSessionToken, file1.toString(), "file1");
+
+    Path file2 = Paths.get(srcDir.toString(), "file2").toAbsolutePath();
+    metadata.add(ArtifactMetadata.newBuilder().setName("file2").build());
+    Files.write(file2, "second".getBytes(CHARSET));
+    putArtifact(stagingSessionToken, file2.toString(), "file2");
+
+    String stagingToken = commitManifest(stagingSessionToken, metadata);
+
+    BeamFileSystemArtifactSource artifactSource = new BeamFileSystemArtifactSource(stagingToken);
+    Assert.assertEquals("first", getArtifactContents(artifactSource, "file1"));
+    Assert.assertEquals("second", getArtifactContents(artifactSource, "file2"));
+    Assert.assertThat(
+        artifactSource.getManifest().getArtifactList(),
+        containsInAnyOrder(metadata.toArray(new ArtifactMetadata[0])));
   }
 }
