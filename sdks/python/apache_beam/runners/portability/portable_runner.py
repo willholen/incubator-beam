@@ -87,7 +87,7 @@ class PortableRunner(runner.PipelineRunner):
     proto_context = pipeline_context.PipelineContext(
         default_environment_url=self._docker_image)
     proto_pipeline = pipeline.to_runner_api(context=proto_context)
-    if self._runner_api_address:
+    if self._runner_api_address or True:
       for pcoll in proto_pipeline.components.pcollections.values():
         if pcoll.coder_id not in proto_context.coders:
           coder = coders.registry.get_coder(pickler.loads(pcoll.coder_id))
