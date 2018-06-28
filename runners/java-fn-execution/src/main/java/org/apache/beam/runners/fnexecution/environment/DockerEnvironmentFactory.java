@@ -114,6 +114,9 @@ public class DockerEnvironmentFactory implements EnvironmentFactory {
     String workerId = idGenerator.getId();
 
     // Prepare docker invocation.
+    // Path tmp = java.nio.file.FileSystems.getDefault().getPath("/tmp","flink-tmp");
+    // Path workerPersistentDirectory = Files.createTempDirectory(tmp, "worker_persistent_directory");
+    // Path semiPersistentDirectory = Files.createTempDirectory(tmp, "semi_persistent_dir");
     Path workerPersistentDirectory = Files.createTempDirectory("worker_persistent_directory");
     Path semiPersistentDirectory = Files.createTempDirectory("semi_persistent_dir");
     String containerImage = environment.getUrl();
