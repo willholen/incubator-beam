@@ -245,8 +245,6 @@ class _BatchSizeEstimator(object):
     # profiling-style counters.)
     self._remainder_msecs = 0
 
-    self._hist_prefix = 'batch_size_hist_%x_' % random.randint(128, 256)
-
   def ignore_next_timing(self):
     """Call to indicate the next timing should be ignored.
 
