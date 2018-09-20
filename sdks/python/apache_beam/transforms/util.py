@@ -30,7 +30,6 @@ from builtins import range
 from builtins import zip
 
 from future.utils import itervalues
-from past.utils import old_div
 
 from apache_beam import typehints
 from apache_beam.metrics import Metrics
@@ -213,6 +212,7 @@ class _BatchSizeEstimator(object):
                max_batch_size=1000,
                target_batch_overhead=.1,
                target_batch_duration_secs=1,
+               variance=0.25,
                clock=time.time):
     if min_batch_size > max_batch_size:
       raise ValueError("Minimum (%s) must not be greater than maximum (%s)" % (
@@ -230,6 +230,7 @@ class _BatchSizeEstimator(object):
     self._max_batch_size = max_batch_size
     self._target_batch_overhead = target_batch_overhead
     self._target_batch_duration_secs = target_batch_duration_secs
+    self._variance = variance
     self._clock = clock
     self._data = []
     self._ignore_next_timing = False
@@ -243,6 +244,8 @@ class _BatchSizeEstimator(object):
     # (Milliseconds are chosen because that's conventionally used elsewhere in
     # profiling-style counters.)
     self._remainder_msecs = 0
+
+    self._hist_prefix = 'batch_size_hist_%x_' % random.randint(128, 256)
 
   def ignore_next_timing(self):
     """Call to indicate the next timing should be ignored.
@@ -258,9 +261,14 @@ class _BatchSizeEstimator(object):
     yield
     elapsed = self._clock() - start
     elapsed_msec = 1e3 * elapsed + self._remainder_msecs
+    hist_base = 1.2
+    from math import log
+    Metrics.counter('BatchElementsHist', self._hist_prefix + str(int(pow(hist_base, int(log(batch_size) / log(hist_base)))))).inc(1)
     self._size_distribution.update(batch_size)
     self._time_distribution.update(int(elapsed_msec))
     self._remainder_msecs = elapsed_msec - int(elapsed_msec)
+    import logging
+    logging.warn("BatchRecordTime %s %s %s" % (self._hist_prefix, batch_size, elapsed))
     if self._ignore_next_timing:
       self._ignore_next_timing = False
     else:
@@ -269,16 +277,18 @@ class _BatchSizeEstimator(object):
         self._thin_data()
 
   def _thin_data(self):
+    import logging
+    logging.warn("BatchElementsData %s %s" % (self._hist_prefix, self._data))
     sorted_data = sorted(self._data)
     odd_one_out = [sorted_data[-1]] if len(sorted_data) % 2 == 1 else []
-    # Sort the pairs by how different they are.
 
-    def div_keys(kv1_kv2):
-      (x1, _), (x2, _) = kv1_kv2
-      return old_div(x2, x1) # TODO(BEAM-4858)
+    # Sort the pairs by how different they are (in batch size).
+    def uniqueness(adjacent_data):
+      (batch_size, _), (next_batch_size, _) = adjacent_data
+      return float(next_batch_size) / batch_size
 
     pairs = sorted(zip(sorted_data[::2], sorted_data[1::2]),
-                   key=div_keys)
+                   key=uniqueness)
     # Keep the top 1/3 most different pairs, average the top 2/3 most similar.
     threshold = 2 * len(pairs) // 3
     self._data = (
@@ -286,6 +296,65 @@ class _BatchSizeEstimator(object):
         + [((x1 + x2) / 2.0, (t1 + t2) / 2.0)
            for (x1, t1), (x2, t2) in pairs[:threshold]]
         + odd_one_out)
+
+  @staticmethod
+  def linear_regression_no_numpy(xs, ys):
+    n = float(len(xs))
+    xbar = sum(xs) / n
+    ybar = sum(ys) / n
+    b = (sum([(x - xbar) * (y - ybar) for x, y in zip(xs, ys)])
+         / sum([(x - xbar)**2 for x in xs]))
+    a = ybar - b * xbar
+    return a, b
+
+  @staticmethod
+  def linear_regression_numpy(xs, ys):
+    # pylint: disable=wrong-import-order, wrong-import-position
+    import numpy as np
+    from numpy import sum
+    xs = np.asarray(xs, dtype=float)
+    ys = np.asarray(ys, dtype=float)
+
+    # First do a simple least squares fit over all points.
+    n = len(xs)
+    sum_x = sum(xs)
+    sum_y = sum(ys)
+    xbar = sum_x / n
+    ybar = sum_y / n
+    b = sum((xs - xbar) * (ys - ybar)) / sum((xs - xbar)**2)
+    a = ybar - b * xbar
+
+    if n < 10:
+      return a, b
+    else:
+      # Refine this by throwing out outliers, according to Cook's distance.
+      sum_x2 = sum(xs**2)
+      errs = a * xs + b - ys
+      s2 = sum(errs**2) / (n - 2)
+      if s2 == 0:
+        # It's an exact fit!
+        return a, b
+      h = (sum_x2 - 2 * sum_x * xs + n * xs**2) / (n * sum_x2 - sum_x**2)
+      cook_ds = 0.5 / s2 * errs**2 * (h / (1 - h)**2)
+
+      # Exclude those with Cook's distance greater than 1, and re-compute
+      # the regression.
+      weight = cook_ds < 1
+      n = sum(weight)
+      sum_x = sum(weight * xs)
+      sum_y = sum(weight * ys)
+      xbar = sum_x / n
+      ybar = sum_y / n
+      b = sum(weight * (xs - xbar) * (ys - ybar)) / sum(weight * (xs - xbar)**2)
+      a = ybar - b * xbar
+      return a, b
+
+  try:
+    # pylint: disable=wrong-import-order, wrong-import-position
+    import numpy as np
+    linear_regression = linear_regression_numpy
+  except ImportError:
+    linear_regression = linear_regression_no_numpy
 
   def next_batch_size(self):
     if self._min_batch_size == self._max_batch_size:
@@ -302,12 +371,7 @@ class _BatchSizeEstimator(object):
 
     # Linear regression for y = a + bx, where x is batch size and y is time.
     xs, ys = zip(*self._data)
-    n = float(len(self._data))
-    xbar = sum(xs) / n
-    ybar = sum(ys) / n
-    b = (sum([(x - xbar) * (y - ybar) for x, y in self._data])
-         / sum([(x - xbar)**2 for x in xs]))
-    a = ybar - b * xbar
+    a, b = self.linear_regression(xs, ys)
 
     # Avoid nonsensical or division-by-zero errors below due to noise.
     a = max(a, 1e-10)
@@ -316,17 +380,22 @@ class _BatchSizeEstimator(object):
     last_batch_size = self._data[-1][0]
     cap = min(last_batch_size * self._MAX_GROWTH_FACTOR, self._max_batch_size)
 
+    target = self._max_batch_size
+
     if self._target_batch_duration_secs:
       # Solution to a + b*x = self._target_batch_duration_secs.
-      cap = min(cap, (self._target_batch_duration_secs - a) / b)
+      target = min(target, (self._target_batch_duration_secs - a) / b)
 
     if self._target_batch_overhead:
       # Solution to a / (a + b*x) = self._target_batch_overhead.
-      cap = min(cap, (a / b) * (1 / self._target_batch_overhead - 1))
+      target = min(target, (a / b) * (1 / self._target_batch_overhead - 1))
 
-    # Avoid getting stuck at min_batch_size.
+    # Avoid getting stuck.
     jitter = len(self._data) % 2
-    return int(max(self._min_batch_size + jitter, cap))
+    if len(self._data) > 10:
+      target += int(target * self._variance * 2 * (random.random() - .5))
+
+    return int(max(self._min_batch_size + jitter, min(target, cap)))
 
 
 class _GlobalWindowsBatchingDoFn(DoFn):
