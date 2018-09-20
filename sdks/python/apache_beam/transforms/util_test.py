@@ -20,12 +20,11 @@
 from __future__ import absolute_import
 
 import logging
+import random
 import time
 import unittest
 from builtins import object
 from builtins import range
-
-import random
 
 import apache_beam as beam
 from apache_beam.coders import coders
