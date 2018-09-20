@@ -261,14 +261,9 @@ class _BatchSizeEstimator(object):
     yield
     elapsed = self._clock() - start
     elapsed_msec = 1e3 * elapsed + self._remainder_msecs
-    hist_base = 1.2
-    from math import log
-    Metrics.counter('BatchElementsHist', self._hist_prefix + str(int(pow(hist_base, int(log(batch_size) / log(hist_base)))))).inc(1)
     self._size_distribution.update(batch_size)
     self._time_distribution.update(int(elapsed_msec))
     self._remainder_msecs = elapsed_msec - int(elapsed_msec)
-    import logging
-    logging.warn("BatchRecordTime %s %s %s" % (self._hist_prefix, batch_size, elapsed))
     if self._ignore_next_timing:
       self._ignore_next_timing = False
     else:
@@ -277,8 +272,6 @@ class _BatchSizeEstimator(object):
         self._thin_data()
 
   def _thin_data(self):
-    import logging
-    logging.warn("BatchElementsData %s %s" % (self._hist_prefix, self._data))
     sorted_data = sorted(self._data)
     odd_one_out = [sorted_data[-1]] if len(sorted_data) % 2 == 1 else []
 
