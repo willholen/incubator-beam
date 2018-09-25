@@ -212,5 +212,34 @@ def _load_main_session(semi_persistent_directory):
         '(interactive session) may fail.')
 
 
+def _monkey_patch_thread_pool():
+  import concurrent.futures
+  import time
+  import weakref
+
+  def _adjust_thread_count(self):
+      # When the executor gets lost, the weakref callback will wake up
+      # the worker threads.
+      def weakref_cb(_, q=self._work_queue):
+          q.put(None)
+      # Maybe the only item is the one we just placed there.
+      if self._work_queue.qsize() <= 1:
+        # TODO: There must be a better way to see if there are idle threads.
+        time.sleep(0.001)
+      num_threads = len(self._threads)
+      if num_threads < self._max_workers and not self._work_queue.empty():
+          thread_name = '%s_%d' % (self._thread_name_prefix or self,
+                                   num_threads)
+          t = threading.Thread(name=thread_name, target=concurrent.futures.thread._worker,
+                               args=(weakref.ref(self, weakref_cb),
+                                     self._work_queue))
+          t.daemon = True
+          t.start()
+          self._threads.add(t)
+          concurrent.futures.thread._threads_queues[t] = self._work_queue
+  concurrent.futures.ThreadPoolExecutor._adjust_thread_count = _adjust_thread_count
+
+
 if __name__ == '__main__':
+  _monkey_patch_thread_pool()
   main(sys.argv)
