@@ -454,6 +454,10 @@ public class ExecutableStageDoFnOperator<InputT, OutputT> extends DoFnOperator<I
       this.keySelector = keySelector;
       this.timerInternals = timerInternals;
       this.timerReferenceMap = new HashMap<>();
+
+      // Everything you need is here...
+      System.out.println(stageBundleFactory.getProcessBundleDescriptor().getTimerSpecs());
+
       for (TimerReference timer : timers) {
         timerReferenceMap.put(
             timer.transform().getTransform().getOutputsMap().get(timer.localName()), timer);
