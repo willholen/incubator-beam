@@ -17,10 +17,23 @@
  */
 package org.apache.beam.runners.flink.translation.utils;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.apache.beam.model.pipeline.v1.RunnerApi;
 import org.apache.beam.runners.core.construction.RehydratedComponents;
 import org.apache.beam.runners.core.construction.WindowingStrategyTranslation;
@@ -84,18 +97,36 @@ public final class FlinkPipelineTranslatorUtils {
     final int transformsCount = stagePayload.getTransformsCount();
     sb.append("[").append(transformsCount).append("]");
     sb.append("{");
+    List<String> stageNames = new ArrayList<>();
     for (int i = 0; i < transformsCount; i++) {
-      String name = stagePayload.getTransforms(i);
+      String id = stagePayload.getTransforms(i);
+      String name = stagePayload.getComponents().getTransformsOrThrow(id).getUniqueName();
       // Python: Remove the 'ref_AppliedPTransform_' prefix which just makes the name longer
       name = name.replaceFirst("^ref_AppliedPTransform_", "");
       // Java: Remove the 'ParMultiDo(Anonymous)' suffix which just makes the name longer
       name = name.replaceFirst("/ParMultiDo\\(Anonymous\\)$", "");
-      sb.append(name);
+      stageNames.add(name);
+      //sb.append(name);
       if (i + 1 < transformsCount) {
-        sb.append(", ");
+        //sb.append(", ");
       }
     }
+    sb.append(compressedNames(stageNames));
     sb.append("}");
     return sb.toString();
+  }
+
+  public static String compressedNames(Collection<String> fullNames) {
+    Multimap<String, String> stagesByOuterStage = LinkedHashMultimap.create();
+    for(String fullName : fullNames) {
+      int slash = fullName.indexOf('/');
+      if (slash == -1) {
+        stagesByOuterStage.put(fullName, "");
+      } else {
+        stagesByOuterStage.put(fullName.substring(0, slash), fullName.substring(slash + 1));
+      }
+    }
+      return Joiner.on(", ").join(stagesByOuterStage.asMap().entrySet().stream().map(
+          stage -> stage.getValue().size() == 1 ? stage.getKey() + stage.getValue() : stagesByOuterStage.size()  == 1 ? compressedNames(stage.getValue()) : String.format("%s/{%s}", stage.getKey(), compressedNames(stage.getValue()))).collect(Collectors.toList()));
   }
 }
