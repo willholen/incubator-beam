@@ -186,7 +186,10 @@ class _WindowGroupingBuffer(object):
       self._kv_extrator = lambda value: ('', value)
       self._key_coder = coders.SingletonCoder('')
       self._value_coder = coder.wrapped_value_coder
-    elif access_pattern.urn == common_urns.side_inputs.MULTIMAP.urn:
+    elif (access_pattern.urn == common_urns.side_inputs.MULTIMAP.urn
+          # TODO(BEAM-6208): Use standard URNs everywhere.
+          or access_pattern.urn
+          == 'urn:beam:sideinput:materialization:multimap:0.1'):
       self._kv_extrator = lambda value: value
       self._key_coder = coder.wrapped_value_coder.key_coder()
       self._value_coder = (

@@ -63,6 +63,7 @@ dependencies {
   shadow library.java.slf4j_api
   shadow library.java.slf4j_jdk14
   runtime project(path: ":beam-runners-direct-java", configuration: "shadow")
+  compile project(path: ":beam-runners-reference-java")
   shadowTest project(path: ":beam-sdks-java-io-google-cloud-platform", configuration: "shadow")
   shadowTest library.java.hamcrest_core
   shadowTest library.java.hamcrest_library
@@ -126,3 +127,9 @@ task preCommit() {
   }
 }
 
+
+task execute(type:JavaExec) {
+   main = mainClass
+   classpath = sourceSets.main.runtimeClasspath
+   args argv.split(' ')
+}

@@ -147,6 +147,11 @@ class PortableRunner(runner.PipelineRunner):
       # https://issues.apache.org/jira/browse/BEAM-6328
       docker = DockerizedJobServer()
       job_endpoint = docker.start()
+    elif job_endpoint == 'embed':
+      from apache_beam.runners.portability import local_job_service
+      job_service = local_job_service.LocalJobServicer()
+    else:
+      job_service = None
 
     # This is needed as we start a worker server if one is requested
     # but none is provided.
@@ -188,9 +193,12 @@ class PortableRunner(runner.PipelineRunner):
                  for k, v in options.get_all_options().items()
                  if v is not None}
 
-    channel = grpc.insecure_channel(job_endpoint)
-    grpc.channel_ready_future(channel).result()
-    job_service = beam_job_api_pb2_grpc.JobServiceStub(channel)
+    if not job_service:
+      channel = grpc.insecure_channel(job_endpoint)
+      grpc.channel_ready_future(channel).result()
+      job_service = beam_job_api_pb2_grpc.JobServiceStub(channel)
+    else:
+      channel = None
 
     # Sends the PrepareRequest but retries in case the channel is not ready
     def send_prepare_request(max_retries=5):
@@ -199,7 +207,8 @@ class PortableRunner(runner.PipelineRunner):
         try:
           # This reports channel is READY but connections may fail
           # Seems to be only an issue on Mac with port forwardings
-          grpc.channel_ready_future(channel).result()
+          if channel:
+            grpc.channel_ready_future(channel).result()
           return job_service.Prepare(
               beam_job_api_pb2.PrepareJobRequest(
                   job_name='job', pipeline=proto_pipeline,

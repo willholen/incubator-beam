@@ -17,6 +17,7 @@
  */
 package org.apache.beam.examples;
 
+import java.util.Arrays;
 import org.apache.beam.examples.common.ExampleUtils;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
@@ -27,7 +28,6 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -36,6 +36,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TypeDescriptors;
 
 /**
  * An example that counts words in Shakespeare and includes Beam best practices.
@@ -116,7 +117,7 @@ public class WordCount {
   public static class FormatAsTextFn extends SimpleFunction<KV<String, Long>, String> {
     @Override
     public String apply(KV<String, Long> input) {
-      return input.getKey() + ": " + input.getValue();
+      return input.getKey() + ":::" + input.getValue();
     }
   }
 
@@ -166,7 +167,7 @@ public class WordCount {
 
     /** Set this required option to specify where to write the output. */
     @Description("Path of the file to write to")
-    @Required
+    //@Required
     String getOutput();
 
     void setOutput(String value);
@@ -175,20 +176,46 @@ public class WordCount {
   static void runWordCount(WordCountOptions options) {
     Pipeline p = Pipeline.create(options);
 
+    /*
+    PCollection<Integer> pcoll = p.apply(Create.of(10));
+
+    PCollectionView<Integer> view = pcoll.apply(View.asSingleton()); //  pcoll.apply(Sum.integersGlobally().asSingletonView());
+
+    pcoll.apply(ParDo.of(new DoFn<Integer, String>() {
+          @ProcessElement
+          public void processElement(@Element Integer element, OutputReceiver<String> out, ProcessContext c) {
+            System.out.println(element + " " + c.sideInput(view));
+          }
+        }).withSideInputs(view)
+    );
+    */
+
     // Concepts #2 and #3: Our pipeline applies the composite CountWords transform, and passes the
     // static FormatAsTextFn() to the ParDo transform.
     p.apply("ReadLines", TextIO.read().from(options.getInputFile()))
         .apply(new CountWords())
         .apply(MapElements.via(new FormatAsTextFn()))
+        .apply(
+            MapElements.into(TypeDescriptors.strings())
+                .via(
+                    result -> {
+                      System.out.println("GOT " + result);
+                      return result;
+                    }))
         .apply("WriteCounts", TextIO.write().to(options.getOutput()));
 
-    p.run().waitUntilFinish();
+    System.out.println(p.run().waitUntilFinish());
   }
 
   public static void main(String[] args) {
+    System.out.println(Arrays.toString(args));
+
     WordCountOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(WordCountOptions.class);
+    options.setInputFile("/usr/local/google/home/robertwb/beam/beam/LICENSE");
+    options.setOutput("/usr/local/google/home/robertwb/scratch/counts.txt");
 
     runWordCount(options);
+    System.out.println("main() ALL DONE");
   }
 }

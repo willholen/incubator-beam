@@ -51,6 +51,7 @@ import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.transforms.windowing.TimestampCombiner;
 import org.apache.beam.sdk.util.CombineFnUtil;
 import org.apache.beam.sdk.util.WindowedValue;
+import org.apache.beam.sdk.util.WindowedValue.WindowedValueCoder;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
@@ -149,7 +150,11 @@ public class FnApiStateAccessor implements SideInputReader, StateBinder {
 
     SideInputSpec sideInputSpec = sideInputSpecMap.get(tag);
     checkArgument(sideInputSpec != null, "Attempting to access unknown side input %s.", view);
-    KvCoder<?, ?> kvCoder = (KvCoder) sideInputSpec.getCoder();
+    Coder<?> coder = sideInputSpec.getCoder();
+    if (coder instanceof WindowedValueCoder) {
+      coder = ((WindowedValueCoder) coder).getValueCoder();
+    }
+    KvCoder<?, ?> kvCoder = (KvCoder) coder; //sideInputSpec.getCoder();
 
     ByteString.Output encodedWindowOut = ByteString.newOutput();
     try {
