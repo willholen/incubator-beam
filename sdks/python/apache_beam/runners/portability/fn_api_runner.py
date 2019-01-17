@@ -332,6 +332,7 @@ class FnApiRunner(runner.PipelineRunner):
         fn_api_runner_transforms.annotate_downstream_side_inputs,
         fn_api_runner_transforms.fix_side_input_pcoll_coders,
         fn_api_runner_transforms.lift_combiners,
+        fn_api_runner_transforms.expand_sdf,
         fn_api_runner_transforms.expand_gbk,
         fn_api_runner_transforms.sink_flattens,
         fn_api_runner_transforms.greedily_fuse,
@@ -425,7 +426,7 @@ class FnApiRunner(runner.PipelineRunner):
             data_spec.api_service_descriptor.url = (
                 data_api_service_descriptor.url)
           transform.spec.payload = data_spec.SerializeToString()
-        elif transform.spec.urn == common_urns.primitives.PAR_DO.urn:
+        elif transform.spec.urn in fn_api_runner_transforms.PAR_DO_URNS:
           payload = proto_utils.parse_Bytes(
               transform.spec.payload, beam_runner_api_pb2.ParDoPayload)
           for tag, si in payload.side_inputs.items():
@@ -508,10 +509,13 @@ class FnApiRunner(runner.PipelineRunner):
 
     result = BundleManager(
         controller, get_buffer, process_bundle_descriptor,
-        self._progress_frequency).process_bundle(data_input, data_output)
+        self._progress_frequency).process_bundle(
+            data_input, data_output)
 
+    last_result = result
     while True:
-      timer_inputs = {}
+      # TODO(SDF): Rename timer_inputs.
+      timer_inputs = collections.defaultdict(list)
       for transform_id, timer_writes in stage.timer_pcollections:
         windowed_timer_coder_impl = context.coders[
             pipeline_components.pcollections[timer_writes].coder_id].get_impl()
@@ -536,13 +540,31 @@ class FnApiRunner(runner.PipelineRunner):
                 windowed_key_timer, out, True)
           timer_inputs[transform_id, 'out'] = [out.get()]
           written_timers[:] = []
+
+      def add_application(application):
+        # Find the io transform that feeds this transform.
+        # TODO(SDF): Memoize?
+        input_pcoll = process_bundle_descriptor.transforms[
+            application.ptransform_id].inputs[application.input_id]
+        for input_id, proto in process_bundle_descriptor.transforms.items():
+          if (proto.spec.urn == bundle_processor.DATA_INPUT_URN
+              and input_pcoll in proto.outputs.values()):
+            timer_inputs[input_id, 'out'].append(application.element)
+            break
+        else:
+          raise RuntimeError(
+              'No IO transform feeds %s' % application.ptransform_id)
+
+      for delayed_application in last_result.process_bundle.residual_roots:
+        add_application(delayed_application.application)
+
       if timer_inputs:
         # The worker will be waiting on these inputs as well.
         for other_input in data_input:
           if other_input not in timer_inputs:
             timer_inputs[other_input] = []
         # TODO(robertwb): merge results
-        BundleManager(
+        last_result = BundleManager(
             controller,
             get_buffer,
             process_bundle_descriptor,
