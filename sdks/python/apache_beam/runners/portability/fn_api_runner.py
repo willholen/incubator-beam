@@ -507,10 +507,10 @@ class FnApiRunner(runner.PipelineRunner):
       finally:
         controller.state.restore()
 
-    result = BundleManager(
+    result, splits = BundleManager(
         controller, get_buffer, process_bundle_descriptor,
         self._progress_frequency).process_bundle(
-            data_input, data_output)
+            data_input, data_output, test_splits=True)
 
     last_result = result
     while True:
@@ -558,13 +558,54 @@ class FnApiRunner(runner.PipelineRunner):
       for delayed_application in last_result.process_bundle.residual_roots:
         add_application(delayed_application.application)
 
+      prev_stops = collections.defaultdict(lambda: float('inf'))
+      for split in splits:
+        for delayed_application in split.residual_roots:
+          add_application(delayed_application.application)
+        for buffer_split in split.buffer_splits:
+          transform = process_bundle_descriptor.transforms[
+              buffer_split.ptransform_id]
+          coder_id = beam_fn_api_pb2.RemoteGrpcPort.FromString(
+              transform.spec.payload).coder_id
+          coder_impl = context.coders[safe_coders[coder_id]].get_impl()
+          # TODO(SDF): This assumes determanistic ordering of buffer iteration.
+          # TODO(SDF): The return split is in terms of indices.  Ideally,
+          # a runner could map these back to actual positions to effectively
+          # describe the two "halves" of the now-split range.  Even if we have
+          # to buffer each element we send (or at the very least a bit of
+          # metadata, like position, about each of them) this should be doable
+          # if they're already in memory and we are bounding the buffer size
+          # (e.g. to 10mb plus whatever is eagerly read from the SDK).  In the
+          # case of non-split-points, we can either immediately replay the
+          # "non-split-position" elements or record them as we do the other
+          # delayed applications.
+
+          # Decode and recode to split the encoded buffer by element count.
+          buffer = data_input[buffer_split.ptransform_id, buffer_split.input_id]
+          input_stream = create_InputStream(''.join(buffer))
+          output_stream = create_OutputStream()
+          index = 0
+          prev_stop = prev_stops[buffer_split.ptransform_id]
+          while input_stream.size() > 0:
+            if index > prev_stop:
+              break
+            element = coder_impl.decode_from_stream(input_stream, True)
+            if index >= buffer_split.first_residual_element:
+              coder_impl.encode_to_stream(element, output_stream, True)
+            index += 1
+          timer_inputs[
+              buffer_split.ptransform_id, buffer_split.input_id].append(
+                  output_stream.get())
+          prev_stops[
+              buffer_split.ptransform_id] = buffer_split.last_primary_element
+
       if timer_inputs:
         # The worker will be waiting on these inputs as well.
         for other_input in data_input:
           if other_input not in timer_inputs:
             timer_inputs[other_input] = []
         # TODO(robertwb): merge results
-        last_result = BundleManager(
+        last_result, splits = BundleManager(
             controller,
             get_buffer,
             process_bundle_descriptor,
@@ -1095,7 +1136,7 @@ class BundleManager(object):
     self._registered = skip_registration
     self._progress_frequency = progress_frequency
 
-  def process_bundle(self, inputs, expected_outputs):
+  def process_bundle(self, inputs, expected_outputs, test_splits=False):
     # Unique id for the instruction processing this bundle.
     BundleManager._uid_counter += 1
     process_bundle_id = 'bundle_%s' % BundleManager._uid_counter
@@ -1119,6 +1160,13 @@ class BundleManager(object):
       for element_data in elements:
         data_out.write(element_data)
       data_out.close()
+
+    if test_splits:
+      # Inject some splits.
+      random_splitter = BundleSplitter(self._controller, process_bundle_id)
+      random_splitter.start()
+    else:
+      random_splitter = None
 
     # Actually start the bundle.
     if registration_future and registration_future.get().error:
@@ -1150,9 +1198,16 @@ class BundleManager(object):
       logging.debug('Wait for the bundle to finish.')
       result = result_future.get()
 
+    if random_splitter:
+      random_splitter.stop()
+      split_results = random_splitter.split_results()
+    else:
+      split_results = []
+
     if result.error:
       raise RuntimeError(result.error)
-    return result
+
+    return result, split_results
 
 
 class ProgressRequester(threading.Thread):
@@ -1188,6 +1243,39 @@ class ProgressRequester(threading.Thread):
       except Exception as exn:
         logging.error("Bad progress: %s", exn)
       time.sleep(self._frequency)
+
+  def stop(self):
+    self._done = True
+
+
+class BundleSplitter(threading.Thread):
+  def __init__(self, controller, instruction_id):
+    super(BundleSplitter, self).__init__()
+    self._controller = controller
+    self._instruction_id = instruction_id
+    self._results = []
+    self._done = False
+
+  def run(self):
+    for fraction in (.5, .25, 0):
+      time.sleep(.1)
+      if self._done:
+        return
+      split_result = self._controller.control_handler.push(
+          beam_fn_api_pb2.InstructionRequest(
+              process_bundle_split=beam_fn_api_pb2.ProcessBundleSplitRequest(
+                  instruction_reference=self._instruction_id,
+                  fraction_of_remainder=fraction))).get()
+      if split_result.error:
+        logging.info('Unable to split at %s: %s' % (
+            fraction, split_result.error))
+      elif split_result.process_bundle_split:
+        self._results.append(split_result.process_bundle_split)
+
+  def split_results(self):
+    self.stop()
+    self.join()
+    return self._results
 
   def stop(self):
     self._done = True

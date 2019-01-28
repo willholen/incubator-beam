@@ -72,6 +72,14 @@ class ConsumerSet(Receiver):
   the other edge.
   ConsumerSet are attached to the outputting Operation.
   """
+  @staticmethod
+  def create(counter_factory, step_name, output_index, consumers, coder):
+    if len(consumers) == 1:
+      return SingletonConsumerSet(
+          counter_factory, step_name, output_index, consumers, coder)
+    else:
+      return ConsumerSet(
+          counter_factory, step_name, output_index, consumers, coder)
 
   def __init__(
       self, counter_factory, step_name, output_index, consumers, coder):
@@ -89,6 +97,13 @@ class ConsumerSet(Receiver):
       cython.cast(Operation, consumer).process(windowed_value)
     self.update_counters_finish()
 
+  def try_split(self, fraction_of_remainder):
+    # TODO(SDF): Consider supporting this.
+    # This would never come up in the existing SDF expansion, but might
+    # be useful to support fused SDF nodes.
+    # This would require dedicated delivery to each of the ops separately.
+    return None, None
+
   def update_counters_start(self, windowed_value):
     self.opcounter.update_from(windowed_value)
 
@@ -99,6 +114,21 @@ class ConsumerSet(Receiver):
     return '%s[%s.out%s, coder=%s, len(consumers)=%s]' % (
         self.__class__.__name__, self.step_name, self.output_index, self.coder,
         len(self.consumers))
+
+
+class SingletonConsumerSet(ConsumerSet):
+  def __init__(
+      self, counter_factory, step_name, output_index, consumers, coder):
+    assert len(consumers) == 1
+    super(SingletonConsumerSet, self).__init__(
+        counter_factory, step_name, output_index, consumers, coder)
+    self.consumer = consumers[0]
+
+  def receive(self, windowed_value):
+    self.consumer.process(windowed_value)
+
+  def try_split(self, fraction_of_remainder):
+    return self.consumer.try_split(fraction_of_remainder)
 
 
 class Operation(object):
@@ -172,6 +202,9 @@ class Operation(object):
   def process(self, o):
     """Process element in operation."""
     pass
+
+  def try_split(self, fraction_of_remainder):
+    return None, None
 
   def finish(self):
     """Finish operation."""
@@ -551,6 +584,14 @@ class SdfProcessElements(DoOperation):
       if delayed_application:
         self.execution_context.delayed_applications.append(
             (self, delayed_application))
+
+  def try_split(self, fraction_of_remainder):
+    primary, residual = self.dofn_runner.try_split(fraction_of_remainder)
+    if primary or residual:
+      return (self, primary), (self, residual)
+    else:
+      assert primary is None and residual is None
+      return None, None
 
 
 class DoFnRunnerReceiver(Receiver):

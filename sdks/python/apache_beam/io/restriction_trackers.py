@@ -147,3 +147,17 @@ class OffsetRestrictionTracker(RestrictionTracker):
     with self._lock:
       self._checkpoint_residual = self.checkpoint()
       self._checkpointed = True
+
+  def try_split(self, fraction):
+    with self._lock:
+      if not self._checkpointed:
+        if self._current_position is None:
+          cur = self._range.start - 1
+        else:
+          cur = self._current_position
+        if cur < self._range.stop - 1:
+          split_point = cur + int(max(1, (self._range.stop - cur) * fraction))
+          if split_point < self._range.stop:
+            prev_stop, self._range.stop = self._range.stop, split_point
+            return (self._range.start, split_point), (split_point, prev_stop)
+      return None, None
