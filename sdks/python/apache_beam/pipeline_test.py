@@ -378,6 +378,105 @@ class PipelineTest(unittest.TestCase):
       p.replace_all([override])
       self.assertEqual(pcoll.producer.inputs[0].element_type, expected_type)
 
+  def test_concurrent_pipelines(self):
+    import time
+    from concurrent import futures
+    import threading
+
+    SLEEP = 0.001
+    DEPTH = 5
+    DUPLICITY = 2
+    LATCHES = ('START', 'CONSTRUCT', 'RUN', 'PREGBK', 'POSTGBK', 'DONE')
+    TIMEOUT = 60
+
+#    condition = threading.Condition(threading.Lock())
+    def seen():
+      # This must be global, but the module-level globals are not
+      # safe in case this module is __main__.
+      if not hasattr(beam, '_concurrent_pipeline_test_seen'):
+        beam._concurrent_pipeline_test_seen = set()
+      return beam._concurrent_pipeline_test_seen
+    def get_condition():
+      if not hasattr(beam, '_condition'):
+        beam._condition = threading.Condition()
+      return beam._condition
+
+    def block_if(nonce, actual, expected):
+      condition = get_condition()
+      if actual == expected:
+        try:
+          condition.acquire()
+          seen().add(nonce)
+          if len(seen()) == num_pipelines:
+            seen().clear()
+            logging.error('Releasing all threads.')
+            condition.notify_all()
+          else:
+            logging.error(
+                'Waiting at %s for %s (seen %s)', actual, nonce, seen())
+            start = time.time()
+            condition.wait(TIMEOUT)
+            if time.time() - start > TIMEOUT:
+              raise futures.TimeoutError(
+                  'Waiting at %s for %s (seen %s)' % (actual, nonce, seen()))
+            logging.error('Done waiting at %s for %s', actual, nonce)
+        finally:
+          condition.release()
+
+    def run_pipeline(nonce, latch):
+      try:
+        logging.error("Thread %s will wait at %s", nonce, latch)
+        for _ in range(2):
+          block_if(nonce, latch, 'START')
+          with TestPipeline() as p:
+            pcoll = p | beam.Create([nonce])
+            block_if(nonce, latch, 'CONSTRUCT')
+            pcoll = pcoll | beam.Map(
+                lambda x: block_if(nonce, latch, 'PREGBK') or x)
+            for ix in range(DEPTH):
+              time.sleep(SLEEP)
+              pcoll = (
+                  pcoll
+                  | 'Map%s' % ix >> beam.FlatMap(
+                      lambda x: time.sleep(SLEEP) or [x, nonce])
+                  | 'Sum%s' % ix >> beam.CombineGlobally(sum))
+            pcoll = pcoll | beam.Map(
+                lambda x: block_if(nonce, latch, 'POSTGBK') or x)
+            assert_that(pcoll, equal_to([nonce * (DEPTH + 1)]))
+            block_if(nonce, latch, 'RUN')
+          block_if(nonce, latch, 'DONE')
+      except:
+        condition.acquire()
+        condition.notify_all()
+        condition.release()
+        raise
+      finally:
+        logging.error("Thread %s waiting at %s finished.", nonce, latch)
+
+    num_pipelines = len(LATCHES) * DUPLICITY
+    with futures.ThreadPoolExecutor(max_workers=num_pipelines, thread_name_prefix='run_pipeline') as pool:
+      list(pool.map(
+          run_pipeline, range(num_pipelines), LATCHES * DUPLICITY, timeout=3 * TIMEOUT))
+    print("done")
+
+if False:
+  import sys
+  import threading
+  import time
+  import traceback
+  def dump():
+    while True:
+      time.sleep(3)
+      threads_by_id = {th.ident: th for th in threading.enumerate()}
+      for thread_id, stack in sys._current_frames().items():
+        th = threads_by_id.get(thread_id)
+        print()
+        print('# Thread:', th or thread_id)
+        print(''.join(traceback.format_stack(stack)))
+  t = threading.Thread(target=dump)
+  t.daemon = True
+  t.start()
+
 
 class DoFnTest(unittest.TestCase):
 
