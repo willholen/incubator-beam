@@ -744,10 +744,10 @@ class FnApiRunner(runner.PipelineRunner):
         worker_handler_list, process_bundle_descriptor, data_input, data_output,
         get_input_coder_impl, cache_token_generator=cache_token_generator)
 
-    bundle_manager = ParallelBundleManager(
+    bundle_manager = BundleManager(
         worker_handler_list, get_buffer, get_input_coder_impl,
         process_bundle_descriptor, self._progress_frequency,
-        num_workers=self._num_workers,
+#        num_workers=self._num_workers,
         cache_token_generator=cache_token_generator)
 
     result, splits = bundle_manager.process_bundle(data_input, data_output)

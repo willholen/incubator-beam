@@ -100,19 +100,19 @@ def run(argv=None, save_main_session=True):
             | 'split' >> (beam.ParDo(WordExtractingDoFn())
                           .with_output_types(unicode))
             | 'pair_with_one' >> beam.Map(lambda x: (x, 1))
-            | 'group' >> beam.GroupByKey()
-            | 'count' >> beam.Map(count_ones))
+)#             | 'group' >> beam.GroupByKey()
+#             | 'count' >> beam.Map(count_ones))
 
   # Format the counts into a PCollection of strings.
   def format_result(word_count):
     (word, count) = word_count
     return '%s: %d' % (word, count)
 
-  output = counts | 'format' >> beam.Map(format_result)
+#  output = counts | 'format' >> beam.Map(format_result)
 
   # Write the output using a "Write" transform that has side effects.
   # pylint: disable=expression-not-assigned
-  output | 'write' >> WriteToText(known_args.output)
+#  output | 'write' >> WriteToText(known_args.output)
 
   result = p.run()
   result.wait_until_finish()
