@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """``PTransforms`` for manipulating files in Apache Beam.
 
 Provides reading ``PTransform``\\s, ``MatchFiles``,
@@ -119,12 +118,10 @@ from apache_beam.utils.annotations import experimental
 if TYPE_CHECKING:
   from apache_beam.transforms.window import BoundedWindow
 
-__all__ = ['EmptyMatchTreatment',
-           'MatchFiles',
-           'MatchAll',
-           'ReadableFile',
-           'ReadMatches']
-
+__all__ = [
+    'EmptyMatchTreatment', 'MatchFiles', 'MatchAll', 'ReadableFile',
+    'ReadMatches'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,11 +158,11 @@ class _MatchAllFn(beam.DoFn):
     match_results = filesystems.FileSystems.match([file_pattern])
     match_result = match_results[0]
 
-    if (not match_result.metadata_list
-        and not EmptyMatchTreatment.allow_empty_match(
-            file_pattern, self._empty_match_treatment)):
-      raise BeamIOError(
-          'Empty match for pattern %s. Disallowed.' % file_pattern)
+    if (not match_result.metadata_list and
+        not EmptyMatchTreatment.allow_empty_match(file_pattern,
+                                                  self._empty_match_treatment)):
+      raise BeamIOError('Empty match for pattern %s. Disallowed.' %
+                        file_pattern)
 
     return match_result.metadata_list
 
@@ -184,9 +181,7 @@ class MatchFiles(beam.PTransform):
     self._empty_match_treatment = empty_match_treatment
 
   def expand(self, pcoll):
-    return (pcoll.pipeline
-            | beam.Create([self._file_pattern])
-            | MatchAll())
+    return (pcoll.pipeline | beam.Create([self._file_pattern]) | MatchAll())
 
 
 @experimental()
@@ -200,8 +195,7 @@ class MatchAll(beam.PTransform):
     self._empty_match_treatment = empty_match_treatment
 
   def expand(self, pcoll):
-    return (pcoll
-            | beam.ParDo(_MatchAllFn(self._empty_match_treatment)))
+    return (pcoll | beam.ParDo(_MatchAllFn(self._empty_match_treatment)))
 
 
 class _ReadMatchesFn(beam.DoFn):
@@ -211,17 +205,15 @@ class _ReadMatchesFn(beam.DoFn):
     self._skip_directories = skip_directories
 
   def process(self, file_metadata):
-    metadata = (filesystem.FileMetadata(file_metadata, 0)
-                if isinstance(file_metadata, (str, unicode))
-                else file_metadata)
+    metadata = (filesystem.FileMetadata(file_metadata, 0) if isinstance(
+        file_metadata, (str, unicode)) else file_metadata)
 
-    if ((metadata.path.endswith('/') or metadata.path.endswith('\\'))
-        and self._skip_directories):
+    if ((metadata.path.endswith('/') or metadata.path.endswith('\\')) and
+        self._skip_directories):
       return
     elif metadata.path.endswith('/') or metadata.path.endswith('\\'):
-      raise BeamIOError(
-          'Directories are not allowed in ReadMatches transform.'
-          'Found %s.' % metadata.path)
+      raise BeamIOError('Directories are not allowed in ReadMatches transform.'
+                        'Found %s.' % metadata.path)
 
     # TODO: Mime type? Other arguments? Maybe arguments passed in to transform?
     yield ReadableFile(metadata, self._compression)
@@ -234,13 +226,9 @@ class ReadableFile(object):
     self.metadata = metadata
     self._compression = compression
 
-  def open(self,
-           mime_type='text/plain',
-           compression_type=None):
-    compression = (
-        compression_type or
-        self._compression or
-        filesystems.CompressionTypes.AUTO)
+  def open(self, mime_type='text/plain', compression_type=None):
+    compression = (compression_type or self._compression or
+                   filesystems.CompressionTypes.AUTO)
     return filesystems.FileSystems.open(self.metadata.path,
                                         mime_type=mime_type,
                                         compression_type=compression)
@@ -263,8 +251,8 @@ class ReadMatches(beam.PTransform):
     self._skip_directories = skip_directories
 
   def expand(self, pcoll):
-    return pcoll | beam.ParDo(_ReadMatchesFn(self._compression,
-                                             self._skip_directories))
+    return pcoll | beam.ParDo(
+        _ReadMatchesFn(self._compression, self._skip_directories))
 
 
 class FileSink(object):
@@ -319,23 +307,24 @@ def prefix_naming(prefix):
   return default_file_naming(prefix)
 
 
-_DEFAULT_FILE_NAME_TEMPLATE = (
-    '{prefix}-{start}-{end}-{pane}-'
-    '{shard:05d}-{total_shards:05d}'
-    '{suffix}{compression}')
+_DEFAULT_FILE_NAME_TEMPLATE = ('{prefix}-{start}-{end}-{pane}-'
+                               '{shard:05d}-{total_shards:05d}'
+                               '{suffix}{compression}')
 
 
 def destination_prefix_naming():
 
   def _inner(window, pane, shard_index, total_shards, compression, destination):
-    kwargs = {'prefix': str(destination),
-              'start': '',
-              'end': '',
-              'pane': '',
-              'shard': 0,
-              'total_shards': 0,
-              'suffix': '',
-              'compression': ''}
+    kwargs = {
+        'prefix': str(destination),
+        'start': '',
+        'end': '',
+        'pane': '',
+        'shard': 0,
+        'total_shards': 0,
+        'suffix': '',
+        'compression': ''
+    }
     if total_shards is not None and shard_index is not None:
       kwargs['shard'] = int(shard_index)
       kwargs['total_shards'] = int(total_shards)
@@ -360,14 +349,16 @@ def destination_prefix_naming():
 def default_file_naming(prefix, suffix=None):
 
   def _inner(window, pane, shard_index, total_shards, compression, destination):
-    kwargs = {'prefix': prefix,
-              'start': '',
-              'end': '',
-              'pane': '',
-              'shard': 0,
-              'total_shards': 0,
-              'suffix': '',
-              'compression': ''}
+    kwargs = {
+        'prefix': prefix,
+        'start': '',
+        'end': '',
+        'pane': '',
+        'shard': 0,
+        'total_shards': 0,
+        'suffix': '',
+        'compression': ''
+    }
     if total_shards is not None and shard_index is not None:
       kwargs['shard'] = int(shard_index)
       kwargs['total_shards'] = int(total_shards)
@@ -391,13 +382,9 @@ def default_file_naming(prefix, suffix=None):
   return _inner
 
 
-_FileResult = collections.namedtuple('FileResult',
-                                     ['file_name',
-                                      'shard_index',
-                                      'total_shards',
-                                      'window',
-                                      'pane',
-                                      'destination'])
+_FileResult = collections.namedtuple('FileResult', [
+    'file_name', 'shard_index', 'total_shards', 'window', 'pane', 'destination'
+])
 
 
 # Adding a class to contain PyDoc.
@@ -453,9 +440,8 @@ class WriteToFiles(beam.PTransform):
       max_writers_per_bundle (int): The number of writers that can be open
         concurrently in a single worker that's processing one bundle.
     """
-    self.path = (
-        path if isinstance(path, ValueProvider) else StaticValueProvider(str,
-                                                                         path))
+    self.path = (path if isinstance(path, ValueProvider) else
+                 StaticValueProvider(str, path))
     self.file_naming_fn = file_naming or default_file_naming('output')
     self.destination_fn = self._get_destination_fn(destination)
     self._temp_directory = temp_directory
@@ -489,52 +475,43 @@ class WriteToFiles(beam.PTransform):
     p = pcoll.pipeline
 
     if not self._temp_directory:
-      temp_location = (
-          p.options.view_as(GoogleCloudOptions).temp_location
-          or self.path.get())
+      temp_location = (p.options.view_as(GoogleCloudOptions).temp_location or
+                       self.path.get())
       dir_uid = str(uuid.uuid4())
       self._temp_directory = StaticValueProvider(
-          str,
-          filesystems.FileSystems.join(temp_location,
-                                       '.temp%s' % dir_uid))
+          str, filesystems.FileSystems.join(temp_location, '.temp%s' % dir_uid))
       _LOGGER.info('Added temporary directory %s', self._temp_directory.get())
 
-    output = (pcoll
-              | beam.ParDo(_WriteUnshardedRecordsFn(
-                  base_path=self._temp_directory,
-                  destination_fn=self.destination_fn,
-                  sink_fn=self.sink_fn,
-                  max_writers_per_bundle=self._max_num_writers_per_bundle))
-              .with_outputs(_WriteUnshardedRecordsFn.SPILLED_RECORDS,
-                            _WriteUnshardedRecordsFn.WRITTEN_FILES))
+    output = (pcoll | beam.ParDo(
+        _WriteUnshardedRecordsFn(base_path=self._temp_directory,
+                                 destination_fn=self.destination_fn,
+                                 sink_fn=self.sink_fn,
+                                 max_writers_per_bundle=self.
+                                 _max_num_writers_per_bundle)).with_outputs(
+                                     _WriteUnshardedRecordsFn.SPILLED_RECORDS,
+                                     _WriteUnshardedRecordsFn.WRITTEN_FILES))
 
     written_files_pc = output[_WriteUnshardedRecordsFn.WRITTEN_FILES]
     spilled_records_pc = output[_WriteUnshardedRecordsFn.SPILLED_RECORDS]
 
     more_written_files_pc = (
-        spilled_records_pc
-        | beam.ParDo(_AppendShardedDestination(self.destination_fn,
-                                               self.shards))
-        | "GroupRecordsByDestinationAndShard" >> beam.GroupByKey()
-        | beam.ParDo(_WriteShardedRecordsFn(self._temp_directory,
-                                            self.sink_fn,
-                                            self.shards))
-    )
+        spilled_records_pc | beam.ParDo(
+            _AppendShardedDestination(self.destination_fn, self.shards)) |
+        "GroupRecordsByDestinationAndShard" >> beam.GroupByKey() | beam.ParDo(
+            _WriteShardedRecordsFn(self._temp_directory, self.sink_fn,
+                                   self.shards)))
 
     files_by_destination_pc = (
-        (written_files_pc, more_written_files_pc)
-        | beam.Flatten()
-        | beam.Map(lambda file_result: (file_result.destination, file_result))
-        | "GroupTempFilesByDestination" >> beam.GroupByKey())
+        (written_files_pc, more_written_files_pc) | beam.Flatten() |
+        beam.Map(lambda file_result: (file_result.destination, file_result)) |
+        "GroupTempFilesByDestination" >> beam.GroupByKey())
 
     # Now we should take the temporary files, and write them to the final
     # destination, with their proper names.
 
-    file_results = (files_by_destination_pc
-                    | beam.ParDo(
-                        _MoveTempFilesIntoFinalDestinationFn(
-                            self.path, self.file_naming_fn,
-                            self._temp_directory)))
+    file_results = (files_by_destination_pc | beam.ParDo(
+        _MoveTempFilesIntoFinalDestinationFn(self.path, self.file_naming_fn,
+                                             self._temp_directory)))
 
     return file_results
 
@@ -560,20 +537,14 @@ class _MoveTempFilesIntoFinalDestinationFn(beam.DoFn):
     self.file_naming_fn = file_naming_fn
     self.temporary_directory = temp_dir
 
-  def process(self,
-              element,
-              w=beam.DoFn.WindowParam):
+  def process(self, element, w=beam.DoFn.WindowParam):
     destination = element[0]
     file_results = list(element[1])
 
     for i, r in enumerate(file_results):
       # TODO(pabloem): Handle compression for files.
-      final_file_name = self.file_naming_fn(r.window,
-                                            r.pane,
-                                            i,
-                                            len(file_results),
-                                            '',
-                                            destination)
+      final_file_name = self.file_naming_fn(r.window, r.pane, i,
+                                            len(file_results), '', destination)
 
       _LOGGER.info('Moving temporary file %s to dir: %s as %s. Res: %s',
                    r.file_name, self.path.get(), final_file_name, r)
@@ -583,30 +554,27 @@ class _MoveTempFilesIntoFinalDestinationFn(beam.DoFn):
 
       # TODO(pabloem): Batch rename requests?
       try:
-        filesystems.FileSystems.rename([r.file_name],
-                                       [final_full_path])
+        filesystems.FileSystems.rename([r.file_name], [final_full_path])
       except BeamIOError:
         # This error is not serious, because it may happen on a retry of the
         # bundle. We simply log it.
-        _LOGGER.debug('File %s failed to be copied. This may be due to a bundle'
-                      ' being retried.', r.file_name)
+        _LOGGER.debug(
+            'File %s failed to be copied. This may be due to a bundle'
+            ' being retried.', r.file_name)
 
-      yield FileResult(final_file_name,
-                       i,
-                       len(file_results),
-                       r.window,
-                       r.pane,
+      yield FileResult(final_file_name, i, len(file_results), r.window, r.pane,
                        destination)
 
-    _LOGGER.info('Cautiously removing temporary files for'
-                 ' destination %s and window %s', destination, w)
+    _LOGGER.info(
+        'Cautiously removing temporary files for'
+        ' destination %s and window %s', destination, w)
     writer_key = (destination, w)
     self._remove_temporary_files(writer_key)
 
   def _remove_temporary_files(self, writer_key):
     try:
-      prefix = filesystems.FileSystems.join(
-          self.temporary_directory.get(), str(abs(hash(writer_key))))
+      prefix = filesystems.FileSystems.join(self.temporary_directory.get(),
+                                            str(abs(hash(writer_key))))
       match_result = filesystems.FileSystems.match(['%s*' % prefix])
       orphaned_files = [m.path for m in match_result[0].metadata_list]
 
@@ -618,11 +586,12 @@ class _MoveTempFilesIntoFinalDestinationFn(beam.DoFn):
 
 class _WriteShardedRecordsFn(beam.DoFn):
 
-  def __init__(self,
-               base_path,
-               sink_fn,  # type: Callable[[Any], FileSink]
-               shards  # type: int
-              ):
+  def __init__(
+      self,
+      base_path,
+      sink_fn,  # type: Callable[[Any], FileSink]
+      shards  # type: int
+  ):
     self.base_path = base_path
     self.sink_fn = sink_fn
     self.shards = shards
@@ -660,10 +629,11 @@ class _WriteShardedRecordsFn(beam.DoFn):
 
 class _AppendShardedDestination(beam.DoFn):
 
-  def __init__(self,
-               destination,  # type: Callable[[Any], str]
-               shards  # type: int
-              ):
+  def __init__(
+      self,
+      destination,  # type: Callable[[Any], str]
+      shards  # type: int
+  ):
     self.destination_fn = destination
     self.shards = shards
 
@@ -672,8 +642,8 @@ class _AppendShardedDestination(beam.DoFn):
         lambda: random.randrange(self.shards))  # type: DefaultDict[str, int]
 
   def _next_shard_for_destination(self, destination):
-    self._shard_counter[destination] = (
-        (self._shard_counter[destination] + 1) % self.shards)
+    self._shard_counter[destination] = ((self._shard_counter[destination] + 1) %
+                                        self.shards)
 
     return self._shard_counter[destination]
 
@@ -746,12 +716,13 @@ class _WriteUnshardedRecordsFn(beam.DoFn):
       sink.flush()
       writer.close()
 
-      file_result = FileResult(self._file_names[key],
-                               shard_index=-1,
-                               total_shards=0,
-                               window=key[1],
-                               pane=None,  # TODO(pabloem): get the pane info
-                               destination=key[0])
+      file_result = FileResult(
+          self._file_names[key],
+          shard_index=-1,
+          total_shards=0,
+          window=key[1],
+          pane=None,  # TODO(pabloem): get the pane info
+          destination=key[0])
 
       yield beam.pvalue.TaggedOutput(
           self.WRITTEN_FILES,

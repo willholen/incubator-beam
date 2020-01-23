@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """The TestStream implementation for the DirectRunner
 
 The DirectRunner implements TestStream as the _TestStream class which is used
@@ -45,6 +44,7 @@ class _WatermarkController(PTransform):
    - If the instance receives an ElementEvent, it emits all specified elements
      to the Global Window with the event time set to the element's timestamp.
   """
+
   def get_windowing(self, _):
     return core.Windowing(window.GlobalWindows())
 
@@ -71,7 +71,9 @@ class _TestStream(PTransform):
   # TestStream.
   WATERMARK_CONTROL_TAG = '_TestStream_Watermark'
 
-  def __init__(self, output_tags, coder=coders.FastPrimitivesCoder(),
+  def __init__(self,
+               output_tags,
+               coder=coders.FastPrimitivesCoder(),
                events=None):
     assert coder is not None
     self.coder = coder
@@ -100,13 +102,17 @@ class _TestStream(PTransform):
     their holds. This is because the calculation of the output watermark is a
     min over all input watermarks.
     """
-    return [WatermarkEvent(timestamp.MAX_TIMESTAMP - timestamp.TIME_GRANULARITY,
-                           _TestStream.WATERMARK_CONTROL_TAG)]
+    return [
+        WatermarkEvent(timestamp.MAX_TIMESTAMP - timestamp.TIME_GRANULARITY,
+                       _TestStream.WATERMARK_CONTROL_TAG)
+    ]
 
   def _test_stream_stop(self):
     """Sentinel value to close the watermark of the TestStream."""
-    return [WatermarkEvent(timestamp.MAX_TIMESTAMP,
-                           _TestStream.WATERMARK_CONTROL_TAG)]
+    return [
+        WatermarkEvent(timestamp.MAX_TIMESTAMP,
+                       _TestStream.WATERMARK_CONTROL_TAG)
+    ]
 
   def _test_stream_init(self):
     """Sentinel value to hold the watermark of the TestStream to -inf.
@@ -114,13 +120,14 @@ class _TestStream(PTransform):
     This sets a hold to ensure that the output watermarks of the output
     PCollections do not advance to +inf before their watermark holds are set.
     """
-    return [WatermarkEvent(timestamp.MIN_TIMESTAMP,
-                           _TestStream.WATERMARK_CONTROL_TAG)]
+    return [
+        WatermarkEvent(timestamp.MIN_TIMESTAMP,
+                       _TestStream.WATERMARK_CONTROL_TAG)
+    ]
 
   def _set_up(self, output_tags):
-    return (self._test_stream_init()
-            + self._watermark_starts(output_tags)
-            + self._test_stream_start())
+    return (self._test_stream_init() + self._watermark_starts(output_tags) +
+            self._test_stream_start())
 
   def _tear_down(self, output_tags):
     return self._watermark_stops(output_tags) + self._test_stream_stop()

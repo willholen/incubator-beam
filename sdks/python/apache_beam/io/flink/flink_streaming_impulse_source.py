@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 A PTransform that provides an unbounded, streaming source of empty byte arrays.
 
@@ -40,8 +39,10 @@ class FlinkStreamingImpulseSource(PTransform):
   config = {}  # type: Dict[str, Any]
 
   def expand(self, pbegin):
-    assert isinstance(pbegin, pvalue.PBegin), (
-        'Input to transform must be a PBegin but found %s' % pbegin)
+    assert isinstance(
+        pbegin,
+        pvalue.PBegin), ('Input to transform must be a PBegin but found %s' %
+                         pbegin)
     return pvalue.PCollection(pbegin.pipeline, is_bounded=False)
 
   def get_windowing(self, inputs):

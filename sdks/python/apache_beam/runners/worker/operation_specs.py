@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Worker utilities for representing MapTasks.
 
 Each MapTask represents a sequence of ParallelInstruction(s): read from a
@@ -57,35 +56,32 @@ def build_worker_instruction(*args):
 
 def worker_printable_fields(workerproto):
   """Returns the interesting fields of a Worker* object."""
-  return ['%s=%s' % (name, value)
-          # _asdict is the only way and cannot subclass this generated class
-          # pylint: disable=protected-access
-          for name, value in workerproto._asdict().items()
-          # want to output value 0 but not None nor []
-          if (value or value == 0)
-          and name not in
-          ('coder', 'coders', 'output_coders',
-           'elements',
-           'combine_fn', 'serialized_fn', 'window_fn',
-           'append_trailing_newlines', 'strip_trailing_newlines',
-           'compression_type', 'context',
-           'start_shuffle_position', 'end_shuffle_position',
-           'shuffle_reader_config', 'shuffle_writer_config')]
+  return [
+      '%s=%s' % (name, value)
+      # _asdict is the only way and cannot subclass this generated class
+      # pylint: disable=protected-access
+      for name, value in workerproto._asdict().items()
+      # want to output value 0 but not None nor []
+      if (value or value == 0) and name not in (
+          'coder', 'coders', 'output_coders', 'elements', 'combine_fn',
+          'serialized_fn', 'window_fn', 'append_trailing_newlines',
+          'strip_trailing_newlines', 'compression_type', 'context',
+          'start_shuffle_position', 'end_shuffle_position',
+          'shuffle_reader_config', 'shuffle_writer_config')
+  ]
 
 
 def worker_object_to_string(worker_object):
   """Returns a string compactly representing a Worker* object."""
-  return '%s(%s)' % (worker_object.__class__.__name__,
-                     ', '.join(worker_printable_fields(worker_object)))
+  return '%s(%s)' % (worker_object.__class__.__name__, ', '.join(
+      worker_printable_fields(worker_object)))
 
 
 # All the following Worker* definitions will have these lint problems:
 # pylint: disable=invalid-name
 # pylint: disable=pointless-string-statement
 
-
-WorkerRead = build_worker_instruction(
-    'WorkerRead', ['source', 'output_coders'])
+WorkerRead = build_worker_instruction('WorkerRead', ['source', 'output_coders'])
 """Worker details needed to read from a source.
 
 Attributes:
@@ -93,9 +89,8 @@ Attributes:
   output_coders: 1-tuple of the coder for the output.
 """
 
-
-WorkerSideInputSource = build_worker_instruction(
-    'WorkerSideInputSource', ['source', 'tag'])
+WorkerSideInputSource = build_worker_instruction('WorkerSideInputSource',
+                                                 ['source', 'tag'])
 """Worker details needed to read from a side input source.
 
 Attributes:
@@ -103,11 +98,11 @@ Attributes:
   tag: string tag for this side input.
 """
 
-
 WorkerGroupingShuffleRead = build_worker_instruction(
-    'WorkerGroupingShuffleRead',
-    ['start_shuffle_position', 'end_shuffle_position',
-     'shuffle_reader_config', 'coder', 'output_coders'])
+    'WorkerGroupingShuffleRead', [
+        'start_shuffle_position', 'end_shuffle_position',
+        'shuffle_reader_config', 'coder', 'output_coders'
+    ])
 """Worker details needed to read from a grouping shuffle source.
 
 Attributes:
@@ -122,11 +117,11 @@ Attributes:
   output_coders: 1-tuple of the coder for the output.
 """
 
-
 WorkerUngroupedShuffleRead = build_worker_instruction(
-    'WorkerUngroupedShuffleRead',
-    ['start_shuffle_position', 'end_shuffle_position',
-     'shuffle_reader_config', 'coder', 'output_coders'])
+    'WorkerUngroupedShuffleRead', [
+        'start_shuffle_position', 'end_shuffle_position',
+        'shuffle_reader_config', 'coder', 'output_coders'
+    ])
 """Worker details needed to read from an ungrouped shuffle source.
 
 Attributes:
@@ -140,9 +135,8 @@ Attributes:
   coder: The value coder used to decode shuffle entries.
 """
 
-
-WorkerWrite = build_worker_instruction(
-    'WorkerWrite', ['sink', 'input', 'output_coders'])
+WorkerWrite = build_worker_instruction('WorkerWrite',
+                                       ['sink', 'input', 'output_coders'])
 """Worker details needed to write to a sink.
 
 Attributes:
@@ -152,7 +146,6 @@ Attributes:
     The output index is 0 except for multi-output operations (like ParDo).
   output_coders: 1-tuple, coder to use to estimate bytes written.
 """
-
 
 WorkerInMemoryWrite = build_worker_instruction(
     'WorkerInMemoryWrite',
@@ -171,7 +164,6 @@ Attributes:
     The output index is 0 except for multi-output operations (like ParDo).
   output_coders: 1-tuple, coder to use to estimate bytes written.
 """
-
 
 WorkerShuffleWrite = build_worker_instruction(
     'WorkerShuffleWrite',
@@ -192,7 +184,6 @@ Attributes:
     shuffle_kind is grouping, this is expected to be a KV coder.
 """
 
-
 WorkerDoFn = build_worker_instruction(
     'WorkerDoFn',
     ['serialized_fn', 'output_tags', 'input', 'side_inputs', 'output_coders'])
@@ -211,10 +202,8 @@ Attributes:
     WorkerInMemoryRead and WorkerTextRead.
 """
 
-
 WorkerReifyTimestampAndWindows = build_worker_instruction(
-    'WorkerReifyTimestampAndWindows',
-    ['output_tags', 'input', 'output_coders'])
+    'WorkerReifyTimestampAndWindows', ['output_tags', 'input', 'output_coders'])
 """Worker details needed to run a WindowInto.
 Attributes:
   output_tags: The string tags used to identify the outputs of a ParDo
@@ -226,11 +215,10 @@ Attributes:
     The output index is 0 except for multi-output operations (like ParDo).
 """
 
-
-WorkerMergeWindows = build_worker_instruction(
-    'WorkerMergeWindows',
-    ['window_fn', 'combine_fn', 'phase', 'output_tags', 'input', 'coders',
-     'context', 'output_coders'])
+WorkerMergeWindows = build_worker_instruction('WorkerMergeWindows', [
+    'window_fn', 'combine_fn', 'phase', 'output_tags', 'input', 'coders',
+    'context', 'output_coders'
+])
 """Worker details needed to run a MergeWindows (aka. GroupAlsoByWindows).
 Attributes:
   window_fn: A serialized Windowing object representing the windowing strategy.
@@ -252,10 +240,8 @@ Attributes:
   context: The ExecutionContext object for the current work item.
 """
 
-
 WorkerCombineFn = build_worker_instruction(
-    'WorkerCombineFn',
-    ['serialized_fn', 'phase', 'input', 'output_coders'])
+    'WorkerCombineFn', ['serialized_fn', 'phase', 'input', 'output_coders'])
 """Worker details needed to run a CombineFn.
 Attributes:
   serialized_fn: A serialized CombineFn object to be used.
@@ -270,10 +256,8 @@ Attributes:
   output_coders: 1-tuple of the coder for the output.
 """
 
-
 WorkerPartialGroupByKey = build_worker_instruction(
-    'WorkerPartialGroupByKey',
-    ['combine_fn', 'input', 'output_coders'])
+    'WorkerPartialGroupByKey', ['combine_fn', 'input', 'output_coders'])
 """Worker details needed to run a partial group-by-key.
 Attributes:
   combine_fn: A serialized CombineFn object to be used.
@@ -283,10 +267,8 @@ Attributes:
   output_coders: 1-tuple of the coder for the output.
 """
 
-
-WorkerFlatten = build_worker_instruction(
-    'WorkerFlatten',
-    ['inputs', 'output_coders'])
+WorkerFlatten = build_worker_instruction('WorkerFlatten',
+                                         ['inputs', 'output_coders'])
 """Worker details needed to run a Flatten.
 Attributes:
   inputs: A list of tuples, each (producer index, output index), representing
@@ -321,7 +303,8 @@ def get_coder_from_spec(coder_spec):
   if coder_spec['@type'] == 'kind:pair':
     assert len(coder_spec['component_encodings']) == 2
     component_coders = [
-        get_coder_from_spec(c) for c in coder_spec['component_encodings']]
+        get_coder_from_spec(c) for c in coder_spec['component_encodings']
+    ]
     return coders.TupleCoder(component_coders)
   elif coder_spec['@type'] == 'kind:stream':
     assert len(coder_spec['component_encodings']) == 1
@@ -330,34 +313,34 @@ def get_coder_from_spec(coder_spec):
   elif coder_spec['@type'] == 'kind:windowed_value':
     assert len(coder_spec['component_encodings']) == 2
     value_coder, window_coder = [
-        get_coder_from_spec(c) for c in coder_spec['component_encodings']]
-    return coders.coders.WindowedValueCoder(
-        value_coder, window_coder=window_coder)
+        get_coder_from_spec(c) for c in coder_spec['component_encodings']
+    ]
+    return coders.coders.WindowedValueCoder(value_coder,
+                                            window_coder=window_coder)
   elif coder_spec['@type'] == 'kind:interval_window':
-    assert ('component_encodings' not in coder_spec
-            or not coder_spec['component_encodings'])
+    assert ('component_encodings' not in coder_spec or
+            not coder_spec['component_encodings'])
     return coders.coders.IntervalWindowCoder()
   elif coder_spec['@type'] == 'kind:global_window':
-    assert ('component_encodings' not in coder_spec
-            or not coder_spec['component_encodings'])
+    assert ('component_encodings' not in coder_spec or
+            not coder_spec['component_encodings'])
     return coders.coders.GlobalWindowCoder()
   elif coder_spec['@type'] == 'kind:varint':
-    assert ('component_encodings' not in coder_spec
-            or len(coder_spec['component_encodings'] == 0))
+    assert ('component_encodings' not in coder_spec or
+            len(coder_spec['component_encodings'] == 0))
     return coders.coders.VarIntCoder()
   elif coder_spec['@type'] == 'kind:length_prefix':
     assert len(coder_spec['component_encodings']) == 1
     return coders.coders.LengthPrefixCoder(
         get_coder_from_spec(coder_spec['component_encodings'][0]))
   elif coder_spec['@type'] == 'kind:bytes':
-    assert ('component_encodings' not in coder_spec
-            or len(coder_spec['component_encodings'] == 0))
+    assert ('component_encodings' not in coder_spec or
+            len(coder_spec['component_encodings'] == 0))
     return coders.BytesCoder()
 
   # We pass coders in the form "<coder_name>$<pickled_data>" to make the job
   # description JSON more readable.
-  return coders.coders.deserialize_coder(
-      coder_spec['@type'].encode('ascii'))
+  return coders.coders.deserialize_coder(coder_spec['@type'].encode('ascii'))
 
 
 class MapTask(object):
@@ -376,7 +359,9 @@ class MapTask(object):
       about a step.
   """
 
-  def __init__(self, operations, stage_name,
+  def __init__(self,
+               operations,
+               stage_name,
                system_names=None,
                step_names=None,
                original_names=None,
@@ -390,10 +375,11 @@ class MapTask(object):
   @staticmethod
   def _make_name_contexts(original_names, user_names, system_names):
     # TODO(BEAM-4028): Remove method once map task relies on name contexts.
-    return [common.DataflowNameContext(step_name, user_name, system_name)
-            for step_name, user_name, system_name in zip(original_names,
-                                                         user_names,
-                                                         system_names)]
+    return [
+        common.DataflowNameContext(step_name, user_name, system_name)
+        for step_name, user_name, system_name in zip(original_names, user_names,
+                                                     system_names)
+    ]
 
   @property
   def system_names(self):

@@ -39,8 +39,8 @@ def check_produce_counts(actual):
 ('winter', ['🍆'])
 [END produce_counts]'''.splitlines()[1:-1]
   # The elements order is non-deterministic, so sort them first.
-  assert_matches_stdout(
-      actual, expected, lambda pair: (pair[0], sorted(pair[1])))
+  assert_matches_stdout(actual, expected, lambda pair:
+                        (pair[0], sorted(pair[1])))
 
 
 @mock.patch('apache_beam.Pipeline', TestPipeline)
@@ -48,6 +48,7 @@ def check_produce_counts(actual):
     'apache_beam.examples.snippets.transforms.aggregation.groupbykey.print',
     str)
 class GroupByKeyTest(unittest.TestCase):
+
   def test_groupbykey(self):
     groupbykey.groupbykey(check_produce_counts)
 

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Module used to define functions and classes used by the coder unit tests."""
 
 # pytype: skip-file
@@ -64,6 +63,7 @@ def create_class(datum):
 
     def get(self):
       return 'Z:%s' % datum
+
   return Z()
 
 

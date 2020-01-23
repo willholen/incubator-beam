@@ -27,6 +27,7 @@ def pardo_dofn(test=None):
   import apache_beam as beam
 
   class SplitWords(beam.DoFn):
+
     def __init__(self, delimiter=','):
       self.delimiter = delimiter
 
@@ -35,15 +36,10 @@ def pardo_dofn(test=None):
         yield word
 
   with beam.Pipeline() as pipeline:
-    plants = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            '🍓Strawberry,🥕Carrot,🍆Eggplant',
-            '🍅Tomato,🥔Potato',
-        ])
-        | 'Split words' >> beam.ParDo(SplitWords(','))
-        | beam.Map(print)
-    )
+    plants = (pipeline | 'Gardening plants' >> beam.Create([
+        '🍓Strawberry,🥕Carrot,🍆Eggplant',
+        '🍅Tomato,🥔Potato',
+    ]) | 'Split words' >> beam.ParDo(SplitWords(',')) | beam.Map(print))
     # [END pardo_dofn]
     if test:
       test(plants)
@@ -55,7 +51,11 @@ def pardo_dofn_params(test=None):
   import apache_beam as beam
 
   class AnalyzeElement(beam.DoFn):
-    def process(self, elem, timestamp=beam.DoFn.TimestampParam, window=beam.DoFn.WindowParam):
+
+    def process(self,
+                elem,
+                timestamp=beam.DoFn.TimestampParam,
+                window=beam.DoFn.WindowParam):
       yield '\n'.join([
           '# timestamp',
           'type(timestamp) -> ' + repr(type(timestamp)),
@@ -65,21 +65,22 @@ def pardo_dofn_params(test=None):
           '',
           '# window',
           'type(window) -> ' + repr(type(window)),
-          'window.start -> {} ({})'.format(window.start, window.start.to_utc_datetime()),
-          'window.end -> {} ({})'.format(window.end, window.end.to_utc_datetime()),
-          'window.max_timestamp() -> {} ({})'.format(window.max_timestamp(), window.max_timestamp().to_utc_datetime()),
+          'window.start -> {} ({})'.format(window.start,
+                                           window.start.to_utc_datetime()),
+          'window.end -> {} ({})'.format(window.end,
+                                         window.end.to_utc_datetime()),
+          'window.max_timestamp() -> {} ({})'.format(
+              window.max_timestamp(),
+              window.max_timestamp().to_utc_datetime()),
       ])
 
   with beam.Pipeline() as pipeline:
     dofn_params = (
-        pipeline
-        | 'Create a single test element' >> beam.Create([':)'])
-        | 'Add timestamp (Spring equinox 2020)' >> beam.Map(
-            lambda elem: beam.window.TimestampedValue(elem, 1584675660))
-        | 'Fixed 30sec windows' >> beam.WindowInto(beam.window.FixedWindows(30))
-        | 'Analyze element' >> beam.ParDo(AnalyzeElement())
-        | beam.Map(print)
-    )
+        pipeline | 'Create a single test element' >> beam.Create([':)']) |
+        'Add timestamp (Spring equinox 2020)' >>
+        beam.Map(lambda elem: beam.window.TimestampedValue(elem, 1584675660)) |
+        'Fixed 30sec windows' >> beam.WindowInto(beam.window.FixedWindows(30)) |
+        'Analyze element' >> beam.ParDo(AnalyzeElement()) | beam.Map(print))
     # [END pardo_dofn_params]
     # pylint: enable=line-too-long
     if test:
@@ -91,6 +92,7 @@ def pardo_dofn_methods(test=None):
   import apache_beam as beam
 
   class DoFnMethods(beam.DoFn):
+
     def __init__(self):
       print('__init__')
       self.window = beam.window.GlobalWindow()
@@ -116,12 +118,9 @@ def pardo_dofn_methods(test=None):
       print('teardown')
 
   with beam.Pipeline() as pipeline:
-    results = (
-        pipeline
-        | 'Create inputs' >> beam.Create(['🍓', '🥕', '🍆', '🍅', '🥔'])
-        | 'DoFn methods' >> beam.ParDo(DoFnMethods())
-        | beam.Map(print)
-    )
+    results = (pipeline |
+               'Create inputs' >> beam.Create(['🍓', '🥕', '🍆', '🍅', '🥔']) |
+               'DoFn methods' >> beam.ParDo(DoFnMethods()) | beam.Map(print))
     # [END pardo_dofn_methods]
     if test:
       return test(results)

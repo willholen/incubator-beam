@@ -35,6 +35,7 @@ from apache_beam.utils import counters
 
 
 class NameTest(unittest.TestCase):
+
   def test_basic_metric_name(self):
     name = MetricName('namespace1', 'name1')
     self.assertEqual(name.namespace, 'namespace1')
@@ -96,7 +97,9 @@ class MetricResultsTest(unittest.TestCase):
 
 
 class MetricsTest(unittest.TestCase):
+
   def test_get_namespace_class(self):
+
     class MyClass(object):
       pass
 
@@ -130,7 +133,8 @@ class MetricsTest(unittest.TestCase):
   def test_create_counter_distribution(self):
     sampler = statesampler.StateSampler('', counters.CounterFactory())
     statesampler.set_current_tracker(sampler)
-    state1 = sampler.scoped_state('mystep', 'myState',
+    state1 = sampler.scoped_state('mystep',
+                                  'myState',
                                   metrics_container=MetricsContainer('mystep'))
 
     try:
@@ -153,12 +157,11 @@ class MetricsTest(unittest.TestCase):
 
         container = MetricsEnvironment.current_container()
         self.assertEqual(
-            container.get_counter(
-                MetricName(counter_ns, name)).get_cumulative(),
-            7)
+            container.get_counter(MetricName(counter_ns,
+                                             name)).get_cumulative(), 7)
         self.assertEqual(
-            container.get_distribution(
-                MetricName(distro_ns, name)).get_cumulative(),
+            container.get_distribution(MetricName(distro_ns,
+                                                  name)).get_cumulative(),
             DistributionData(12, 2, 2, 10))
     finally:
       sampler.stop()

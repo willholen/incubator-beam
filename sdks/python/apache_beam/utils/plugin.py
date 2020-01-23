@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A BeamPlugin base class.
 
 For experimental usage only; no backwards-compatibility guarantees.
@@ -43,6 +42,8 @@ class BeamPlugin(object):
   @classmethod
   def get_all_plugin_paths(cls):
     """Get full import paths of the BeamPlugin subclass."""
+
     def fullname(o):
       return o.__module__ + "." + o.__name__
+
     return [fullname(o) for o in cls.get_all_subclasses()]

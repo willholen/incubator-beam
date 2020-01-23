@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the range_trackers module."""
 
 # pytype: skip-file
@@ -49,8 +48,9 @@ class OffsetRangeTest(unittest.TestCase):
 
   def test_split_respects_min_num_splits(self):
     range = OffsetRange(10, 100)
-    splits = list(range.split(desired_num_offsets_per_split=5,
-                              min_num_offsets_per_split=25))
+    splits = list(
+        range.split(desired_num_offsets_per_split=5,
+                    min_num_offsets_per_split=25))
     self.assertEqual(3, len(splits))
     self.assertIn(OffsetRange(10, 35), splits)
     self.assertIn(OffsetRange(35, 60), splits)

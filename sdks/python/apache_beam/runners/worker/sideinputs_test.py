@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for side input utilities."""
 
 # pytype: skip-file
@@ -80,8 +79,8 @@ class PrefetchingSourceIteratorTest(unittest.TestCase):
     sources = [
         FakeSource([0, 1, 2, 3, 4, 5]),
     ]
-    iterator_fn = sideinputs.get_iterator_fn_for_sources(
-        sources, max_reader_threads=2)
+    iterator_fn = sideinputs.get_iterator_fn_for_sources(sources,
+                                                         max_reader_threads=2)
     assert list(strip_windows(iterator_fn())) == list(range(6))
 
   def test_bytes_read_are_reported(self):
@@ -102,8 +101,8 @@ class PrefetchingSourceIteratorTest(unittest.TestCase):
         FakeSource([]),
         FakeSource([6, 7, 8, 9, 10]),
     ]
-    iterator_fn = sideinputs.get_iterator_fn_for_sources(
-        sources, max_reader_threads=3)
+    iterator_fn = sideinputs.get_iterator_fn_for_sources(sources,
+                                                         max_reader_threads=3)
     assert sorted(strip_windows(iterator_fn())) == list(range(11))
 
   def test_multiple_sources_single_reader_iterator_fn(self):
@@ -113,11 +112,12 @@ class PrefetchingSourceIteratorTest(unittest.TestCase):
         FakeSource([]),
         FakeSource([6, 7, 8, 9, 10]),
     ]
-    iterator_fn = sideinputs.get_iterator_fn_for_sources(
-        sources, max_reader_threads=1)
+    iterator_fn = sideinputs.get_iterator_fn_for_sources(sources,
+                                                         max_reader_threads=1)
     assert list(strip_windows(iterator_fn())) == list(range(11))
 
   def test_source_iterator_single_source_exception(self):
+
     class MyException(Exception):
       pass
 
@@ -136,6 +136,7 @@ class PrefetchingSourceIteratorTest(unittest.TestCase):
     self.assertEqual(sorted(seen), [0])
 
   def test_source_iterator_fn_exception(self):
+
     class MyException(Exception):
       pass
 
@@ -167,9 +168,11 @@ class PrefetchingSourceIteratorTest(unittest.TestCase):
 class EmulatedCollectionsTest(unittest.TestCase):
 
   def test_emulated_iterable(self):
+
     def _iterable_fn():
       for i in range(10):
         yield i
+
     iterable = sideinputs.EmulatedIterable(_iterable_fn)
     # Check that multiple iterations are supported.
     for _ in range(0, 5):
@@ -183,6 +186,7 @@ class EmulatedCollectionsTest(unittest.TestCase):
     def _iterable_fn():
       for i in range(10):
         yield ('%d' % i) * (200 * 1024 * 1024)
+
     iterable = sideinputs.EmulatedIterable(_iterable_fn)
     # Check that multiple iterations are supported.
     for _ in range(0, 3):

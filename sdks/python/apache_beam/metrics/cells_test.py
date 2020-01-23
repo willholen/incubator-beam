@@ -31,6 +31,7 @@ from apache_beam.metrics.cells import GaugeData
 
 
 class TestCounterCell(unittest.TestCase):
+
   @classmethod
   def _modify_counter(cls, d):
     for i in range(cls.NUM_ITERATIONS):
@@ -44,17 +45,15 @@ class TestCounterCell(unittest.TestCase):
     threads = []
     c = CounterCell()
     for _ in range(TestCounterCell.NUM_THREADS):
-      t = threading.Thread(target=TestCounterCell._modify_counter,
-                           args=(c,))
+      t = threading.Thread(target=TestCounterCell._modify_counter, args=(c,))
       threads.append(t)
       t.start()
 
     for t in threads:
       t.join()
 
-    total = (self.NUM_ITERATIONS
-             * (self.NUM_ITERATIONS - 1) // 2
-             * self.NUM_THREADS)
+    total = (self.NUM_ITERATIONS * (self.NUM_ITERATIONS - 1) // 2 *
+             self.NUM_THREADS)
     self.assertEqual(c.get_cumulative(), total)
 
   def test_basic_operations(self):
@@ -73,6 +72,7 @@ class TestCounterCell(unittest.TestCase):
 
 
 class TestDistributionCell(unittest.TestCase):
+
   @classmethod
   def _modify_distribution(cls, d):
     for i in range(cls.NUM_ITERATIONS):
@@ -94,40 +94,35 @@ class TestDistributionCell(unittest.TestCase):
     for t in threads:
       t.join()
 
-    total = (self.NUM_ITERATIONS
-             * (self.NUM_ITERATIONS - 1) // 2
-             * self.NUM_THREADS)
+    total = (self.NUM_ITERATIONS * (self.NUM_ITERATIONS - 1) // 2 *
+             self.NUM_THREADS)
 
     count = (self.NUM_ITERATIONS * self.NUM_THREADS)
 
     self.assertEqual(d.get_cumulative(),
-                     DistributionData(total, count, 0,
-                                      self.NUM_ITERATIONS - 1))
+                     DistributionData(total, count, 0, self.NUM_ITERATIONS - 1))
 
   def test_basic_operations(self):
     d = DistributionCell()
     d.update(10)
-    self.assertEqual(d.get_cumulative(),
-                     DistributionData(10, 1, 10, 10))
+    self.assertEqual(d.get_cumulative(), DistributionData(10, 1, 10, 10))
 
     d.update(2)
-    self.assertEqual(d.get_cumulative(),
-                     DistributionData(12, 2, 2, 10))
+    self.assertEqual(d.get_cumulative(), DistributionData(12, 2, 2, 10))
 
     d.update(900)
-    self.assertEqual(d.get_cumulative(),
-                     DistributionData(912, 3, 2, 900))
+    self.assertEqual(d.get_cumulative(), DistributionData(912, 3, 2, 900))
 
   def test_integer_only(self):
     d = DistributionCell()
     d.update(3.1)
     d.update(3.2)
     d.update(3.3)
-    self.assertEqual(d.get_cumulative(),
-                     DistributionData(9, 3, 3, 3))
+    self.assertEqual(d.get_cumulative(), DistributionData(9, 3, 3, 3))
 
 
 class TestGaugeCell(unittest.TestCase):
+
   def test_basic_operations(self):
     g = GaugeCell()
     g.set(10)

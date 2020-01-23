@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unittest for GCP testing utils."""
 
 # pytype: skip-file
@@ -67,9 +66,7 @@ class UtilsTest(unittest.TestCase):
     mock_client.return_value.dataset.return_value.table.return_value = (
         'table_ref')
 
-    utils.delete_bq_table('unused_project',
-                          'unused_dataset',
-                          'unused_table')
+    utils.delete_bq_table('unused_project', 'unused_dataset', 'unused_table')
     mock_client.return_value.delete_table.assert_called_with('table_ref')
 
   def test_delete_table_fails_not_found(self, mock_client):
@@ -78,9 +75,7 @@ class UtilsTest(unittest.TestCase):
     mock_client.return_value.delete_table.side_effect = gexc.NotFound('test')
 
     with self.assertRaisesRegex(Exception, r'does not exist:.*table_ref'):
-      utils.delete_bq_table('unused_project',
-                            'unused_dataset',
-                            'unused_table')
+      utils.delete_bq_table('unused_project', 'unused_dataset', 'unused_table')
 
 
 @unittest.skipIf(pubsub is None, 'GCP dependencies are not installed')
@@ -101,8 +96,9 @@ class PubSubUtilTest(unittest.TestCase):
     data = b'data'
     attributes = {'key': 'value'}
     message = PubsubMessage(data, attributes)
-    utils.write_to_pubsub(
-        mock_pubsub, topic_path, [message], with_attributes=True)
+    utils.write_to_pubsub(mock_pubsub,
+                          topic_path, [message],
+                          with_attributes=True)
     mock_pubsub.publish.assert_has_calls(
         [mock.call(topic_path, data, **attributes),
          mock.call().result()])
@@ -114,11 +110,10 @@ class PubSubUtilTest(unittest.TestCase):
     topic_path = "project/fakeproj/topics/faketopic"
     data = b'data'
     with mock.patch('apache_beam.io.gcp.tests.utils.time') as mock_time:
-      utils.write_to_pubsub(
-          mock_pubsub,
-          topic_path, [data] * number_of_elements,
-          chunk_size=chunk_size,
-          delay_between_chunks=123)
+      utils.write_to_pubsub(mock_pubsub,
+                            topic_path, [data] * number_of_elements,
+                            chunk_size=chunk_size,
+                            delay_between_chunks=123)
     mock_time.sleep.assert_called_with(123)
     mock_pubsub.publish.assert_has_calls(
         [mock.call(topic_path, data),
@@ -132,8 +127,10 @@ class PubSubUtilTest(unittest.TestCase):
     data_list = [
         'data {}'.format(i).encode("utf-8") for i in range(number_of_elements)
     ]
-    utils.write_to_pubsub(
-        mock_pubsub, topic_path, data_list, chunk_size=chunk_size)
+    utils.write_to_pubsub(mock_pubsub,
+                          topic_path,
+                          data_list,
+                          chunk_size=chunk_size)
     call_list = []
     for start in range(0, number_of_elements, chunk_size):
       # Publish a batch of messages
@@ -155,8 +152,9 @@ class PubSubUtilTest(unittest.TestCase):
     pull_response = test_utils.create_pull_response(
         [test_utils.PullResponseMessage(data, ack_id=ack_id)])
     mock_pubsub.pull.return_value = pull_response
-    output = utils.read_from_pubsub(
-        mock_pubsub, subscription_path, number_of_elements=1)
+    output = utils.read_from_pubsub(mock_pubsub,
+                                    subscription_path,
+                                    number_of_elements=1)
     self.assertEqual([data], output)
     mock_pubsub.acknowledge.assert_called_once_with(subscription_path, [ack_id])
 
@@ -170,11 +168,10 @@ class PubSubUtilTest(unittest.TestCase):
     pull_response = test_utils.create_pull_response(
         [test_utils.PullResponseMessage(data, attributes, ack_id=ack_id)])
     mock_pubsub.pull.return_value = pull_response
-    output = utils.read_from_pubsub(
-        mock_pubsub,
-        subscription_path,
-        with_attributes=True,
-        number_of_elements=1)
+    output = utils.read_from_pubsub(mock_pubsub,
+                                    subscription_path,
+                                    with_attributes=True,
+                                    number_of_elements=1)
     self.assertEqual([message], output)
     mock_pubsub.acknowledge.assert_called_once_with(subscription_path, [ack_id])
 
@@ -203,8 +200,9 @@ class PubSubUtilTest(unittest.TestCase):
           return self.pull_response
 
     mock_pubsub.pull.side_effect = FlakyPullResponse(pull_response)
-    output = utils.read_from_pubsub(
-        mock_pubsub, subscription_path, number_of_elements=number_of_elements)
+    output = utils.read_from_pubsub(mock_pubsub,
+                                    subscription_path,
+                                    number_of_elements=number_of_elements)
     self.assertEqual([data] * number_of_elements, output)
     self._assert_ack_ids_equal(mock_pubsub, [ack_id] * number_of_elements)
 
@@ -245,11 +243,10 @@ class PubSubUtilTest(unittest.TestCase):
 
     mock_pubsub.pull.side_effect = SequentialPullResponse(
         response_messages, response_size)
-    output = utils.read_from_pubsub(
-        mock_pubsub,
-        subscription_path,
-        with_attributes=True,
-        number_of_elements=number_of_elements)
+    output = utils.read_from_pubsub(mock_pubsub,
+                                    subscription_path,
+                                    with_attributes=True,
+                                    number_of_elements=number_of_elements)
     self.assertEqual(messages, output)
     self._assert_ack_ids_equal(mock_pubsub, ack_ids)
 
@@ -259,8 +256,9 @@ class PubSubUtilTest(unittest.TestCase):
     with self.assertRaisesRegex(ValueError, "number_of_elements"):
       utils.read_from_pubsub(sub_client, subscription_path)
     with self.assertRaisesRegex(ValueError, "number_of_elements"):
-      utils.read_from_pubsub(
-          sub_client, subscription_path, with_attributes=True)
+      utils.read_from_pubsub(sub_client,
+                             subscription_path,
+                             with_attributes=True)
 
   def _assert_ack_ids_equal(self, mock_pubsub, ack_ids):
     actual_ack_ids = [

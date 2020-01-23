@@ -16,7 +16,6 @@
 #
 
 # cython: language_level=3
-
 """Python worker logging."""
 
 # pytype: skip-file
@@ -122,11 +121,12 @@ class JsonLogFormatter(logging.Formatter):
     output = {}  # type: Dict[str, Any]
     output['timestamp'] = {
         'seconds': int(record.created),
-        'nanos': int(record.msecs * 1000000)}
+        'nanos': int(record.msecs * 1000000)
+    }
     # ERROR. INFO, DEBUG log levels translate into the same for severity
     # property. WARNING becomes WARN.
-    output['severity'] = (
-        record.levelname if record.levelname != 'WARNING' else 'WARN')
+    output['severity'] = (record.levelname
+                          if record.levelname != 'WARNING' else 'WARN')
 
     # msg could be an arbitrary object, convert it to a string first.
     record_msg = str(record.msg)
@@ -164,8 +164,8 @@ class JsonLogFormatter(logging.Formatter):
     # All logging happens using the root logger. We will add the basename of the
     # file and the function name where the logging happened to make it easier
     # to identify who generated the record.
-    output['logger'] = '%s:%s:%s' % (
-        record.name, record.filename, record.funcName)
+    output['logger'] = '%s:%s:%s' % (record.name, record.filename,
+                                     record.funcName)
     # Add exception information if any is available.
     if record.exc_info:
       output['exception'] = ''.join(

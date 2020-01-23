@@ -54,9 +54,10 @@ def check_plant_details(actual):
 
 
 @mock.patch('apache_beam.Pipeline', TestPipeline)
-@mock.patch(
-    'apache_beam.examples.snippets.transforms.elementwise.map.print', str)
+@mock.patch('apache_beam.examples.snippets.transforms.elementwise.map.print',
+            str)
 class MapTest(unittest.TestCase):
+
   def test_map_simple(self):
     map.map_simple(check_plants)
 

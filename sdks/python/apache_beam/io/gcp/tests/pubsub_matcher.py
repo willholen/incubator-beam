@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """PubSub verifier used for end-to-end test."""
 
 # pytype: skip-file
@@ -30,7 +29,6 @@ from hamcrest.core.base_matcher import BaseMatcher
 from apache_beam.io.gcp.pubsub import PubsubMessage
 
 __all__ = ['PubSubMessageMatcher']
-
 
 # Protect against environments where pubsub library is not available.
 try:
@@ -51,9 +49,14 @@ class PubSubMessageMatcher(BaseMatcher):
   subscription until all expected messages are shown or timeout.
   """
 
-  def __init__(self, project, sub_name, expected_msg=None,
-               expected_msg_len=None, timeout=DEFAULT_TIMEOUT,
-               with_attributes=False, strip_attributes=None):
+  def __init__(self,
+               project,
+               sub_name,
+               expected_msg=None,
+               expected_msg_len=None,
+               timeout=DEFAULT_TIMEOUT,
+               with_attributes=False,
+               strip_attributes=None):
     """Initialize PubSubMessageMatcher object.
 
     Args:
@@ -71,15 +74,15 @@ class PubSubMessageMatcher(BaseMatcher):
         value to prevent a successful match.
     """
     if pubsub is None:
-      raise ImportError(
-          'PubSub dependencies are not installed.')
+      raise ImportError('PubSub dependencies are not installed.')
     if not project:
       raise ValueError('Invalid project %s.' % project)
     if not sub_name:
       raise ValueError('Invalid subscription %s.' % sub_name)
     if not expected_msg_len and not expected_msg:
-      raise ValueError('Required expected_msg: {} or expected_msg_len: {}.'
-                       .format(expected_msg, expected_msg_len))
+      raise ValueError(
+          'Required expected_msg: {} or expected_msg_len: {}.'.format(
+              expected_msg, expected_msg_len))
     if expected_msg and not isinstance(expected_msg, list):
       raise ValueError('Invalid expected messages %s.' % expected_msg)
     if expected_msg_len and not isinstance(expected_msg_len, int):
@@ -141,22 +144,18 @@ class PubSubMessageMatcher(BaseMatcher):
     return total_messages
 
   def describe_to(self, description):
-    description.append_text(
-        'Expected %d messages.' % self.expected_msg_len)
+    description.append_text('Expected %d messages.' % self.expected_msg_len)
 
   def describe_mismatch(self, _, mismatch_description):
     c_expected = Counter(self.expected_msg)
     c_actual = Counter(self.messages)
-    mismatch_description.append_text(
-        "Got %d messages. " % (
-            len(self.messages)))
+    mismatch_description.append_text("Got %d messages. " % (len(self.messages)))
     if self.expected_msg:
-      mismatch_description.append_text(
-          "Diffs (item, count):\n"
-          "  Expected but not in actual: %s\n"
-          "  Unexpected: %s" % (
-              (c_expected - c_actual).items(),
-              (c_actual - c_expected).items()))
+      mismatch_description.append_text("Diffs (item, count):\n"
+                                       "  Expected but not in actual: %s\n"
+                                       "  Unexpected: %s" %
+                                       ((c_expected - c_actual).items(),
+                                        (c_actual - c_expected).items()))
     if self.with_attributes and self.strip_attributes:
-      mismatch_description.append_text(
-          '\n  Stripped attributes: %r' % self.strip_attributes)
+      mismatch_description.append_text('\n  Stripped attributes: %r' %
+                                       self.strip_attributes)

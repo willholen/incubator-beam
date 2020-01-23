@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A job server submitting portable pipelines as uber jars to Spark."""
 
 # pytype: skip-file
@@ -49,10 +48,10 @@ class SparkUberJarJobServer(abstract_job_service.AbstractJobServiceServicer):
   def __init__(self, rest_url, options):
     super(SparkUberJarJobServer, self).__init__()
     self._rest_url = rest_url
-    self._executable_jar = (options.view_as(pipeline_options.SparkRunnerOptions)
-                            .spark_job_server_jar)
-    self._artifact_port = (options.view_as(pipeline_options.JobServerOptions)
-                           .artifact_port)
+    self._executable_jar = (options.view_as(
+        pipeline_options.SparkRunnerOptions).spark_job_server_jar)
+    self._artifact_port = (options.view_as(
+        pipeline_options.JobServerOptions).artifact_port)
     self._temp_dir = tempfile.mkdtemp(prefix='apache-beam-spark')
 
   def start(self):
@@ -62,20 +61,18 @@ class SparkUberJarJobServer(abstract_job_service.AbstractJobServiceServicer):
     pass
 
   def executable_jar(self):
-    url = (self._executable_jar or
-           job_server.JavaJarJobServer.path_to_beam_jar(
-               'runners:spark:job-server:shadowJar'))
+    url = (self._executable_jar or job_server.JavaJarJobServer.path_to_beam_jar(
+        'runners:spark:job-server:shadowJar'))
     return job_server.JavaJarJobServer.local_jar(url)
 
   def create_beam_job(self, job_id, job_name, pipeline, options):
-    return SparkBeamJob(
-        self._rest_url,
-        self.executable_jar(),
-        job_id,
-        job_name,
-        pipeline,
-        options,
-        artifact_port=self._artifact_port)
+    return SparkBeamJob(self._rest_url,
+                        self.executable_jar(),
+                        job_id,
+                        job_name,
+                        pipeline,
+                        options,
+                        artifact_port=self._artifact_port)
 
 
 class SparkBeamJob(abstract_job_service.UberJarBeamJob):
@@ -85,12 +82,20 @@ class SparkBeamJob(abstract_job_service.UberJarBeamJob):
   Note that the Spark Rest API is not enabled by default. It must be enabled by
   setting the configuration property spark.master.rest.enabled to true."""
 
-  def __init__(
-      self, rest_url, executable_jar, job_id, job_name, pipeline, options,
-      artifact_port=0):
-    super(SparkBeamJob, self).__init__(
-        executable_jar, job_id, job_name, pipeline, options,
-        artifact_port=artifact_port)
+  def __init__(self,
+               rest_url,
+               executable_jar,
+               job_id,
+               job_name,
+               pipeline,
+               options,
+               artifact_port=0):
+    super(SparkBeamJob, self).__init__(executable_jar,
+                                       job_id,
+                                       job_name,
+                                       pipeline,
+                                       options,
+                                       artifact_port=artifact_port)
     self._rest_url = rest_url
     # Message history is a superset of state history.
     self._message_history = self._state_history[:]
@@ -168,10 +173,10 @@ class SparkBeamJob(abstract_job_service.UberJarBeamJob):
         fout.write(manifest_contents)
 
     # Upload the jar and start the job.
-    self._spark_submission_id = self.post(
-        'v1/submissions/create',
-        json=self._create_submission_request(self._jar, self._job_name)
-    )['submissionId']
+    self._spark_submission_id = self.post('v1/submissions/create',
+                                          json=self._create_submission_request(
+                                              self._jar,
+                                              self._job_name))['submissionId']
     _LOGGER.info('Submitted Spark job with ID %s' % self._spark_submission_id)
 
   def cancel(self):
@@ -219,14 +224,14 @@ class SparkBeamJob(abstract_job_service.UberJarBeamJob):
       message = None
       if 'message' in response:
         importance = (
-            beam_job_api_pb2.JobMessage.MessageImportance.JOB_MESSAGE_ERROR if
-            state == beam_job_api_pb2.JobState.FAILED else
+            beam_job_api_pb2.JobMessage.MessageImportance.JOB_MESSAGE_ERROR
+            if state == beam_job_api_pb2.JobState.FAILED else
             beam_job_api_pb2.JobMessage.MessageImportance.JOB_MESSAGE_BASIC)
-        message = beam_job_api_pb2.JobMessage(
-            message_id='message%d' % message_ix,
-            time=str(int(timestamp)),
-            importance=importance,
-            message_text=response['message'])
+        message = beam_job_api_pb2.JobMessage(message_id='message%d' %
+                                              message_ix,
+                                              time=str(int(timestamp)),
+                                              importance=importance,
+                                              message_text=response['message'])
         yield message
         message_ix += 1
         # TODO(BEAM-8983) In the event of a failure, query

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """For internal use only; no backwards-compatibility guarantees."""
 
 # pytype: skip-file
@@ -46,10 +45,8 @@ if TYPE_CHECKING:
   from apache_beam.runners.pipeline_context import PipelineContext
 
 T = TypeVar('T')
-ConstructorFn = Callable[
-    [Union['message.Message', bytes],
-     'PipelineContext'],
-    Any]
+ConstructorFn = Callable[[Union['message.Message', bytes], 'PipelineContext'],
+                         Any]
 
 
 class RunnerApiFn(object):
@@ -79,39 +76,43 @@ class RunnerApiFn(object):
 
   @classmethod
   @overload
-  def register_urn(cls,
-                   urn,  # type: str
-                   parameter_type,  # type: Type[T]
-                  ):
+  def register_urn(
+      cls,
+      urn,  # type: str
+      parameter_type,  # type: Type[T]
+  ):
     # type: (...) -> Callable[[Callable[[T, PipelineContext], Any]], Callable[[T, PipelineContext], Any]]
     pass
 
   @classmethod
   @overload
-  def register_urn(cls,
-                   urn,  # type: str
-                   parameter_type,  # type: None
-                  ):
+  def register_urn(
+      cls,
+      urn,  # type: str
+      parameter_type,  # type: None
+  ):
     # type: (...) -> Callable[[Callable[[bytes, PipelineContext], Any]], Callable[[bytes, PipelineContext], Any]]
     pass
 
   @classmethod
   @overload
-  def register_urn(cls,
-                   urn,  # type: str
-                   parameter_type,  # type: Type[T]
-                   fn  # type: Callable[[T, PipelineContext], Any]
-                  ):
+  def register_urn(
+      cls,
+      urn,  # type: str
+      parameter_type,  # type: Type[T]
+      fn  # type: Callable[[T, PipelineContext], Any]
+  ):
     # type: (...) -> None
     pass
 
   @classmethod
   @overload
-  def register_urn(cls,
-                   urn,  # type: str
-                   parameter_type,  # type: None
-                   fn  # type: Callable[[bytes, PipelineContext], Any]
-                  ):
+  def register_urn(
+      cls,
+      urn,  # type: str
+      parameter_type,  # type: None
+      fn  # type: Callable[[bytes, PipelineContext], Any]
+  ):
     # type: (...) -> None
     pass
 
@@ -128,9 +129,11 @@ class RunnerApiFn(object):
     A corresponding to_runner_api_parameter method would be expected that
     returns the tuple ('beam:fn:foo', FooPayload)
     """
+
     def register(fn):
       cls._known_urns[urn] = parameter_type, fn
       return staticmethod(fn)
+
     if fn:
       # Used as a statement.
       register(fn)
@@ -143,12 +146,10 @@ class RunnerApiFn(object):
     """Registers and implements the given urn via pickling.
     """
     inspect.currentframe().f_back.f_locals['to_runner_api_parameter'] = (
-        lambda self, context: (
-            pickle_urn, wrappers_pb2.BytesValue(value=pickler.dumps(self))))
-    cls.register_urn(
-        pickle_urn,
-        wrappers_pb2.BytesValue,
-        lambda proto, unused_context: pickler.loads(proto.value))
+        lambda self, context:
+        (pickle_urn, wrappers_pb2.BytesValue(value=pickler.dumps(self))))
+    cls.register_urn(pickle_urn, wrappers_pb2.BytesValue,
+                     lambda proto, unused_context: pickler.loads(proto.value))
 
   def to_runner_api(self, context):
     # type: (PipelineContext) -> beam_runner_api_pb2.FunctionSpec
@@ -160,8 +161,8 @@ class RunnerApiFn(object):
     urn, typed_param = self.to_runner_api_parameter(context)
     return beam_runner_api_pb2.FunctionSpec(
         urn=urn,
-        payload=typed_param.SerializeToString()
-        if isinstance(typed_param, message.Message) else typed_param)
+        payload=typed_param.SerializeToString() if isinstance(
+            typed_param, message.Message) else typed_param)
 
   @classmethod
   def from_runner_api(cls, fn_proto, context):
@@ -172,5 +173,4 @@ class RunnerApiFn(object):
     """
     parameter_type, constructor = cls._known_urns[fn_proto.urn]
     return constructor(
-        proto_utils.parse_Bytes(fn_proto.payload, parameter_type),
-        context)
+        proto_utils.parse_Bytes(fn_proto.payload, parameter_type), context)

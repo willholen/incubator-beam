@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A runner that allows running of Beam pipelines interactively.
 
 This module is experimental. No backwards-compatibility guarantees.
@@ -39,7 +38,6 @@ from apache_beam.runners.interactive.display import pipeline_graph
 
 # size of PCollection samples cached.
 SAMPLE_SIZE = 8
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,12 +67,11 @@ class InteractiveRunner(runners.PipelineRunner):
           pipeline. Useful if running large pipelines when display is not
           needed.
     """
-    self._underlying_runner = (underlying_runner
-                               or direct_runner.DirectRunner())
+    self._underlying_runner = (underlying_runner or
+                               direct_runner.DirectRunner())
     if not ie.current_env().cache_manager():
       ie.current_env().set_cache_manager(
-          cache.FileBasedCacheManager(cache_dir,
-                                      cache_format))
+          cache.FileBasedCacheManager(cache_dir, cache_format))
     self._cache_manager = ie.current_env().cache_manager()
     self._render_option = render_option
     self._in_session = False
@@ -142,8 +139,7 @@ class InteractiveRunner(runners.PipelineRunner):
 
     pipeline_to_execute = beam.pipeline.Pipeline.from_runner_api(
         pipeline_instrument.instrumented_pipeline_proto(),
-        self._underlying_runner,
-        options)
+        self._underlying_runner, options)
 
     if not self._skip_display:
       a_pipeline_graph = pipeline_graph.PipelineGraph(
@@ -157,10 +153,9 @@ class InteractiveRunner(runners.PipelineRunner):
     # outer scopes are also recommended since the user_pipeline might not be
     # available from within this scope.
     if user_pipeline:
-      ie.current_env().set_pipeline_result(
-          user_pipeline,
-          main_job_result,
-          is_main_job=True)
+      ie.current_env().set_pipeline_result(user_pipeline,
+                                           main_job_result,
+                                           is_main_job=True)
     main_job_result.wait_until_finish()
 
     return main_job_result

@@ -58,7 +58,9 @@ if os.environ.get('LOAD_TEST_ENABLED') == 'true':
 DEFAULT_TIMEOUT = 800
 WAIT_UNTIL_FINISH_DURATION = 1 * 60 * 1000
 
+
 class TestOptions(PipelineOptions):
+
   @classmethod
   def _add_argparse_args(cls, parser):
     parser.add_argument('--test-pipeline-options')

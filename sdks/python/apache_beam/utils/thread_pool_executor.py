@@ -31,6 +31,7 @@ except Exception:  # Python2
 
 
 class _WorkItem(object):
+
   def __init__(self, future, fn, args, kwargs):
     self._future = future
     self._fn = fn
@@ -55,6 +56,7 @@ class _WorkItem(object):
 
 
 class _Worker(threading.Thread):
+
   def __init__(self, idle_worker_queue, permitted_thread_age_in_seconds,
                work_item):
     super(_Worker, self).__init__()
@@ -123,12 +125,13 @@ class _Worker(threading.Thread):
 
 
 class UnboundedThreadPoolExecutor(_base.Executor):
+
   def __init__(self, permitted_thread_age_in_seconds=30):
     self._permitted_thread_age_in_seconds = permitted_thread_age_in_seconds
     self._idle_worker_queue = queue.Queue()
     self._workers = weakref.WeakSet()
     self._shutdown = False
-    self._lock = threading.Lock() # Guards access to _workers and _shutdown
+    self._lock = threading.Lock()  # Guards access to _workers and _shutdown
 
   def submit(self, fn, *args, **kwargs):
     """Attempts to submit the work item.
@@ -150,9 +153,8 @@ class UnboundedThreadPoolExecutor(_base.Executor):
           raise RuntimeError('Cannot schedule new tasks after thread pool '
                              'has been shutdown.')
 
-        worker = _Worker(
-            self._idle_worker_queue, self._permitted_thread_age_in_seconds,
-            work_item)
+        worker = _Worker(self._idle_worker_queue,
+                         self._permitted_thread_age_in_seconds, work_item)
         worker.daemon = True
         worker.start()
         self._workers.add(worker)

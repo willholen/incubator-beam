@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A word-counting workflow."""
 
 # pytype: skip-file
@@ -106,13 +105,13 @@ class ExerciseStreamingMetricsPipelineTest(unittest.TestCase):
     # Checks that pipeline initializes to RUNNING state.
     state_verifier = PipelineStateMatcher(PipelineState.RUNNING)
 
-    extra_opts = {'wait_until_finish_duration': WAIT_UNTIL_FINISH_DURATION,
-                  'on_success_matcher': all_of(state_verifier,
-                                               pubsub_msg_verifier),
-                  'experiment': 'beam_fn_api',
-                  'input_subscription': self.input_sub.name,
-                  'output_topic': self.output_topic.name,
-                 }
+    extra_opts = {
+        'wait_until_finish_duration': WAIT_UNTIL_FINISH_DURATION,
+        'on_success_matcher': all_of(state_verifier, pubsub_msg_verifier),
+        'experiment': 'beam_fn_api',
+        'input_subscription': self.input_sub.name,
+        'output_topic': self.output_topic.name,
+    }
 
     argv = self.test_pipeline.get_full_options_as_args(**extra_opts)
     return dataflow_exercise_streaming_metrics_pipeline.run(argv)
@@ -133,43 +132,41 @@ class ExerciseStreamingMetricsPipelineTest(unittest.TestCase):
         # System metrics
         MetricResultMatcher(
             name='ElementCount',
-            labels={"output_user_name": "generate_metrics-out0",
-                    "original_name": "generate_metrics-out0-ElementCount"},
+            labels={
+                "output_user_name": "generate_metrics-out0",
+                "original_name": "generate_metrics-out0-ElementCount"
+            },
             attempted=len(MESSAGES_TO_PUBLISH),
             committed=len(MESSAGES_TO_PUBLISH),
         ),
         MetricResultMatcher(
             name='ElementCount',
-            labels={"output_user_name": "ReadFromPubSub/Read-out0",
-                    "original_name": "ReadFromPubSub/Read-out0-ElementCount"},
+            labels={
+                "output_user_name": "ReadFromPubSub/Read-out0",
+                "original_name": "ReadFromPubSub/Read-out0-ElementCount"
+            },
             attempted=len(MESSAGES_TO_PUBLISH),
             committed=len(MESSAGES_TO_PUBLISH),
         ),
         # User Counter Metrics.
-        MetricResultMatcher(
-            name='double_msg_counter_name',
-            namespace=METRIC_NAMESPACE,
-            step='generate_metrics',
-            attempted=len(MESSAGES_TO_PUBLISH) * 2,
-            committed=len(MESSAGES_TO_PUBLISH) * 2
-        ),
-        MetricResultMatcher(
-            name='msg_len_dist_metric_name',
-            namespace=METRIC_NAMESPACE,
-            step='generate_metrics',
-            attempted=DistributionMatcher(
-                sum_value=len(''.join(MESSAGES_TO_PUBLISH)),
-                count_value=len(MESSAGES_TO_PUBLISH),
-                min_value=len(MESSAGES_TO_PUBLISH[0]),
-                max_value=len(MESSAGES_TO_PUBLISH[1])
-            ),
-            committed=DistributionMatcher(
-                sum_value=len(''.join(MESSAGES_TO_PUBLISH)),
-                count_value=len(MESSAGES_TO_PUBLISH),
-                min_value=len(MESSAGES_TO_PUBLISH[0]),
-                max_value=len(MESSAGES_TO_PUBLISH[1])
-            )
-        ),
+        MetricResultMatcher(name='double_msg_counter_name',
+                            namespace=METRIC_NAMESPACE,
+                            step='generate_metrics',
+                            attempted=len(MESSAGES_TO_PUBLISH) * 2,
+                            committed=len(MESSAGES_TO_PUBLISH) * 2),
+        MetricResultMatcher(name='msg_len_dist_metric_name',
+                            namespace=METRIC_NAMESPACE,
+                            step='generate_metrics',
+                            attempted=DistributionMatcher(
+                                sum_value=len(''.join(MESSAGES_TO_PUBLISH)),
+                                count_value=len(MESSAGES_TO_PUBLISH),
+                                min_value=len(MESSAGES_TO_PUBLISH[0]),
+                                max_value=len(MESSAGES_TO_PUBLISH[1])),
+                            committed=DistributionMatcher(
+                                sum_value=len(''.join(MESSAGES_TO_PUBLISH)),
+                                count_value=len(MESSAGES_TO_PUBLISH),
+                                min_value=len(MESSAGES_TO_PUBLISH[0]),
+                                max_value=len(MESSAGES_TO_PUBLISH[1]))),
     ]
 
     metrics = result.metrics().all_metrics()

@@ -72,6 +72,7 @@ def check_average(actual):
     'apache_beam.examples.snippets.transforms.aggregation.combineperkey.print',
     str)
 class CombinePerKeyTest(unittest.TestCase):
+
   def test_combineperkey_simple(self):
     combineperkey.combineperkey_simple(check_total)
 

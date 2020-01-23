@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """ConsumerTrackingPipelineVisitor, a PipelineVisitor object."""
 
 # pytype: skip-file
@@ -44,7 +43,8 @@ class ConsumerTrackingPipelineVisitor(PipelineVisitor):
   """
 
   def __init__(self):
-    self.value_to_consumers = {}  # type: Dict[pvalue.PValue, List[AppliedPTransform]]
+    self.value_to_consumers = {
+    }  # type: Dict[pvalue.PValue, List[AppliedPTransform]]
     self.root_transforms = set()  # type: Set[AppliedPTransform]
     self.views = []  # type: List[pvalue.AsSideInput]
     self.step_names = {}  # type: Dict[AppliedPTransform, str]

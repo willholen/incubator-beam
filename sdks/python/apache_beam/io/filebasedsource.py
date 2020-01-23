@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A framework for developing sources for new file types.
 
 To create a source for a new file type a sub-class of :class:`FileBasedSource`
@@ -107,8 +106,8 @@ class FileBasedSource(iobase.BoundedSource):
 
     if not isinstance(file_pattern, ((str, unicode), ValueProvider)):
       raise TypeError('%s: file_pattern must be of type string'
-                      ' or ValueProvider; got %r instead'
-                      % (self.__class__.__name__, file_pattern))
+                      ' or ValueProvider; got %r instead' %
+                      (self.__class__.__name__, file_pattern))
 
     if isinstance(file_pattern, (str, unicode)):
       file_pattern = StaticValueProvider(str, file_pattern)
@@ -125,10 +124,13 @@ class FileBasedSource(iobase.BoundedSource):
       self._validate()
 
   def display_data(self):
-    return {'file_pattern': DisplayDataItem(str(self._pattern),
-                                            label="File Pattern"),
-            'compression': DisplayDataItem(str(self._compression_type),
-                                           label='Compression Type')}
+    return {
+        'file_pattern':
+            DisplayDataItem(str(self._pattern), label="File Pattern"),
+        'compression':
+            DisplayDataItem(str(self._compression_type),
+                            label='Compression Type')
+    }
 
   @check_accessible(['_pattern'])
   def _get_concat_source(self):
@@ -153,13 +155,13 @@ class FileBasedSource(iobase.BoundedSource):
           continue  # Ignoring empty file.
 
         # We determine splittability of this specific file.
-        splittable = (
-            self.splittable and
-            _determine_splittability_from_compression_type(
-                file_name, self._compression_type))
+        splittable = (self.splittable and
+                      _determine_splittability_from_compression_type(
+                          file_name, self._compression_type))
 
         single_file_source = _SingleFileSource(
-            file_based_source_ref, file_name,
+            file_based_source_ref,
+            file_name,
             0,
             file_size,
             min_bundle_size=self._min_bundle_size,
@@ -169,9 +171,9 @@ class FileBasedSource(iobase.BoundedSource):
     return self._concat_source
 
   def open_file(self, file_name):
-    return FileSystems.open(
-        file_name, 'application/octet-stream',
-        compression_type=self._compression_type)
+    return FileSystems.open(file_name,
+                            'application/octet-stream',
+                            compression_type=self._compression_type)
 
   @check_accessible(['_pattern'])
   def _validate(self):
@@ -182,11 +184,12 @@ class FileBasedSource(iobase.BoundedSource):
     # Limit the responses as we only want to check if something exists
     match_result = FileSystems.match([pattern], limits=[1])[0]
     if len(match_result.metadata_list) <= 0:
-      raise IOError(
-          'No files found based on the file pattern %s' % pattern)
+      raise IOError('No files found based on the file pattern %s' % pattern)
 
-  def split(
-      self, desired_bundle_size=None, start_position=None, stop_position=None):
+  def split(self,
+            desired_bundle_size=None,
+            start_position=None,
+            stop_position=None):
     return self._get_concat_source().split(
         desired_bundle_size=desired_bundle_size,
         start_position=start_position,
@@ -229,8 +232,7 @@ class FileBasedSource(iobase.BoundedSource):
     return self._splittable
 
 
-def _determine_splittability_from_compression_type(
-    file_path, compression_type):
+def _determine_splittability_from_compression_type(file_path, compression_type):
   if compression_type == CompressionTypes.AUTO:
     compression_type = CompressionTypes.detect_compression_type(file_path)
 
@@ -240,15 +242,20 @@ def _determine_splittability_from_compression_type(
 class _SingleFileSource(iobase.BoundedSource):
   """Denotes a source for a specific file type."""
 
-  def __init__(self, file_based_source, file_name, start_offset, stop_offset,
-               min_bundle_size=0, splittable=True):
+  def __init__(self,
+               file_based_source,
+               file_name,
+               start_offset,
+               stop_offset,
+               min_bundle_size=0,
+               splittable=True):
     if not isinstance(start_offset, (int, long)):
-      raise TypeError(
-          'start_offset must be a number. Received: %r' % start_offset)
+      raise TypeError('start_offset must be a number. Received: %r' %
+                      start_offset)
     if stop_offset != range_trackers.OffsetRangeTracker.OFFSET_INFINITY:
       if not isinstance(stop_offset, (int, long)):
-        raise TypeError(
-            'stop_offset must be a number. Received: %r' % stop_offset)
+        raise TypeError('stop_offset must be a number. Received: %r' %
+                        stop_offset)
       if start_offset >= stop_offset:
         raise ValueError(
             'start_offset must be smaller than stop_offset. Received %d and %d '
@@ -270,8 +277,9 @@ class _SingleFileSource(iobase.BoundedSource):
       stop_offset = self._stop_offset
 
     if self._splittable:
-      splits = OffsetRange(start_offset, stop_offset).split(
-          desired_bundle_size, self._min_bundle_size)
+      splits = OffsetRange(start_offset,
+                           stop_offset).split(desired_bundle_size,
+                                              self._min_bundle_size)
       for split in splits:
         yield iobase.SourceBundle(
             split.stop - split.start,
@@ -292,17 +300,13 @@ class _SingleFileSource(iobase.BoundedSource):
       # certain unsplittable source, e.g., compressed sources.
       yield iobase.SourceBundle(
           stop_offset - start_offset,
-          _SingleFileSource(
-              self._file_based_source,
-              self._file_name,
-              start_offset,
-              range_trackers.OffsetRangeTracker.OFFSET_INFINITY,
-              min_bundle_size=self._min_bundle_size,
-              splittable=self._splittable
-          ),
-          start_offset,
-          range_trackers.OffsetRangeTracker.OFFSET_INFINITY
-      )
+          _SingleFileSource(self._file_based_source,
+                            self._file_name,
+                            start_offset,
+                            range_trackers.OffsetRangeTracker.OFFSET_INFINITY,
+                            min_bundle_size=self._min_bundle_size,
+                            splittable=self._splittable), start_offset,
+          range_trackers.OffsetRangeTracker.OFFSET_INFINITY)
 
   def estimate_size(self):
     return self._stop_offset - self._start_offset
@@ -315,12 +319,11 @@ class _SingleFileSource(iobase.BoundedSource):
       # offset so that all data of the source gets read. Choosing size of the
       # file as end offset will be wrong for certain unsplittable source, for
       # e.g., compressed sources.
-      stop_position = (
-          self._stop_offset if self._splittable
-          else range_trackers.OffsetRangeTracker.OFFSET_INFINITY)
+      stop_position = (self._stop_offset if self._splittable else
+                       range_trackers.OffsetRangeTracker.OFFSET_INFINITY)
 
-    range_tracker = range_trackers.OffsetRangeTracker(
-        start_position, stop_position)
+    range_tracker = range_trackers.OffsetRangeTracker(start_position,
+                                                      stop_position)
     if not self._splittable:
       range_tracker = range_trackers.UnsplittableRangeTracker(range_tracker)
 
@@ -335,8 +338,8 @@ class _SingleFileSource(iobase.BoundedSource):
 
 class _ExpandIntoRanges(DoFn):
 
-  def __init__(
-      self, splittable, compression_type, desired_bundle_size, min_bundle_size):
+  def __init__(self, splittable, compression_type, desired_bundle_size,
+               min_bundle_size):
     self._desired_bundle_size = desired_bundle_size
     self._min_bundle_size = min_bundle_size
     self._splittable = splittable
@@ -345,19 +348,18 @@ class _ExpandIntoRanges(DoFn):
   def process(self, element, *args, **kwargs):
     match_results = FileSystems.match([element])
     for metadata in match_results[0].metadata_list:
-      splittable = (
-          self._splittable and
-          _determine_splittability_from_compression_type(
-              metadata.path, self._compression_type))
+      splittable = (self._splittable and
+                    _determine_splittability_from_compression_type(
+                        metadata.path, self._compression_type))
 
       if splittable:
-        for split in OffsetRange(
-            0, metadata.size_in_bytes).split(
-                self._desired_bundle_size, self._min_bundle_size):
+        for split in OffsetRange(0, metadata.size_in_bytes).split(
+            self._desired_bundle_size, self._min_bundle_size):
           yield (metadata, split)
       else:
-        yield (metadata, OffsetRange(
-            0, range_trackers.OffsetRangeTracker.OFFSET_INFINITY))
+        yield (metadata,
+               OffsetRange(0,
+                           range_trackers.OffsetRangeTracker.OFFSET_INFINITY))
 
 
 class _ReadRange(DoFn):
@@ -386,13 +388,14 @@ class ReadAllFiles(PTransform):
   read a PCollection of files.
   """
 
-  def __init__(self,
-               splittable,  # type: bool
-               compression_type,
-               desired_bundle_size,  # type: int
-               min_bundle_size,  # type: int
-               source_from_file,  # type: Callable[[str], iobase.BoundedSource]
-              ):
+  def __init__(
+      self,
+      splittable,  # type: bool
+      compression_type,
+      desired_bundle_size,  # type: int
+      min_bundle_size,  # type: int
+      source_from_file,  # type: Callable[[str], iobase.BoundedSource]
+  ):
     """
     Args:
       splittable: If False, files won't be split into sub-ranges. If True,
@@ -420,9 +423,8 @@ class ReadAllFiles(PTransform):
     self._source_from_file = source_from_file
 
   def expand(self, pvalue):
-    return (pvalue
-            | 'ExpandIntoRanges' >> ParDo(_ExpandIntoRanges(
-                self._splittable, self._compression_type,
-                self._desired_bundle_size, self._min_bundle_size))
-            | 'Reshard' >> Reshuffle()
-            | 'ReadRange' >> ParDo(_ReadRange(self._source_from_file)))
+    return (pvalue | 'ExpandIntoRanges' >> ParDo(
+        _ExpandIntoRanges(self._splittable, self._compression_type,
+                          self._desired_bundle_size, self._min_bundle_size)) |
+            'Reshard' >> Reshuffle() |
+            'ReadRange' >> ParDo(_ReadRange(self._source_from_file)))

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Module visualizes PCollection data.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -128,6 +127,7 @@ def visualize(pcoll, dynamic_plotting_interval=None):
     tl = Timeloop()
 
     def dynamic_plotting(pcoll, pv, tl):
+
       @tl.job(interval=timedelta(seconds=dynamic_plotting_interval))
       def continuous_update_display():  # pylint: disable=unused-variable
         # Always creates a new PCollVisualization instance when the
@@ -163,8 +163,9 @@ class PCollectionVisualization(object):
         'use `pip install apache-beam[interactive]` to install necessary '
         'dependencies and make sure that you are executing code in an '
         'interactive environment such as a Jupyter notebook.')
-    assert isinstance(pcoll, pvalue.PCollection), (
-        'pcoll should be apache_beam.pvalue.PCollection')
+    assert isinstance(
+        pcoll,
+        pvalue.PCollection), ('pcoll should be apache_beam.pvalue.PCollection')
     self._pcoll = pcoll
     # This allows us to access cache key and other meta data about the pipeline
     # whether it's the pipeline defined in user code or a copy of that pipeline.
@@ -178,8 +179,8 @@ class PCollectionVisualization(object):
     self._cache_key = self._pin.cache_key(self._pcoll)
     self._dive_display_id = 'facets_dive_{}_{}'.format(self._cache_key,
                                                        id(self))
-    self._overview_display_id = 'facets_overview_{}_{}'.format(self._cache_key,
-                                                               id(self))
+    self._overview_display_id = 'facets_overview_{}_{}'.format(
+        self._cache_key, id(self))
     self._df_display_id = 'df_{}_{}'.format(self._cache_key, id(self))
 
   def display_plain_text(self):
@@ -225,8 +226,7 @@ class PCollectionVisualization(object):
     sprite_size = 32 if len(data.index) > 50000 else 64
     jsonstr = data.to_json(orient='records')
     if update:
-      script = _DIVE_SCRIPT_TEMPLATE.format(display_id=update,
-                                            jsonstr=jsonstr)
+      script = _DIVE_SCRIPT_TEMPLATE.format(display_id=update, jsonstr=jsonstr)
       display_javascript(Javascript(script))
     else:
       html = _DIVE_HTML_TEMPLATE.format(display_id=self._dive_display_id,
@@ -236,41 +236,36 @@ class PCollectionVisualization(object):
 
   def _display_overview(self, data, update=None):
     gfsg = GenericFeatureStatisticsGenerator()
-    proto = gfsg.ProtoFromDataFrames(
-        [{'name': 'data', 'table': data}])
+    proto = gfsg.ProtoFromDataFrames([{'name': 'data', 'table': data}])
     protostr = base64.b64encode(proto.SerializeToString()).decode('utf-8')
     if update:
-      script = _OVERVIEW_SCRIPT_TEMPLATE.format(
-          display_id=update,
-          protostr=protostr)
+      script = _OVERVIEW_SCRIPT_TEMPLATE.format(display_id=update,
+                                                protostr=protostr)
       display_javascript(Javascript(script))
     else:
       html = _OVERVIEW_HTML_TEMPLATE.format(
-          display_id=self._overview_display_id,
-          protostr=protostr)
+          display_id=self._overview_display_id, protostr=protostr)
       display(HTML(html))
 
   def _display_dataframe(self, data, update=None):
     if update:
       table_id = 'table_{}'.format(update)
-      html = _DATAFRAME_PAGINATION_TEMPLATE.format(
-          dataframe_html=data.to_html(notebook=True,
-                                      table_id=table_id),
-          table_id=table_id)
+      html = _DATAFRAME_PAGINATION_TEMPLATE.format(dataframe_html=data.to_html(
+          notebook=True, table_id=table_id),
+                                                   table_id=table_id)
       update_display(HTML(html), display_id=update)
     else:
       table_id = 'table_{}'.format(self._df_display_id)
-      html = _DATAFRAME_PAGINATION_TEMPLATE.format(
-          dataframe_html=data.to_html(notebook=True,
-                                      table_id=table_id),
-          table_id=table_id)
+      html = _DATAFRAME_PAGINATION_TEMPLATE.format(dataframe_html=data.to_html(
+          notebook=True, table_id=table_id),
+                                                   table_id=table_id)
       display(HTML(html), display_id=self._df_display_id)
 
   def _to_element_list(self):
     pcoll_list = []
     if ie.current_env().cache_manager().exists('full', self._cache_key):
-      pcoll_list, _ = ie.current_env().cache_manager().read('full',
-                                                            self._cache_key)
+      pcoll_list, _ = ie.current_env().cache_manager().read(
+          'full', self._cache_key)
     return pcoll_list
 
   def _to_dataframe(self):

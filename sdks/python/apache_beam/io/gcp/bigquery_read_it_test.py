@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for BigQuery sources and sinks."""
 # pytype: skip-file
 
@@ -48,7 +47,6 @@ except ImportError:
   HttpError = None
 # pylint: enable=wrong-import-order, wrong-import-position
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -57,14 +55,17 @@ def skip(runners):
     runners = [runners]
 
   def inner(fn):
+
     @wraps(fn)
     def wrapped(self):
       if self.runner_name in runners:
-        self.skipTest('This test doesn\'t work on these runners: {}'.format(
-            runners))
+        self.skipTest(
+            'This test doesn\'t work on these runners: {}'.format(runners))
       else:
         return fn(self)
+
     return wrapped
+
   return inner
 
 
@@ -79,21 +80,20 @@ class BigQueryReadIntegrationTests(unittest.TestCase):
     cls.project = cls.test_pipeline.get_option('project')
 
     cls.bigquery_client = BigQueryWrapper()
-    cls.dataset_id = '%s%s%d' % (cls.BIG_QUERY_DATASET_ID,
-                                 str(int(time.time())),
-                                 random.randint(0, 10000))
+    cls.dataset_id = '%s%s%d' % (cls.BIG_QUERY_DATASET_ID, str(int(
+        time.time())), random.randint(0, 10000))
     cls.bigquery_client.get_or_create_dataset(cls.project, cls.dataset_id)
-    _LOGGER.info("Created dataset %s in project %s",
-                 cls.dataset_id, cls.project)
+    _LOGGER.info("Created dataset %s in project %s", cls.dataset_id,
+                 cls.project)
 
   @classmethod
   def tearDownClass(cls):
-    request = bigquery.BigqueryDatasetsDeleteRequest(
-        projectId=cls.project, datasetId=cls.dataset_id,
-        deleteContents=True)
+    request = bigquery.BigqueryDatasetsDeleteRequest(projectId=cls.project,
+                                                     datasetId=cls.dataset_id,
+                                                     deleteContents=True)
     try:
-      _LOGGER.info("Deleting dataset %s in project %s",
-                   cls.dataset_id, cls.project)
+      _LOGGER.info("Deleting dataset %s in project %s", cls.dataset_id,
+                   cls.project)
       cls.bigquery_client.client.datasets.Delete(request)
     except HttpError:
       _LOGGER.debug('Failed to clean up dataset %s in project %s',
@@ -101,12 +101,19 @@ class BigQueryReadIntegrationTests(unittest.TestCase):
 
 
 class ReadTests(BigQueryReadIntegrationTests):
-  TABLE_DATA = [
-      {'number': 1, 'str': 'abc'},
-      {'number': 2, 'str': 'def'},
-      {'number': 3, 'str': u'你好'},
-      {'number': 4, 'str': u'привет'}
-  ]
+  TABLE_DATA = [{
+      'number': 1,
+      'str': 'abc'
+  }, {
+      'number': 2,
+      'str': 'def'
+  }, {
+      'number': 3,
+      'str': u'你好'
+  }, {
+      'number': 4,
+      'str': u'привет'
+  }]
 
   @classmethod
   def setUpClass(cls):
@@ -128,24 +135,22 @@ class ReadTests(BigQueryReadIntegrationTests):
     table_field.name = 'str'
     table_field.type = 'STRING'
     table_schema.fields.append(table_field)
-    table = bigquery.Table(
-        tableReference=bigquery.TableReference(
-            projectId=cls.project,
-            datasetId=cls.dataset_id,
-            tableId=table_name),
-        schema=table_schema)
-    request = bigquery.BigqueryTablesInsertRequest(
-        projectId=cls.project, datasetId=cls.dataset_id, table=table)
+    table = bigquery.Table(tableReference=bigquery.TableReference(
+        projectId=cls.project, datasetId=cls.dataset_id, tableId=table_name),
+                           schema=table_schema)
+    request = bigquery.BigqueryTablesInsertRequest(projectId=cls.project,
+                                                   datasetId=cls.dataset_id,
+                                                   table=table)
     cls.bigquery_client.client.tables.Insert(request)
-    cls.bigquery_client.insert_rows(
-        cls.project, cls.dataset_id, table_name, cls.TABLE_DATA)
+    cls.bigquery_client.insert_rows(cls.project, cls.dataset_id, table_name,
+                                    cls.TABLE_DATA)
 
   @skip(['PortableRunner', 'FlinkRunner'])
   @attr('IT')
   def test_native_source(self):
     with beam.Pipeline(argv=self.args) as p:
-      result = (p | 'read' >> beam.io.Read(beam.io.BigQuerySource(
-          query=self.query, use_standard_sql=True)))
+      result = (p | 'read' >> beam.io.Read(
+          beam.io.BigQuerySource(query=self.query, use_standard_sql=True)))
       assert_that(result, equal_to(self.TABLE_DATA))
 
   @attr('IT')
@@ -157,6 +162,7 @@ class ReadTests(BigQueryReadIntegrationTests):
 
 
 class ReadNewTypesTests(BigQueryReadIntegrationTests):
+
   @classmethod
   def setUpClass(cls):
     super(ReadNewTypesTests, cls).setUpClass()
@@ -202,20 +208,22 @@ class ReadNewTypesTests(BigQueryReadIntegrationTests):
     table_field.name = 'geo'
     table_field.type = 'GEOGRAPHY'
     table_schema.fields.append(table_field)
-    table = bigquery.Table(
-        tableReference=bigquery.TableReference(
-            projectId=cls.project,
-            datasetId=cls.dataset_id,
-            tableId=table_name),
-        schema=table_schema)
-    request = bigquery.BigqueryTablesInsertRequest(
-        projectId=cls.project, datasetId=cls.dataset_id, table=table)
+    table = bigquery.Table(tableReference=bigquery.TableReference(
+        projectId=cls.project, datasetId=cls.dataset_id, tableId=table_name),
+                           schema=table_schema)
+    request = bigquery.BigqueryTablesInsertRequest(projectId=cls.project,
+                                                   datasetId=cls.dataset_id,
+                                                   table=table)
     cls.bigquery_client.client.tables.Insert(request)
     row_data = {
-        'float': 0.33, 'numeric': Decimal('10'), 'bytes':
-        base64.b64encode(b'\xab\xac').decode('utf-8'), 'date': '3000-12-31',
-        'time': '23:59:59', 'datetime': '2018-12-31T12:44:31',
-        'timestamp': '2018-12-31 12:44:31.744957 UTC', 'geo': 'POINT(30 10)'
+        'float': 0.33,
+        'numeric': Decimal('10'),
+        'bytes': base64.b64encode(b'\xab\xac').decode('utf-8'),
+        'date': '3000-12-31',
+        'time': '23:59:59',
+        'datetime': '2018-12-31T12:44:31',
+        'timestamp': '2018-12-31 12:44:31.744957 UTC',
+        'geo': 'POINT(30 10)'
     }
 
     table_data = [row_data]
@@ -223,15 +231,19 @@ class ReadNewTypesTests(BigQueryReadIntegrationTests):
     for key, value in iteritems(row_data):
       table_data.append({key: value})
 
-    cls.bigquery_client.insert_rows(
-        cls.project, cls.dataset_id, table_name, table_data)
+    cls.bigquery_client.insert_rows(cls.project, cls.dataset_id, table_name,
+                                    table_data)
 
   def get_expected_data(self):
     expected_row = {
-        'float': 0.33, 'numeric': Decimal('10'), 'bytes':
-        base64.b64encode(b'\xab\xac'), 'date': '3000-12-31',
-        'time': '23:59:59', 'datetime': '2018-12-31T12:44:31',
-        'timestamp': '2018-12-31 12:44:31.744957 UTC', 'geo': 'POINT(30 10)'
+        'float': 0.33,
+        'numeric': Decimal('10'),
+        'bytes': base64.b64encode(b'\xab\xac'),
+        'date': '3000-12-31',
+        'time': '23:59:59',
+        'datetime': '2018-12-31T12:44:31',
+        'timestamp': '2018-12-31 12:44:31.744957 UTC',
+        'geo': 'POINT(30 10)'
     }
 
     expected_data = [expected_row]
@@ -248,8 +260,8 @@ class ReadNewTypesTests(BigQueryReadIntegrationTests):
   @attr('IT')
   def test_native_source(self):
     with beam.Pipeline(argv=self.args) as p:
-      result = (p | 'read' >> beam.io.Read(beam.io.BigQuerySource(
-          query=self.query, use_standard_sql=True)))
+      result = (p | 'read' >> beam.io.Read(
+          beam.io.BigQuerySource(query=self.query, use_standard_sql=True)))
       assert_that(result, equal_to(self.get_expected_data()))
 
   @attr('IT')

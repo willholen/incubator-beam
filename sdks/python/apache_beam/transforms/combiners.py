@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A library of basic combiner PTransform subclasses."""
 
 # pytype: skip-file
@@ -50,15 +49,7 @@ from apache_beam.typehints import with_output_types
 from apache_beam.utils.timestamp import Duration
 from apache_beam.utils.timestamp import Timestamp
 
-__all__ = [
-    'Count',
-    'Mean',
-    'Sample',
-    'Top',
-    'ToDict',
-    'ToList',
-    'Latest'
-    ]
+__all__ = ['Count', 'Mean', 'Sample', 'Top', 'ToDict', 'ToList', 'Latest']
 
 # Type variables
 T = TypeVar('T')
@@ -136,11 +127,10 @@ class Count(object):
     def expand(self, pcoll):
       paired_with_void_type = typehints.Tuple[pcoll.element_type, Any]
       output_type = typehints.KV[pcoll.element_type, int]
-      return (pcoll
-              | ('%s:PairWithVoid' % self.label >> core.Map(lambda x: (x, None))
-                 .with_output_types(paired_with_void_type))
-              | core.CombinePerKey(CountCombineFn())
-              .with_output_types(output_type))
+      return (pcoll | ('%s:PairWithVoid' % self.label >> core.Map(
+          lambda x: (x, None)).with_output_types(paired_with_void_type)) |
+              core.CombinePerKey(
+                  CountCombineFn()).with_output_types(output_type))
 
 
 @with_input_types(Any)
@@ -166,6 +156,7 @@ class CountCombineFn(core.CombineFn):
 
 class Top(object):
   """Combiners for obtaining extremal elements."""
+
   # pylint: disable=no-self-argument
 
   class Of(ptransform.PTransform):
@@ -216,8 +207,8 @@ class Top(object):
       """
       unknown_kwargs = set(kwargs.keys()) - set(['key', 'reverse'])
       if unknown_kwargs:
-        raise ValueError(
-            'Unknown keyword arguments: ' + ', '.join(unknown_kwargs))
+        raise ValueError('Unknown keyword arguments: ' +
+                         ', '.join(unknown_kwargs))
       self._py2__init__(n, None, **kwargs)
 
     # Python 3 sort does not accept a comparison operator, and nor do we.
@@ -233,8 +224,7 @@ class Top(object):
 
     def expand(self, pcoll):
       compare = self._compare
-      if (not self._args and not self._kwargs and
-          pcoll.windowing.is_default()):
+      if (not self._args and not self._kwargs and pcoll.windowing.is_default()):
         if self._reverse:
           if compare is None or compare is operator.lt:
             compare = operator.gt
@@ -248,10 +238,9 @@ class Top(object):
         # won't be empty, so inject at least one empty accumulator
         # so that downstream is guerenteed to produce non-empty output.
         empty_bundle = pcoll.pipeline | core.Create([(None, [])])
-        return (
-            (top_per_bundle, empty_bundle) | core.Flatten()
-            | core.GroupByKey()
-            | core.ParDo(_MergeTopPerBundle(self._n, compare, self._key)))
+        return ((top_per_bundle, empty_bundle) | core.Flatten() |
+                core.GroupByKey() |
+                core.ParDo(_MergeTopPerBundle(self._n, compare, self._key)))
       else:
         return pcoll | core.CombineGlobally(
             TopCombineFn(self._n, compare, self._key, self._reverse),
@@ -265,6 +254,7 @@ class Top(object):
     "greatest" is determined by the comparator function supplied as the compare
     argument in the initializer.
     """
+
     def _py2__init__(self, n, compare=None, *args, **kwargs):
       """Initializer.
 
@@ -305,8 +295,8 @@ class Top(object):
       """
       unknown_kwargs = set(kwargs.keys()) - set(['key', 'reverse'])
       if unknown_kwargs:
-        raise ValueError(
-            'Unknown keyword arguments: ' + ', '.join(unknown_kwargs))
+        raise ValueError('Unknown keyword arguments: ' +
+                         ', '.join(unknown_kwargs))
       self._py2__init__(n, None, **kwargs)
 
     # Python 3 sort does not accept a comparison operator, and nor do we.
@@ -362,6 +352,7 @@ class Top(object):
 @with_input_types(T)
 @with_output_types(Tuple[None, List[T]])
 class _TopPerBundle(core.DoFn):
+
   def __init__(self, n, less_than, key):
     self._n = n
     self._less_than = None if less_than is operator.le else less_than
@@ -372,8 +363,8 @@ class _TopPerBundle(core.DoFn):
 
   def process(self, element):
     if self._less_than or self._key:
-      element = cy_combiners.ComparableValue(
-          element, self._less_than, self._key)
+      element = cy_combiners.ComparableValue(element, self._less_than,
+                                             self._key)
     if len(self._heap) < self._n:
       heapq.heappush(self._heap, element)
     else:
@@ -391,13 +382,13 @@ class _TopPerBundle(core.DoFn):
       yield window.GlobalWindows.windowed_value(
           (None, [wrapper.value for wrapper in self._heap]))
     else:
-      yield window.GlobalWindows.windowed_value(
-          (None, self._heap))
+      yield window.GlobalWindows.windowed_value((None, self._heap))
 
 
 @with_input_types(Tuple[None, Iterable[List[T]]])
 @with_output_types(List[T])
 class _MergeTopPerBundle(core.DoFn):
+
   def __init__(self, n, less_than, key):
     self._n = n
     self._less_than = None if less_than is operator.lt else less_than
@@ -424,11 +415,14 @@ class _MergeTopPerBundle(core.DoFn):
         if not heapc:
           heapc = [
               cy_combiners.ComparableValue(element, self._less_than, self._key)
-              for element in bundle]
+              for element in bundle
+          ]
           continue
         for element in reversed(bundle):
-          if push(heapc, cy_combiners.ComparableValue(
-              element, self._less_than, self._key)):
+          if push(
+              heapc,
+              cy_combiners.ComparableValue(element, self._less_than,
+                                           self._key)):
             break
       heapc.sort()
       yield [wrapper.value for wrapper in reversed(heapc)]
@@ -474,10 +468,9 @@ class TopCombineFn(core.CombineFn):
       reverse = not reverse
 
     if compare:
-      self._compare = (
-          (lambda a, b, *args, **kwargs: not compare(a, b, *args, **kwargs))
-          if reverse
-          else compare)
+      self._compare = ((
+          lambda a, b, *args, **kwargs: not compare(a, b, *args, **kwargs))
+                       if reverse else compare)
     else:
       self._compare = operator.gt if reverse else operator.lt
 
@@ -507,11 +500,14 @@ class TopCombineFn(core.CombineFn):
       return heap
 
   def display_data(self):
-    return {'n': self._n,
-            'compare': DisplayDataItem(self._compare.__name__
-                                       if hasattr(self._compare, '__name__')
-                                       else self._compare.__class__.__name__)
-                       .drop_if_none()}
+    return {
+        'n':
+            self._n,
+        'compare':
+            DisplayDataItem(self._compare.__name__ if hasattr(
+                self._compare, '__name__') else self._compare.__class__.__name__
+                           ).drop_if_none()
+    }
 
   # The accumulator type is a tuple
   # (bool, Union[List[T], List[ComparableValue[T]])
@@ -541,9 +537,8 @@ class TopCombineFn(core.CombineFn):
     else:
       assert not holds_comparables
 
-    comparable = (
-        cy_combiners.ComparableValue(element, self._less_than, self._key)
-        if holds_comparables else element)
+    comparable = (cy_combiners.ComparableValue(
+        element, self._less_than, self._key) if holds_comparables else element)
 
     if len(heap) < self._n:
       heapq.heappush(heap, comparable)
@@ -612,6 +607,7 @@ class TopCombineFn(core.CombineFn):
 
 
 class Largest(TopCombineFn):
+
   def default_label(self):
     return 'Largest(%s)' % self._n
 
@@ -627,6 +623,7 @@ class Smallest(TopCombineFn):
 
 class Sample(object):
   """Combiners for sampling n elements without replacement."""
+
   # pylint: disable=no-self-argument
 
   class FixedSizeGlobally(ptransform.PTransform):
@@ -700,23 +697,27 @@ class _TupleCombineFnBase(core.CombineFn):
     self._named_combiners = combiners
 
   def display_data(self):
-    combiners = [c.__name__ if hasattr(c, '__name__') else c.__class__.__name__
-                 for c in self._named_combiners]
+    combiners = [
+        c.__name__ if hasattr(c, '__name__') else c.__class__.__name__
+        for c in self._named_combiners
+    ]
     return {'combiners': str(combiners)}
 
   def create_accumulator(self):
     return [c.create_accumulator() for c in self._combiners]
 
   def merge_accumulators(self, accumulators):
-    return [c.merge_accumulators(a)
-            for c, a in zip(self._combiners, zip(*accumulators))]
+    return [
+        c.merge_accumulators(a)
+        for c, a in zip(self._combiners, zip(*accumulators))
+    ]
 
   def compact(self, accumulator):
     return [c.compact(a) for c, a in zip(self._combiners, accumulator)]
 
   def extract_output(self, accumulator):
-    return tuple([c.extract_output(a)
-                  for c, a in zip(self._combiners, accumulator)])
+    return tuple(
+        [c.extract_output(a) for c, a in zip(self._combiners, accumulator)])
 
 
 class TupleCombineFn(_TupleCombineFnBase):
@@ -728,8 +729,10 @@ class TupleCombineFn(_TupleCombineFnBase):
   """
 
   def add_input(self, accumulator, element):
-    return [c.add_input(a, e)
-            for c, a, e in zip(self._combiners, accumulator, element)]
+    return [
+        c.add_input(a, e)
+        for c, a, e in zip(self._combiners, accumulator, element)
+    ]
 
   def with_common_input(self):
     return SingleInputTupleCombineFn(*self._combiners)
@@ -744,8 +747,9 @@ class SingleInputTupleCombineFn(_TupleCombineFnBase):
   """
 
   def add_input(self, accumulator, element):
-    return [c.add_input(a, element)
-            for c, a in zip(self._combiners, accumulator)]
+    return [
+        c.add_input(a, element) for c, a in zip(self._combiners, accumulator)
+    ]
 
 
 class ToList(ptransform.PTransform):
@@ -871,8 +875,8 @@ class PhasedCombineFnExecutor(object):
     return self.combine_fn.apply(elements)
 
   def add_only(self, elements):
-    return self.combine_fn.add_inputs(
-        self.combine_fn.create_accumulator(), elements)
+    return self.combine_fn.add_inputs(self.combine_fn.create_accumulator(),
+                                      elements)
 
   def merge_only(self, accumulators):
     return self.combine_fn.merge_accumulators(accumulators)
@@ -895,9 +899,8 @@ class Latest(object):
       return [(element, timestamp)]
 
     def expand(self, pcoll):
-      return (pcoll
-              | core.ParDo(self.add_timestamp)
-              .with_output_types(Tuple[T, TimestampType])  # type: ignore[misc]
+      return (pcoll | core.ParDo(self.add_timestamp).with_output_types(
+          Tuple[T, TimestampType])  # type: ignore[misc]
               | core.CombineGlobally(LatestCombineFn()))
 
   @with_input_types(Tuple[K, V])
@@ -912,9 +915,8 @@ class Latest(object):
       return [(key, (value, timestamp))]
 
     def expand(self, pcoll):
-      return (pcoll
-              | core.ParDo(self.add_timestamp)
-              .with_output_types(Tuple[K, Tuple[T, TimestampType]])  # type: ignore[misc]
+      return (pcoll | core.ParDo(self.add_timestamp).with_output_types(
+          Tuple[K, Tuple[T, TimestampType]])  # type: ignore[misc]
               | core.CombinePerKey(LatestCombineFn()))
 
 

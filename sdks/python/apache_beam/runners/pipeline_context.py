@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Utility class for serializing pipelines via the runner API.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -54,12 +53,14 @@ class _PipelineContextMap(object):
   Under the hood it encodes and decodes these objects into runner API
   representations.
   """
-  def __init__(self,
-               context,
-               obj_type,
-               namespace,  # type: str
-               proto_map=None  # type: Optional[Mapping[str, message.Message]]
-              ):
+
+  def __init__(
+      self,
+      context,
+      obj_type,
+      namespace,  # type: str
+      proto_map=None  # type: Optional[Mapping[str, message.Message]]
+  ):
     self._pipeline_context = context
     self._obj_type = obj_type
     self._namespace = namespace
@@ -71,11 +72,8 @@ class _PipelineContextMap(object):
   def _unique_ref(self, obj=None, label=None):
     # type: (Optional[Any], Optional[str]) -> str
     self._counter += 1
-    return "%s_%s_%s_%d" % (
-        self._namespace,
-        self._obj_type.__name__,
-        label or type(obj).__name__,
-        self._counter)
+    return "%s_%s_%s_%d" % (self._namespace, self._obj_type.__name__, label or
+                            type(obj).__name__, self._counter)
 
   def populate_map(self, proto_map):
     # type: (Mapping[str, message.Message]) -> None
@@ -136,15 +134,15 @@ class PipelineContext(object):
   Used for accessing and constructing the referenced objects of a Pipeline.
   """
 
-  def __init__(self,
-               proto=None,  # type: Optional[Union[beam_runner_api_pb2.Components, beam_fn_api_pb2.ProcessBundleDescriptor]]
-               default_environment=None,  # type: Optional[environments.Environment]
-               use_fake_coders=False,
-               iterable_state_read=None,  # type: Optional[IterableStateReader]
-               iterable_state_write=None,  # type: Optional[IterableStateWriter]
-               namespace='ref',
-               allow_proto_holders=False
-              ):
+  def __init__(
+      self,
+      proto=None,  # type: Optional[Union[beam_runner_api_pb2.Components, beam_fn_api_pb2.ProcessBundleDescriptor]]
+      default_environment=None,  # type: Optional[environments.Environment]
+      use_fake_coders=False,
+      iterable_state_read=None,  # type: Optional[IterableStateReader]
+      iterable_state_write=None,  # type: Optional[IterableStateWriter]
+      namespace='ref',
+      allow_proto_holders=False):
     if isinstance(proto, beam_fn_api_pb2.ProcessBundleDescriptor):
       proto = beam_runner_api_pb2.Components(
           coders=dict(proto.coders.items()),
@@ -169,7 +167,8 @@ class PipelineContext(object):
 
     if default_environment:
       self._default_environment_id = self.environments.get_id(
-          default_environment, label='default_environment')  # type: Optional[str]
+          default_environment,
+          label='default_environment')  # type: Optional[str]
     else:
       self._default_environment_id = None
     self.use_fake_coders = use_fake_coders

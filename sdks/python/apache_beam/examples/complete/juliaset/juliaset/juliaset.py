@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A Julia set computing workflow: https://en.wikipedia.org/wiki/Julia_set.
 
 We use the quadratic polinomial f(z) = z*z + c, with c = -.62772 +.42193i
@@ -50,15 +49,14 @@ def get_julia_set_point_color(element, c, n, max_iterations):
 
 def generate_julia_set_colors(pipeline, c, n, max_iterations):
   """Compute julia set coordinates for each point in our set."""
+
   def point_set(n):
     for x in range(n):
       for y in range(n):
         yield (x, y)
 
-  julia_set_colors = (pipeline
-                      | 'add points' >> beam.Create(point_set(n))
-                      | beam.Map(
-                          get_julia_set_point_color, c, n, max_iterations))
+  julia_set_colors = (pipeline | 'add points' >> beam.Create(point_set(n)) |
+                      beam.Map(get_julia_set_point_color, c, n, max_iterations))
 
   return julia_set_colors
 
@@ -115,12 +113,11 @@ def run(argv=None):  # pylint: disable=missing-docstring
     # Group each coordinate triplet by its x value, then write the coordinates
     # to the output file with an x-coordinate grouping per line.
     # pylint: disable=expression-not-assigned
-    (coordinates
-     | 'x coord key' >> beam.Map(x_coord_key)
-     | 'x coord' >> beam.GroupByKey()
-     | 'format' >> beam.Map(
-         lambda k_coords: ' '.join('(%s, %s, %s)' % c for c in k_coords[1]))
-     | WriteToText(known_args.coordinate_output))
+    (coordinates | 'x coord key' >> beam.Map(x_coord_key) |
+     'x coord' >> beam.GroupByKey() |
+     'format' >> beam.Map(lambda k_coords: ' '.join('(%s, %s, %s)' % c
+                                                    for c in k_coords[1])) |
+     WriteToText(known_args.coordinate_output))
 
     # Optionally render the image and save it to a file.
     # TODO(silviuc): Add this functionality.

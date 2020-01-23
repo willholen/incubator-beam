@@ -144,8 +144,8 @@ class StagerTest(unittest.TestCase):
             )
 
       assert package_file, 'Pip fake does not support the command: ' + str(args)
-      self.create_temp_file(
-          FileSystems.join(args[5], package_file), 'Package content.')
+      self.create_temp_file(FileSystems.join(args[5], package_file),
+                            'Package content.')
 
     return pip_fake
 
@@ -201,8 +201,8 @@ class StagerTest(unittest.TestCase):
     options.view_as(SetupOptions).requirements_cache = requirements_cache_dir
     options.view_as(SetupOptions).requirements_file = os.path.join(
         source_dir, stager.REQUIREMENTS_FILE)
-    self.create_temp_file(
-        os.path.join(source_dir, stager.REQUIREMENTS_FILE), 'nothing')
+    self.create_temp_file(os.path.join(source_dir, stager.REQUIREMENTS_FILE),
+                          'nothing')
     self.assertEqual(
         sorted([stager.REQUIREMENTS_FILE, 'abc.txt', 'def.txt']),
         sorted(
@@ -239,8 +239,8 @@ class StagerTest(unittest.TestCase):
     options.view_as(SetupOptions).requirements_file = os.path.join(
         source_dir, stager.REQUIREMENTS_FILE)
     options.view_as(SetupOptions).requirements_cache = self.make_temp_dir()
-    self.create_temp_file(
-        os.path.join(source_dir, stager.REQUIREMENTS_FILE), 'nothing')
+    self.create_temp_file(os.path.join(source_dir, stager.REQUIREMENTS_FILE),
+                          'nothing')
     self.assertEqual(
         sorted([stager.REQUIREMENTS_FILE, 'abc.txt', 'def.txt']),
         sorted(
@@ -304,8 +304,8 @@ class StagerTest(unittest.TestCase):
 
     options = PipelineOptions()
     self.update_options(options)
-    options.view_as(SetupOptions).setup_file = (
-        os.path.join(source_dir, 'xyz-setup.py'))
+    options.view_as(SetupOptions).setup_file = (os.path.join(
+        source_dir, 'xyz-setup.py'))
 
     self.create_temp_file(os.path.join(source_dir, 'xyz-setup.py'), 'notused')
     with self.assertRaises(RuntimeError) as cm:
@@ -489,8 +489,8 @@ class StagerTest(unittest.TestCase):
     self.create_temp_file(os.path.join(source_dir, 'xyz.tar.gz'), 'nothing')
     self.create_temp_file(os.path.join(source_dir, 'xyz2.tar'), 'nothing')
     self.create_temp_file(os.path.join(source_dir, 'whl.whl'), 'nothing')
-    self.create_temp_file(
-        os.path.join(source_dir, stager.EXTRA_PACKAGES_FILE), 'nothing')
+    self.create_temp_file(os.path.join(source_dir, stager.EXTRA_PACKAGES_FILE),
+                          'nothing')
 
     options = PipelineOptions()
     self.update_options(options)
@@ -512,15 +512,16 @@ class StagerTest(unittest.TestCase):
         self.assertEqual([
             'abc.tar.gz', 'xyz.tar.gz', 'xyz2.tar', 'whl.whl',
             'remote_file.tar.gz', stager.EXTRA_PACKAGES_FILE
-        ], self.stager.stage_job_resources(
-            options, staging_location=staging_dir)[1])
+        ],
+                         self.stager.stage_job_resources(
+                             options, staging_location=staging_dir)[1])
     with open(os.path.join(staging_dir, stager.EXTRA_PACKAGES_FILE)) as f:
       self.assertEqual([
           'abc.tar.gz\n', 'xyz.tar.gz\n', 'xyz2.tar\n', 'whl.whl\n',
           'remote_file.tar.gz\n'
       ], f.readlines())
-    self.assertEqual(
-        ['/tmp/remote/remote_file.tar.gz'], self.remote_copied_files)
+    self.assertEqual(['/tmp/remote/remote_file.tar.gz'],
+                     self.remote_copied_files)
 
   def test_with_extra_packages_missing_files(self):
     staging_dir = self.make_temp_dir()
@@ -577,7 +578,7 @@ class StagerTest(unittest.TestCase):
       options = PipelineOptions()
       self.update_options(options)
       options.view_as(DebugOptions).experiments = [
-          'jar_packages='+os.path.join(source_dir, 'abc.tgz')
+          'jar_packages=' + os.path.join(source_dir, 'abc.tgz')
       ]
       self.stager.stage_job_resources(options, staging_location=staging_dir)
     self.assertEqual(
@@ -595,12 +596,10 @@ class StagerTest(unittest.TestCase):
     options = PipelineOptions()
     self.update_options(options)
     options.view_as(DebugOptions).experiments = [
-        'jar_packages=%s,%s,%s,%s' % (
-            os.path.join(source_dir, 'abc.jar'),
-            os.path.join(source_dir, 'xyz.jar'),
-            os.path.join(source_dir, 'ijk.jar'),
-            '/tmp/remote/remote.jar'
-        )
+        'jar_packages=%s,%s,%s,%s' %
+        (os.path.join(source_dir, 'abc.jar'), os.path.join(
+            source_dir, 'xyz.jar'), os.path.join(
+                source_dir, 'ijk.jar'), '/tmp/remote/remote.jar')
     ]
 
     self.remote_copied_files = []
@@ -611,10 +610,9 @@ class StagerTest(unittest.TestCase):
       with mock.patch(
           'apache_beam.runners.portability.stager_test'
           '.stager.Stager._is_remote_path', staticmethod(self.is_remote_path)):
-        self.assertEqual([
-            'abc.jar', 'xyz.jar', 'ijk.jar', 'remote.jar'
-        ], self.stager.stage_job_resources(
-            options, staging_location=staging_dir)[1])
+        self.assertEqual(['abc.jar', 'xyz.jar', 'ijk.jar', 'remote.jar'],
+                         self.stager.stage_job_resources(
+                             options, staging_location=staging_dir)[1])
     self.assertEqual(['/tmp/remote/remote.jar'], self.remote_copied_files)
 
 

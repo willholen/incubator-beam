@@ -127,7 +127,10 @@ class S3FileSystem(FileSystem):
     except Exception as e:  # pylint: disable=broad-except
       raise BeamIOError("List operation failed", {dir_or_prefix: e})
 
-  def _path_open(self, path, mode, mime_type='application/octet-stream',
+  def _path_open(self,
+                 path,
+                 mode,
+                 mime_type='application/octet-stream',
                  compression_type=CompressionTypes.AUTO):
     """Helper functions to open a file in the provided mode.
     """
@@ -138,7 +141,9 @@ class S3FileSystem(FileSystem):
       return raw_file
     return CompressedFile(raw_file, compression_type=compression_type)
 
-  def create(self, path, mime_type='application/octet-stream',
+  def create(self,
+             path,
+             mime_type='application/octet-stream',
              compression_type=CompressionTypes.AUTO):
     """Returns a write channel for the given file path.
 
@@ -151,7 +156,9 @@ class S3FileSystem(FileSystem):
     """
     return self._path_open(path, 'wb', mime_type, compression_type)
 
-  def open(self, path, mime_type='application/octet-stream',
+  def open(self,
+           path,
+           mime_type='application/octet-stream',
            compression_type=CompressionTypes.AUTO):
     """Returns a read channel for the given file path.
 
@@ -196,7 +203,8 @@ class S3FileSystem(FileSystem):
       raise BeamIOError(message)
     src_dest_pairs = list(zip(source_file_names, destination_file_names))
     results = s3io.S3IO().rename_files(src_dest_pairs)
-    exceptions = {(src, dest): error for (src, dest, error) in results
+    exceptions = {(src, dest): error
+                  for (src, dest, error) in results
                   if error is not None}
     if exceptions:
       raise BeamIOError("Rename operation failed", exceptions)
@@ -271,7 +279,8 @@ class S3FileSystem(FileSystem):
       paths: list of paths that give the file objects to be deleted
     """
     results = s3io.S3IO().delete_paths(paths)
-    exceptions = {path: error for (path, error) in results.items()
-                  if error is not None}
+    exceptions = {
+        path: error for (path, error) in results.items() if error is not None
+    }
     if exceptions:
       raise BeamIOError("Delete operation failed", exceptions)

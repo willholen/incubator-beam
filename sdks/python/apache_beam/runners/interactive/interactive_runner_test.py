@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for google3.pipeline.dataflow.python.interactive.interactive_runner.
 
 This module is experimental. No backwards-compatibility guarantees.
@@ -36,6 +35,7 @@ from apache_beam.runners.interactive import interactive_runner
 
 
 def print_with_message(msg):
+
   def printer(elem):
     print(msg, elem)
     return elem
@@ -49,14 +49,12 @@ class InteractiveRunnerTest(unittest.TestCase):
     ie.new_env()
 
   def test_basic(self):
-    p = beam.Pipeline(
-        runner=interactive_runner.InteractiveRunner(
-            direct_runner.DirectRunner()))
+    p = beam.Pipeline(runner=interactive_runner.InteractiveRunner(
+        direct_runner.DirectRunner()))
     ib.watch({'p': p})
     p.run().wait_until_finish()
-    pc0 = (
-        p | 'read' >> beam.Create([1, 2, 3])
-        | 'Print1.1' >> beam.Map(print_with_message('Run1.1')))
+    pc0 = (p | 'read' >> beam.Create([1, 2, 3]) |
+           'Print1.1' >> beam.Map(print_with_message('Run1.1')))
     pc = pc0 | 'Print1.2' >> beam.Map(print_with_message('Run1.2'))
     ib.watch(locals())
     p.run().wait_until_finish()
@@ -66,6 +64,7 @@ class InteractiveRunnerTest(unittest.TestCase):
     p.run().wait_until_finish()
 
   def test_wordcount(self):
+
     class WordExtractingDoFn(beam.DoFn):
 
       def process(self, element):
@@ -73,18 +72,16 @@ class InteractiveRunnerTest(unittest.TestCase):
         words = text_line.split()
         return words
 
-    p = beam.Pipeline(
-        runner=interactive_runner.InteractiveRunner(
-            direct_runner.DirectRunner()))
+    p = beam.Pipeline(runner=interactive_runner.InteractiveRunner(
+        direct_runner.DirectRunner()))
 
     # Count the occurrences of each word.
     counts = (
-        p
-        | beam.Create(['to be or not to be that is the question'])
-        | 'split' >> beam.ParDo(WordExtractingDoFn())
-        | 'pair_with_one' >> beam.Map(lambda x: (x, 1))
-        | 'group' >> beam.GroupByKey()
-        | 'count' >> beam.Map(lambda wordones: (wordones[0], sum(wordones[1]))))
+        p | beam.Create(['to be or not to be that is the question']) |
+        'split' >> beam.ParDo(WordExtractingDoFn()) |
+        'pair_with_one' >> beam.Map(lambda x: (x, 1)) |
+        'group' >> beam.GroupByKey() |
+        'count' >> beam.Map(lambda wordones: (wordones[0], sum(wordones[1]))))
 
     # Watch the local scope for Interactive Beam so that counts will be cached.
     ib.watch(locals())
@@ -106,7 +103,9 @@ class InteractiveRunnerTest(unittest.TestCase):
         })
 
   def test_session(self):
+
     class MockPipelineRunner(object):
+
       def __init__(self):
         self._in_session = False
 

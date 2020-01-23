@@ -29,7 +29,9 @@ if sys.version_info[0] == 3:
     import email.generator as email_generator
 
     class _WrapperNamespace(object):
+
       class BytesGenerator(email_generator.BytesGenerator):
+
         def _write_lines(self, lines):
           self.write(lines)
 

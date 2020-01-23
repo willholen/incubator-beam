@@ -70,7 +70,6 @@ from apache_beam.utils.annotations import experimental
 
 _LOGGER = logging.getLogger(__name__)
 
-
 try:
   # Mongodb has its own bundled bson, which is not compatible with bson pakcage.
   # (https://github.com/py-bson/bson/issues/82). Try to import objectid and if
@@ -142,6 +141,7 @@ class ReadFromMongoDB(PTransform):
 
 
 class _BoundedMongoSource(iobase.BoundedSource):
+
   def __init__(self,
                uri=None,
                db=None,
@@ -197,8 +197,9 @@ class _BoundedMongoSource(iobase.BoundedSource):
   def read(self, range_tracker):
     with MongoClient(self.uri, **self.spec) as client:
       all_filters = self._merge_id_filter(range_tracker)
-      docs_cursor = client[self.db][self.coll].find(filter=all_filters).sort(
-          [('_id', ASCENDING)])
+      docs_cursor = client[self.db][self.coll].find(filter=all_filters).sort([
+          ('_id', ASCENDING)
+      ])
       for doc in docs_cursor:
         if not range_tracker.try_claim(doc['_id']):
           return
@@ -425,6 +426,7 @@ class WriteToMongoDB(PTransform):
 
 
 class _GenerateObjectIdFn(DoFn):
+
   def process(self, element, *args, **kwargs):
     # if _id field already exist we keep it as it is, otherwise the ptransform
     # generates a new _id field to achieve idempotent write to mongodb.
@@ -441,6 +443,7 @@ class _GenerateObjectIdFn(DoFn):
 
 
 class _WriteMongoFn(DoFn):
+
   def __init__(self,
                uri=None,
                db=None,
@@ -482,6 +485,7 @@ class _WriteMongoFn(DoFn):
 
 
 class _MongoSink(object):
+
   def __init__(self, uri=None, db=None, coll=None, extra_params=None):
     if extra_params is None:
       extra_params = {}

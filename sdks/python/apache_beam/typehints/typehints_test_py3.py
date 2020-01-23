@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the type-hint objects and decorators with Python 3 syntax not
 supported by 2.7."""
 
@@ -34,17 +33,22 @@ decorators._enable_from_callable = True
 
 
 class TestParDoAnnotations(unittest.TestCase):
+
   def test_with_side_input(self):
+
     class MyDoFn(DoFn):
       def process(self, element: float, side_input: str) -> \
           Iterable[KV[str, float]]:
         pass
+
     th = MyDoFn().get_type_hints()
     self.assertEqual(th.input_types, ((float, str), {}))
     self.assertEqual(th.output_types, ((KV[str, float],), {}))
 
   def test_pep484_annotations(self):
+
     class MyDoFn(DoFn):
+
       def process(self, element: int) -> Iterable[str]:
         pass
 

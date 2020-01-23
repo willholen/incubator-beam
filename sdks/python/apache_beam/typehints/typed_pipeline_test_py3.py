@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for type-hint objects and decorators - Python 3 syntax specific.
 """
 
@@ -34,7 +33,9 @@ decorators._enable_from_callable = True
 class MainInputTest(unittest.TestCase):
 
   def test_typed_dofn_method(self):
+
     class MyDoFn(beam.DoFn):
+
       def process(self, element: int) -> typehints.Tuple[str]:
         return tuple(str(element))
 
@@ -54,6 +55,7 @@ class MainInputTest(unittest.TestCase):
     @typehints.with_input_types(typehints.Tuple[int, int])
     @typehints.with_output_types(int)
     class MyDoFn(beam.DoFn):
+
       def process(self, element: int) -> typehints.Tuple[str]:
         yield element[0]
 
@@ -77,6 +79,7 @@ class MainInputTest(unittest.TestCase):
       def process(self, element: typehints.Tuple[int, int]) -> \
           typehints.List[int]:
         return [str(element)]
+
     my_do_fn = MyDoFn().with_input_types(int).with_output_types(str)
 
     result = [1, 2, 3] | beam.ParDo(my_do_fn)
@@ -97,6 +100,7 @@ class MainInputTest(unittest.TestCase):
     @typehints.with_output_types(typehints.Generator[int])
     def do_fn(element: typehints.Tuple[int, int]) -> typehints.Generator[str]:
       yield str(element)
+
     pardo = beam.ParDo(do_fn).with_input_types(int).with_output_types(str)
 
     result = [1, 2, 3] | pardo
@@ -119,7 +123,9 @@ class MainInputTest(unittest.TestCase):
     self.assertEqual([['1', '1'], ['2', '2']], sorted(result))
 
   def test_typed_dofn_method_not_iterable(self):
+
     class MyDoFn(beam.DoFn):
+
       def process(self, element: int) -> str:
         return str(element)
 
@@ -127,19 +133,23 @@ class MainInputTest(unittest.TestCase):
       _ = [1, 2, 3] | beam.ParDo(MyDoFn())
 
   def test_typed_callable_not_iterable(self):
+
     def do_fn(element: int) -> int:
       return [element]  # Return a list to not fail the pipeline.
+
     with self.assertLogs() as cm:
       _ = [1, 2, 3] | beam.ParDo(do_fn)
     self.assertRegex(''.join(cm.output), r'int.*is not iterable')
 
   def test_typed_dofn_kwonly(self):
+
     class MyDoFn(beam.DoFn):
       # TODO(BEAM-5878): A kwonly argument like
       #   timestamp=beam.DoFn.TimestampParam would not work here.
       def process(self, element: int, *, side_input: str) -> \
           typehints.Generator[typehints.Optional[int]]:
         yield str(element) if side_input else None
+
     my_do_fn = MyDoFn()
 
     result = [1, 2, 3] | beam.ParDo(my_do_fn, side_input='abc')
@@ -150,10 +160,12 @@ class MainInputTest(unittest.TestCase):
       _ = [1, 2, 3] | beam.ParDo(my_do_fn, side_input=1)
 
   def test_typed_dofn_var_kwargs(self):
+
     class MyDoFn(beam.DoFn):
       def process(self, element: int, **side_inputs: typehints.Dict[str, str]) \
           -> typehints.Generator[typehints.Optional[int]]:
         yield str(element) if side_inputs else None
+
     my_do_fn = MyDoFn()
 
     result = [1, 2, 3] | beam.ParDo(my_do_fn, foo='abc', bar='def')
@@ -164,6 +176,7 @@ class MainInputTest(unittest.TestCase):
       _ = [1, 2, 3] | beam.ParDo(my_do_fn, a=1)
 
   def test_typed_callable_string_literals(self):
+
     def do_fn(element: 'int') -> 'typehints.List[str]':
       return [[str(element)] * 2]
 
@@ -171,7 +184,9 @@ class MainInputTest(unittest.TestCase):
     self.assertEqual([['1', '1'], ['2', '2']], sorted(result))
 
   def test_typed_dofn_string_literals(self):
+
     class MyDoFn(beam.DoFn):
+
       def process(self, element: 'int') -> 'typehints.List[str]':
         return [[str(element)] * 2]
 
@@ -182,7 +197,9 @@ class MainInputTest(unittest.TestCase):
 class AnnotationsTest(unittest.TestCase):
 
   def test_pardo_dofn(self):
+
     class MyDoFn(beam.DoFn):
+
       def process(self, element: int) -> typehints.Generator[str]:
         yield str(element)
 
@@ -191,7 +208,9 @@ class AnnotationsTest(unittest.TestCase):
     self.assertEqual(th.output_types, ((str,), {}))
 
   def test_pardo_dofn_not_iterable(self):
+
     class MyDoFn(beam.DoFn):
+
       def process(self, element: int) -> str:
         return str(element)
 
@@ -199,6 +218,7 @@ class AnnotationsTest(unittest.TestCase):
       _ = beam.ParDo(MyDoFn()).get_type_hints()
 
   def test_pardo_wrapper(self):
+
     def do_fn(element: int) -> typehints.Iterable[str]:
       return [str(element)]
 
@@ -217,6 +237,7 @@ class AnnotationsTest(unittest.TestCase):
     self.assertEqual(th.output_types, ((typehints.Tuple[str, int],), {}))
 
   def test_pardo_wrapper_not_iterable(self):
+
     def do_fn(element: int) -> str:
       return str(element)
 
@@ -225,6 +246,7 @@ class AnnotationsTest(unittest.TestCase):
     self.assertRegex(''.join(cm.output), r'do_fn.* not iterable')
 
   def test_flat_map_wrapper(self):
+
     def map_fn(element: int) -> typehints.Iterable[int]:
       return [element, element + 1]
 
@@ -243,6 +265,7 @@ class AnnotationsTest(unittest.TestCase):
     self.assertEqual(th.output_types, ((str,), {}))
 
   def test_map_wrapper(self):
+
     def map_fn(unused_element: int) -> int:
       return 1
 
@@ -261,6 +284,7 @@ class AnnotationsTest(unittest.TestCase):
     self.assertEqual(th.output_types, ((str,), {}))
 
   def test_filter_wrapper(self):
+
     def filter_fn(element: int) -> bool:
       return bool(element % 2)
 

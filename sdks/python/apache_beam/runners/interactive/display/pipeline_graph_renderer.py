@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """For rendering pipeline graph in HTML-compatible format.
 
 This module is experimental. No backwards-compatibility guarantees.
@@ -41,7 +40,8 @@ if TYPE_CHECKING:
   from apache_beam.runners.interactive.display.pipeline_graph import PipelineGraph
 
 
-class PipelineGraphRenderer(with_metaclass(abc.ABCMeta, BeamPlugin)):  # type: ignore[misc]
+class PipelineGraphRenderer(with_metaclass(abc.ABCMeta,
+                                           BeamPlugin)):  # type: ignore[misc]
   """Abstract class for renderers, who decide how pipeline graphs are rendered.
   """
 
@@ -134,12 +134,13 @@ def get_renderer(option=None):
     else:
       option = 'text'
 
-  renderer = [r for r in PipelineGraphRenderer.get_all_subclasses()
-              if option == r.option()]
+  renderer = [
+      r for r in PipelineGraphRenderer.get_all_subclasses()
+      if option == r.option()
+  ]
   if len(renderer) == 0:
     raise ValueError()
   elif len(renderer) == 1:
     return renderer[0]()
   else:
-    raise ValueError('Found more than one renderer for option: %s',
-                     option)
+    raise ValueError('Found more than one renderer for option: %s', option)

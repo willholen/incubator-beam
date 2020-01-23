@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """FileSystems interface class for accessing the correct filesystem"""
 
 # pytype: skip-file
@@ -58,7 +57,6 @@ try:
 except ImportError:
   pass
 
-
 # pylint: enable=wrong-import-position, unused-import
 
 __all__ = ['FileSystems']
@@ -95,8 +93,10 @@ class FileSystems(object):
     """
     try:
       path_scheme = FileSystems.get_scheme(path)
-      systems = [fs for fs in FileSystem.get_all_subclasses()
-                 if fs.scheme() == path_scheme]
+      systems = [
+          fs for fs in FileSystem.get_all_subclasses()
+          if fs.scheme() == path_scheme
+      ]
       if len(systems) == 0:
         raise ValueError(
             'Unable to get filesystem from specified path, please use the '
@@ -200,7 +200,8 @@ class FileSystems(object):
     return filesystem.match(patterns, limits)
 
   @staticmethod
-  def create(path, mime_type='application/octet-stream',
+  def create(path,
+             mime_type='application/octet-stream',
              compression_type=CompressionTypes.AUTO):
     # type: (...) -> BinaryIO
     """Returns a write channel for the given file path.
@@ -217,7 +218,8 @@ class FileSystems(object):
     return filesystem.create(path, mime_type, compression_type)
 
   @staticmethod
-  def open(path, mime_type='application/octet-stream',
+  def open(path,
+           mime_type='application/octet-stream',
            compression_type=CompressionTypes.AUTO):
     # type: (...) -> BinaryIO
     """Returns a read channel for the given file path.

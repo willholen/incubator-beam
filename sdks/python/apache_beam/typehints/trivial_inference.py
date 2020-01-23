@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Trivial type inference for simple functions.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -39,9 +38,9 @@ from apache_beam.typehints import Any
 from apache_beam.typehints import typehints
 
 # pylint: disable=wrong-import-order, wrong-import-position, ungrouped-imports
-try:                  # Python 2
+try:  # Python 2
   import __builtin__ as builtins
-except ImportError:   # Python 3
+except ImportError:  # Python 3
   import builtins  # type: ignore
 # pylint: enable=wrong-import-order, wrong-import-position, ungrouped-imports
 
@@ -68,24 +67,23 @@ def instance_to_type(o):
     return typehints.Tuple[[instance_to_type(item) for item in o]]
   elif t == list:
     if len(o) > 0:
-      return typehints.List[
-          typehints.Union[[instance_to_type(item) for item in o]]
-      ]
+      return typehints.List[typehints.Union[[
+          instance_to_type(item) for item in o
+      ]]]
     else:
       return typehints.List[typehints.Any]
   elif t == set:
     if len(o) > 0:
-      return typehints.Set[
-          typehints.Union[[instance_to_type(item) for item in o]]
-      ]
+      return typehints.Set[typehints.Union[[
+          instance_to_type(item) for item in o
+      ]]]
     else:
       return typehints.Set[typehints.Any]
   elif t == dict:
     if len(o) > 0:
       return typehints.Dict[
           typehints.Union[[instance_to_type(k) for k, v in o.items()]],
-          typehints.Union[[instance_to_type(v) for k, v in o.items()]],
-      ]
+          typehints.Union[[instance_to_type(v) for k, v in o.items()]],]
     else:
       return typehints.Dict[typehints.Any, typehints.Any]
   else:
@@ -187,8 +185,8 @@ class FrameState(object):
       return other.copy()
     elif other is None:
       return self.copy()
-    return FrameState(self.f, union_list(self.vars, other.vars), union_list(
-        self.stack, other.stack))
+    return FrameState(self.f, union_list(self.vars, other.vars),
+                      union_list(self.stack, other.stack))
 
   def __ror__(self, left):
     return self | left
@@ -215,6 +213,7 @@ def union(a, b):
 
 def finalize_hints(type_hint):
   """Sets type hint for empty data structures to Any."""
+
   def visitor(tc, unused_arg):
     if isinstance(tc, typehints.DictConstraint):
       empty_union = typehints.Union[()]
@@ -243,13 +242,16 @@ def key_value_types(kv_type):
   """
   # TODO(robertwb): Unions of tuples, etc.
   # TODO(robertwb): Assert?
-  if (isinstance(kv_type, typehints.TupleHint.TupleConstraint)
-      and len(kv_type.tuple_types) == 2):
+  if (isinstance(kv_type, typehints.TupleHint.TupleConstraint) and
+      len(kv_type.tuple_types) == 2):
     return kv_type.tuple_types
   return Any, Any
 
 
-known_return_types = {len: int, hash: int,}
+known_return_types = {
+    len: int,
+    hash: int,
+}
 
 
 class BoundMethod(object):
@@ -356,8 +358,8 @@ def infer_return_type_func(f, input_types, debug=False, depth=0):
   yields = set()
   returns = set()
   # TODO(robertwb): Default args via inspect module.
-  local_vars = list(input_types) + [typehints.Union[()]] * (len(co.co_varnames)
-                                                            - len(input_types))
+  local_vars = list(input_types) + [typehints.Union[
+      ()]] * (len(co.co_varnames) - len(input_types))
   state = FrameState(f, local_vars)
   states = collections.defaultdict(lambda: None)
   jumps = collections.defaultdict(int)

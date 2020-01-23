@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Module to convert Python's native typing types to Beam types."""
 
 # pytype: skip-file
@@ -37,8 +36,8 @@ _LOGGER = logging.getLogger(__name__)
 # should trigger.
 # arity is the expected arity of the user type. -1 means it's variadic.
 # beam_type is the Beam type the user type should map to.
-_TypeMapEntry = collections.namedtuple(
-    '_TypeMapEntry', ['match', 'arity', 'beam_type'])
+_TypeMapEntry = collections.namedtuple('_TypeMapEntry',
+                                       ['match', 'arity', 'beam_type'])
 
 
 def _get_compatible_args(typ):
@@ -222,44 +221,37 @@ def convert_to_beam_type(typ):
     return typ
 
   type_map = [
-      _TypeMapEntry(
-          match=_match_same_type(typing.Any),
-          arity=0,
-          beam_type=typehints.Any),
-      _TypeMapEntry(
-          match=_match_issubclass(typing.Dict),
-          arity=2,
-          beam_type=typehints.Dict),
-      _TypeMapEntry(
-          match=_match_is_exactly_iterable,
-          arity=1,
-          beam_type=typehints.Iterable),
-      _TypeMapEntry(
-          match=_match_issubclass(typing.List),
-          arity=1,
-          beam_type=typehints.List),
-      _TypeMapEntry(
-          match=_match_issubclass(typing.Set),
-          arity=1,
-          beam_type=typehints.Set),
+      _TypeMapEntry(match=_match_same_type(typing.Any),
+                    arity=0,
+                    beam_type=typehints.Any),
+      _TypeMapEntry(match=_match_issubclass(typing.Dict),
+                    arity=2,
+                    beam_type=typehints.Dict),
+      _TypeMapEntry(match=_match_is_exactly_iterable,
+                    arity=1,
+                    beam_type=typehints.Iterable),
+      _TypeMapEntry(match=_match_issubclass(typing.List),
+                    arity=1,
+                    beam_type=typehints.List),
+      _TypeMapEntry(match=_match_issubclass(typing.Set),
+                    arity=1,
+                    beam_type=typehints.Set),
       # NamedTuple is a subclass of Tuple, but it needs special handling.
       # We just convert it to Any for now.
       # This MUST appear before the entry for the normal Tuple.
-      _TypeMapEntry(
-          match=_match_is_named_tuple, arity=0, beam_type=typehints.Any),
-      _TypeMapEntry(
-          match=_match_issubclass(typing.Tuple),
-          arity=-1,
-          beam_type=typehints.Tuple),
+      _TypeMapEntry(match=_match_is_named_tuple,
+                    arity=0,
+                    beam_type=typehints.Any),
+      _TypeMapEntry(match=_match_issubclass(typing.Tuple),
+                    arity=-1,
+                    beam_type=typehints.Tuple),
       _TypeMapEntry(match=_match_is_union, arity=-1, beam_type=typehints.Union),
-      _TypeMapEntry(
-          match=_match_issubclass(typing.Generator),
-          arity=3,
-          beam_type=typehints.Generator),
-      _TypeMapEntry(
-          match=_match_issubclass(typing.Iterator),
-          arity=1,
-          beam_type=typehints.Iterator),
+      _TypeMapEntry(match=_match_issubclass(typing.Generator),
+                    arity=3,
+                    beam_type=typehints.Generator),
+      _TypeMapEntry(match=_match_issubclass(typing.Iterator),
+                    arity=1,
+                    beam_type=typehints.Iterator),
   ]
 
   # Find the first matching entry.

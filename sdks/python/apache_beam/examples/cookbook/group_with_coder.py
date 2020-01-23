@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """An example of using custom classes and coder for grouping operations.
 
 This workflow demonstrates registration and usage of a custom coder for a user-
@@ -88,9 +87,7 @@ def run(args=None, save_main_session=True):
   if args is None:
     args = sys.argv[1:]
   parser = argparse.ArgumentParser()
-  parser.add_argument('--input',
-                      required=True,
-                      help='Input file to process.')
+  parser.add_argument('--input', required=True, help='Input file to process.')
   parser.add_argument('--output',
                       required=True,
                       help='Output file to write results to.')
@@ -117,9 +114,9 @@ def run(args=None, save_main_session=True):
      # type of the following operation is the Player type. Since a custom coder
      # is registered for the Player class above, a PlayerCoder will be used to
      # encode Player objects as keys for this combine operation.
-     | beam.CombinePerKey(sum)
-     | beam.Map(lambda k_v: '%s,%d' % (k_v[0].name, k_v[1]))
-     | WriteToText(known_args.output))
+     | beam.CombinePerKey(sum) |
+     beam.Map(lambda k_v: '%s,%d' % (k_v[0].name, k_v[1])) |
+     WriteToText(known_args.output))
 
 
 if __name__ == '__main__':

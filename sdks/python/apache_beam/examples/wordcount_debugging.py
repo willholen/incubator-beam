@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """An example that verifies the counts and includes best practices.
 
 On top of the basic concepts in the wordcount example, this workflow introduces
@@ -61,6 +60,7 @@ from apache_beam.testing.util import equal_to
 
 class FilterTextFn(beam.DoFn):
   """A DoFn that filters for a specific key based on a regular expression."""
+
   def __init__(self, pattern):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(FilterTextFn, self).__init__()
@@ -98,17 +98,17 @@ class CountWords(beam.PTransform):
   A PTransform that converts a PCollection containing lines of text into a
   PCollection of (word, count) tuples.
   """
+
   def expand(self, pcoll):
+
     def count_ones(word_ones):
       (word, ones) = word_ones
       return (word, sum(ones))
 
-    return (pcoll
-            | 'split' >> (beam.FlatMap(lambda x: re.findall(r'[A-Za-z\']+', x))
-                          .with_output_types(unicode))
-            | 'pair_with_one' >> beam.Map(lambda x: (x, 1))
-            | 'group' >> beam.GroupByKey()
-            | 'count' >> beam.Map(count_ones))
+    return (pcoll | 'split' >> (beam.FlatMap(
+        lambda x: re.findall(r'[A-Za-z\']+', x)).with_output_types(unicode)) |
+            'pair_with_one' >> beam.Map(lambda x: (x, 1)) |
+            'group' >> beam.GroupByKey() | 'count' >> beam.Map(count_ones))
 
 
 def run(argv=None, save_main_session=True):
@@ -133,9 +133,8 @@ def run(argv=None, save_main_session=True):
     # Read the text file[pattern] into a PCollection, count the occurrences of
     # each word and filter by a list of words.
     filtered_words = (
-        p | 'read' >> ReadFromText(known_args.input)
-        | CountWords()
-        | 'FilterText' >> beam.ParDo(FilterTextFn('Flourish|stomach')))
+        p | 'read' >> ReadFromText(known_args.input) | CountWords() |
+        'FilterText' >> beam.ParDo(FilterTextFn('Flourish|stomach')))
 
     # assert_that is a convenient PTransform that checks a PCollection has an
     # expected value. Asserts are best used in unit tests with small data sets
@@ -145,8 +144,7 @@ def run(argv=None, save_main_session=True):
     # completion of the Pipeline implies that the expectations were  met. Learn
     # more at https://cloud.google.com/dataflow/pipelines/testing-your-pipeline
     # on how to best test your pipeline.
-    assert_that(
-        filtered_words, equal_to([('Flourish', 3), ('stomach', 1)]))
+    assert_that(filtered_words, equal_to([('Flourish', 3), ('stomach', 1)]))
 
     # Format the counts into a PCollection of strings and write the output using
     # a "Write" transform that has side effects.
@@ -155,9 +153,8 @@ def run(argv=None, save_main_session=True):
       (word, count) = word_count
       return '%s: %s' % (word, count)
 
-    output = (filtered_words
-              | 'format' >> beam.Map(format_result)
-              | 'write' >> WriteToText(known_args.output))
+    output = (filtered_words | 'format' >> beam.Map(format_result) |
+              'write' >> WriteToText(known_args.output))
 
 
 if __name__ == '__main__':

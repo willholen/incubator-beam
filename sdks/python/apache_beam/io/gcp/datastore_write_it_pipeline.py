@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A job that write Entries into Datastore.
 
 The pipelines behave in the steps below.
@@ -58,7 +57,6 @@ except ImportError:
 # pylint: enable=wrong-import-order, wrong-import-position
 # pylint: enable=ungrouped-imports
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -88,7 +86,8 @@ class EntityWrapper(object):
 
     # All entities created will have the same ancestor
     datastore_helper.add_key_path(entity.key, self._kind, self._ancestor,
-                                  self._kind, hashlib.sha1(content).hexdigest())
+                                  self._kind,
+                                  hashlib.sha1(content).hexdigest())
 
     datastore_helper.add_properties(entity, {'content': str(content)})
     return entity
@@ -104,8 +103,9 @@ def make_ancestor_query(kind, namespace, ancestor):
   query = query_pb2.Query()
   query.kind.add().name = kind
 
-  datastore_helper.set_property_filter(
-      query.filter, '__key__', PropertyFilter.HAS_ANCESTOR, ancestor_key)
+  datastore_helper.set_property_filter(query.filter, '__key__',
+                                       PropertyFilter.HAS_ANCESTOR,
+                                       ancestor_key)
 
   return query
 
@@ -146,11 +146,10 @@ def run(argv=None):
   p = new_pipeline_with_job_name(pipeline_options, job_name, '-write')
 
   # pylint: disable=expression-not-assigned
-  (p
-   | 'Input' >> beam.Create(list(range(known_args.num_entities)))
-   | 'To String' >> beam.Map(str)
-   | 'To Entity' >> beam.Map(EntityWrapper(kind, None, ancestor).make_entity)
-   | 'Write to Datastore' >> WriteToDatastore(project))
+  (p | 'Input' >> beam.Create(list(range(known_args.num_entities))) |
+   'To String' >> beam.Map(str) |
+   'To Entity' >> beam.Map(EntityWrapper(kind, None, ancestor).make_entity) |
+   'Write to Datastore' >> WriteToDatastore(project))
 
   p.run()
 
@@ -163,11 +162,10 @@ def run(argv=None):
     query_with_limit = query_pb2.Query()
     query_with_limit.CopyFrom(query)
     query_with_limit.limit.value = known_args.limit
-    entities = p | 'read from datastore' >> ReadFromDatastore(project,
-                                                              query_with_limit)
-    assert_that(
-        entities | beam.combiners.Count.Globally(),
-        equal_to([known_args.limit]))
+    entities = p | 'read from datastore' >> ReadFromDatastore(
+        project, query_with_limit)
+    assert_that(entities | beam.combiners.Count.Globally(),
+                equal_to([known_args.limit]))
 
     p.run()
 
@@ -176,9 +174,8 @@ def run(argv=None):
   p = new_pipeline_with_job_name(pipeline_options, job_name, '-verify')
   entities = p | 'read from datastore' >> ReadFromDatastore(project, query)
 
-  assert_that(
-      entities | beam.combiners.Count.Globally(),
-      equal_to([num_entities]))
+  assert_that(entities | beam.combiners.Count.Globally(),
+              equal_to([num_entities]))
 
   p.run()
 
@@ -187,9 +184,8 @@ def run(argv=None):
   p = new_pipeline_with_job_name(pipeline_options, job_name, '-delete')
   entities = p | 'read from datastore' >> ReadFromDatastore(project, query)
   # pylint: disable=expression-not-assigned
-  (entities
-   | 'To Keys' >> beam.Map(lambda entity: entity.key)
-   | 'Delete keys' >> DeleteFromDatastore(project))
+  (entities | 'To Keys' >> beam.Map(lambda entity: entity.key) |
+   'Delete keys' >> DeleteFromDatastore(project))
 
   p.run()
 
@@ -198,9 +194,7 @@ def run(argv=None):
   p = new_pipeline_with_job_name(pipeline_options, job_name, '-verify-deleted')
   entities = p | 'read from datastore' >> ReadFromDatastore(project, query)
 
-  assert_that(
-      entities | beam.combiners.Count.Globally(),
-      equal_to([0]))
+  assert_that(entities | beam.combiners.Count.Globally(), equal_to([0]))
 
   p.run()
 

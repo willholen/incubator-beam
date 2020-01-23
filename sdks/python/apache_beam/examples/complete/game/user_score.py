@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """First in a series of four pipelines that tell a story in a 'gaming' domain.
 Concepts: batch processing; reading input from Google Cloud Storage or a from a
 local text file, and writing output to a text file; using standalone DoFns; use
@@ -79,6 +78,7 @@ class ParseGameEventFn(beam.DoFn):
 
   The human-readable time string is not used here.
   """
+
   def __init__(self):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(ParseGameEventFn, self).__init__()
@@ -92,7 +92,7 @@ class ParseGameEventFn(beam.DoFn):
           'user': row[0],
           'team': row[1],
           'score': int(row[2]),
-          'timestamp': int(row[3]) /1000.0,
+          'timestamp': int(row[3]) / 1000.0,
       }
     except:  # pylint: disable=bare-except
       # Log and count parse errors
@@ -106,6 +106,7 @@ class ExtractAndSumScore(beam.PTransform):
   The constructor argument `field` determines whether 'team' or 'user' info is
   extracted.
   """
+
   def __init__(self, field):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(ExtractAndSumScore, self).__init__()
@@ -113,19 +114,19 @@ class ExtractAndSumScore(beam.PTransform):
     self.field = field
 
   def expand(self, pcoll):
-    return (pcoll
-            | beam.Map(lambda elem: (elem[self.field], elem['score']))
-            | beam.CombinePerKey(sum))
+    return (pcoll | beam.Map(lambda elem: (elem[self.field], elem['score'])) |
+            beam.CombinePerKey(sum))
+
+
 # [END extract_and_sum_score]
 
 
 class UserScore(beam.PTransform):
+
   def expand(self, pcoll):
-    return (
-        pcoll
-        | 'ParseGameEventFn' >> beam.ParDo(ParseGameEventFn())
-        # Extract and sum username/score pairs from the event data.
-        | 'ExtractAndSumScore' >> ExtractAndSumScore('user'))
+    return (pcoll | 'ParseGameEventFn' >> beam.ParDo(ParseGameEventFn())
+            # Extract and sum username/score pairs from the event data.
+            | 'ExtractAndSumScore' >> ExtractAndSumScore('user'))
 
 
 # [START main]
@@ -153,17 +154,19 @@ def run(argv=None, save_main_session=True):
   options.view_as(SetupOptions).save_main_session = save_main_session
 
   with beam.Pipeline(options=options) as p:
+
     def format_user_score_sums(user_score):
       (user, score) = user_score
       return 'user: %s, total_score: %s' % (user, score)
 
     (p  # pylint: disable=expression-not-assigned
-     | 'ReadInputText' >> beam.io.ReadFromText(args.input)
-     | 'UserScore' >> UserScore()
-     | 'FormatUserScoreSums' >> beam.Map(format_user_score_sums)
-     | 'WriteUserScoreSums' >> beam.io.WriteToText(args.output))
-# [END main]
+     | 'ReadInputText' >> beam.io.ReadFromText(args.input) |
+     'UserScore' >> UserScore() |
+     'FormatUserScoreSums' >> beam.Map(format_user_score_sums) |
+     'WriteUserScoreSums' >> beam.io.WriteToText(args.output))
 
+
+# [END main]
 
 if __name__ == '__main__':
   logging.getLogger().setLevel(logging.INFO)

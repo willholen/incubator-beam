@@ -49,8 +49,9 @@ class DirectPipelineResultTest(unittest.TestCase):
   def test_waiting_on_result_stops_executor_threads(self):
     pre_test_threads = set(t.ident for t in threading.enumerate())
 
-    for runner in ['DirectRunner', 'BundleBasedDirectRunner',
-                   'SwitchingDirectRunner']:
+    for runner in [
+        'DirectRunner', 'BundleBasedDirectRunner', 'SwitchingDirectRunner'
+    ]:
       pipeline = test_pipeline.TestPipeline(runner=runner)
       _ = (pipeline | beam.Create([{'foo': 'bar'}]))
       result = pipeline.run()
@@ -63,6 +64,7 @@ class DirectPipelineResultTest(unittest.TestCase):
   def test_direct_runner_metrics(self):
 
     class MyDoFn(beam.DoFn):
+
       def start_bundle(self):
         count = Metrics.counter(self.__class__, 'bundles')
         count.inc()
@@ -81,35 +83,31 @@ class DirectPipelineResultTest(unittest.TestCase):
         return [element]
 
     p = Pipeline(DirectRunner())
-    pcoll = (p | beam.Create([1, 2, 3, 4, 5], reshuffle=False)
-             | 'Do' >> beam.ParDo(MyDoFn()))
+    pcoll = (p | beam.Create([1, 2, 3, 4, 5], reshuffle=False) |
+             'Do' >> beam.ParDo(MyDoFn()))
     assert_that(pcoll, equal_to([1, 2, 3, 4, 5]))
     result = p.run()
     result.wait_until_finish()
     metrics = result.metrics().query()
-    namespace = '{}.{}'.format(MyDoFn.__module__,
-                               MyDoFn.__name__)
+    namespace = '{}.{}'.format(MyDoFn.__module__, MyDoFn.__name__)
 
     hc.assert_that(
         metrics['counters'],
         hc.contains_inanyorder(
+            MetricResult(MetricKey('Do', MetricName(namespace, 'elements')), 5,
+                         5),
+            MetricResult(MetricKey('Do', MetricName(namespace, 'bundles')), 1,
+                         1),
             MetricResult(
-                MetricKey('Do', MetricName(namespace, 'elements')),
-                5, 5),
-            MetricResult(
-                MetricKey('Do', MetricName(namespace, 'bundles')),
-                1, 1),
-            MetricResult(
-                MetricKey('Do', MetricName(namespace, 'finished_bundles')),
-                1, 1)))
+                MetricKey('Do', MetricName(namespace, 'finished_bundles')), 1,
+                1)))
 
     hc.assert_that(
         metrics['distributions'],
         hc.contains_inanyorder(
-            MetricResult(
-                MetricKey('Do', MetricName(namespace, 'element_dist')),
-                DistributionResult(DistributionData(15, 5, 1, 5)),
-                DistributionResult(DistributionData(15, 5, 1, 5)))))
+            MetricResult(MetricKey('Do', MetricName(namespace, 'element_dist')),
+                         DistributionResult(DistributionData(15, 5, 1, 5)),
+                         DistributionResult(DistributionData(15, 5, 1, 5)))))
 
     gauge_result = metrics['gauges'][0]
     hc.assert_that(
@@ -119,20 +117,17 @@ class DirectPipelineResultTest(unittest.TestCase):
     hc.assert_that(gauge_result.attempted.value, hc.equal_to(5))
 
   def test_create_runner(self):
+    self.assertTrue(isinstance(create_runner('DirectRunner'), DirectRunner))
     self.assertTrue(
-        isinstance(create_runner('DirectRunner'),
-                   DirectRunner))
-    self.assertTrue(
-        isinstance(create_runner('TestDirectRunner'),
-                   TestDirectRunner))
+        isinstance(create_runner('TestDirectRunner'), TestDirectRunner))
 
 
 class BundleBasedRunnerTest(unittest.TestCase):
+
   def test_type_hints(self):
     with test_pipeline.TestPipeline(runner='BundleBasedDirectRunner') as p:
-      _ = (p
-           | beam.Create([[]]).with_output_types(beam.typehints.List[int])
-           | beam.combiners.Count.Globally())
+      _ = (p | beam.Create([[]]).with_output_types(beam.typehints.List[int]) |
+           beam.combiners.Count.Globally())
 
   def test_impulse(self):
     with test_pipeline.TestPipeline(runner='BundleBasedDirectRunner') as p:
@@ -147,7 +142,7 @@ class DirectRunnerRetryTests(unittest.TestCase):
     p = beam.Pipeline(runner='BundleBasedDirectRunner')
 
     # TODO(mariagh): Remove the use of globals from the test.
-    global count_b, count_c # pylint: disable=global-variable-undefined
+    global count_b, count_c  # pylint: disable=global-variable-undefined
     count_b, count_c = 0, 0
 
     def f_b(x):
@@ -162,8 +157,8 @@ class DirectRunnerRetryTests(unittest.TestCase):
 
     names = p | 'CreateNodeA' >> beam.Create(['Ann', 'Joe'])
 
-    fork_b = names | 'SendToB' >> beam.Map(f_b) # pylint: disable=unused-variable
-    fork_c = names | 'SendToC' >> beam.Map(f_c) # pylint: disable=unused-variable
+    fork_b = names | 'SendToB' >> beam.Map(f_b)  # pylint: disable=unused-variable
+    fork_c = names | 'SendToC' >> beam.Map(f_c)  # pylint: disable=unused-variable
 
     with self.assertRaises(Exception):
       p.run().wait_until_finish()
@@ -191,31 +186,31 @@ class DirectRunnerRetryTests(unittest.TestCase):
     self.assertIsNone(evaluator.step_context.partial_keyed_state.get('key'))
 
     evaluator.process_element(['key', 'value'])
-    self.assertEqual(
-        evaluator.step_context.existing_keyed_state['key'].state,
-        defaultdict(lambda: defaultdict(list)))
-    self.assertEqual(
-        evaluator.step_context.partial_keyed_state['key'].state,
-        {None: {'elements':['value']}})
+    self.assertEqual(evaluator.step_context.existing_keyed_state['key'].state,
+                     defaultdict(lambda: defaultdict(list)))
+    self.assertEqual(evaluator.step_context.partial_keyed_state['key'].state,
+                     {None: {
+                         'elements': ['value']
+                     }})
 
     evaluator.process_element(['key', 'value2'])
-    self.assertEqual(
-        evaluator.step_context.existing_keyed_state['key'].state,
-        defaultdict(lambda: defaultdict(list)))
-    self.assertEqual(
-        evaluator.step_context.partial_keyed_state['key'].state,
-        {None: {'elements':['value', 'value2']}})
+    self.assertEqual(evaluator.step_context.existing_keyed_state['key'].state,
+                     defaultdict(lambda: defaultdict(list)))
+    self.assertEqual(evaluator.step_context.partial_keyed_state['key'].state,
+                     {None: {
+                         'elements': ['value', 'value2']
+                     }})
 
     # Simulate an exception (redo key/value)
     evaluator._execution_context.reset()
     evaluator.start_bundle()
     evaluator.process_element(['key', 'value'])
-    self.assertEqual(
-        evaluator.step_context.existing_keyed_state['key'].state,
-        defaultdict(lambda: defaultdict(list)))
-    self.assertEqual(
-        evaluator.step_context.partial_keyed_state['key'].state,
-        {None: {'elements':['value']}})
+    self.assertEqual(evaluator.step_context.existing_keyed_state['key'].state,
+                     defaultdict(lambda: defaultdict(list)))
+    self.assertEqual(evaluator.step_context.partial_keyed_state['key'].state,
+                     {None: {
+                         'elements': ['value']
+                     }})
 
 
 if __name__ == '__main__':

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """End-to-end test for the hourly team score example.
 
 Code: beam/sdks/python/apache_beam/examples/complete/game/hourly_team_score.py
@@ -67,19 +66,18 @@ class HourlyTeamScoreIT(unittest.TestCase):
   @attr('IT')
   def test_hourly_team_score_it(self):
     state_verifier = PipelineStateMatcher(PipelineState.DONE)
-    query = ('SELECT COUNT(*) FROM `%s.%s.%s`' % (self.project,
-                                                  self.dataset_ref.dataset_id,
-                                                  self.OUTPUT_TABLE))
+    query = ('SELECT COUNT(*) FROM `%s.%s.%s`' %
+             (self.project, self.dataset_ref.dataset_id, self.OUTPUT_TABLE))
 
-    bigquery_verifier = BigqueryMatcher(self.project,
-                                        query,
+    bigquery_verifier = BigqueryMatcher(self.project, query,
                                         self.DEFAULT_EXPECTED_CHECKSUM)
 
-    extra_opts = {'input': self.DEFAULT_INPUT_FILE,
-                  'dataset': self.dataset_ref.dataset_id,
-                  'window_duration': 1,
-                  'on_success_matcher': all_of(state_verifier,
-                                               bigquery_verifier)}
+    extra_opts = {
+        'input': self.DEFAULT_INPUT_FILE,
+        'dataset': self.dataset_ref.dataset_id,
+        'window_duration': 1,
+        'on_success_matcher': all_of(state_verifier, bigquery_verifier)
+    }
 
     # Register clean up before pipeline execution
     # Note that actual execution happens in reverse order.

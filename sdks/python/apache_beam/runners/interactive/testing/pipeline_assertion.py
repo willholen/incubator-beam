@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Module to verify implicit cache transforms applied by Interactive Beam.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -42,8 +41,7 @@ def assert_pipeline_equal(test_case, expected_pipeline, actual_pipeline):
                               actual_pipeline_proto)
 
 
-def assert_pipeline_proto_equal(test_case,
-                                expected_pipeline_proto,
+def assert_pipeline_proto_equal(test_case, expected_pipeline_proto,
                                 actual_pipeline_proto):
   """Asserts the equivalence between two pipeline proto representations."""
   components1 = expected_pipeline_proto.components
@@ -58,17 +56,14 @@ def assert_pipeline_proto_equal(test_case,
                             len(components2.windowing_strategies))
   test_case.assertLessEqual(len(components1.coders), len(components2.coders))
 
-  _assert_transform_equal(test_case,
-                          actual_pipeline_proto,
+  _assert_transform_equal(test_case, actual_pipeline_proto,
                           actual_pipeline_proto.root_transform_ids[0],
                           expected_pipeline_proto,
                           expected_pipeline_proto.root_transform_ids[0])
 
 
-def _assert_transform_equal(test_case,
-                            expected_pipeline_proto,
-                            expected_transform_id,
-                            actual_pipeline_proto,
+def _assert_transform_equal(test_case, expected_pipeline_proto,
+                            expected_transform_id, actual_pipeline_proto,
                             actual_transform_id):
   """Asserts the equivalence between transforms from two given pipelines. """
   transform_proto1 = expected_pipeline_proto.components.transforms[

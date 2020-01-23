@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for LocalFileSystem."""
 
 # pytype: skip-file
@@ -68,10 +67,13 @@ class FileSystemsTest(unittest.TestCase):
     self.assertEqual(FileSystems.get_scheme('gs://abc/cdf'), 'gs')
 
   def test_get_filesystem(self):
-    self.assertTrue(isinstance(FileSystems.get_filesystem('/tmp'),
-                               localfilesystem.LocalFileSystem))
-    self.assertTrue(isinstance(FileSystems.get_filesystem('c:\\abc\def'),  # pylint: disable=anomalous-backslash-in-string
-                               localfilesystem.LocalFileSystem))
+    self.assertTrue(
+        isinstance(FileSystems.get_filesystem('/tmp'),
+                   localfilesystem.LocalFileSystem))
+    self.assertTrue(
+        isinstance(
+            FileSystems.get_filesystem('c:\\abc\def'),  # pylint: disable=anomalous-backslash-in-string
+            localfilesystem.LocalFileSystem))
     with self.assertRaises(ValueError):
       FileSystems.get_filesystem('error://abc/def')
 

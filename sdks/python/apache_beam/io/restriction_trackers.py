@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """`iobase.RestrictionTracker` implementations provided with Apache Beam."""
 # pytype: skip-file
 
@@ -97,10 +96,9 @@ class OffsetRestrictionTracker(RestrictionTracker):
     if self._last_claim_attempt < self._range.stop - 1:
       raise ValueError(
           'OffsetRestrictionTracker is not done since work in range [%s, %s) '
-          'has not been claimed.'
-          % (self._last_claim_attempt if self._last_claim_attempt is not None
-             else self._range.start,
-             self._range.stop))
+          'has not been claimed.' %
+          (self._last_claim_attempt if self._last_claim_attempt is not None else
+           self._range.start, self._range.stop))
 
   def current_restriction(self):
     return self._range
@@ -113,9 +111,8 @@ class OffsetRestrictionTracker(RestrictionTracker):
       # If self._current_position is not None, we must be done.
       fraction = 1.0
     else:
-      fraction = (
-          float(self._current_position - self._range.start)
-          / (self._range.stop - self._range.start))
+      fraction = (float(self._current_position - self._range.start) /
+                  (self._range.stop - self._range.start))
     return RestrictionProgress(fraction=fraction)
 
   def start_position(self):
@@ -128,15 +125,15 @@ class OffsetRestrictionTracker(RestrictionTracker):
     if self._last_claim_attempt and position <= self._last_claim_attempt:
       raise ValueError(
           'Positions claimed should strictly increase. Trying to claim '
-          'position %d while last claim attempt was %d.'
-          % (position, self._last_claim_attempt))
+          'position %d while last claim attempt was %d.' %
+          (position, self._last_claim_attempt))
 
     self._last_claim_attempt = position
     if position < self._range.start:
       raise ValueError(
           'Position to be claimed cannot be smaller than the start position '
-          'of the range. Tried to claim position %r for the range [%r, %r)'
-          % (position, self._range.start, self._range.stop))
+          'of the range. Tried to claim position %r for the range [%r, %r)' %
+          (position, self._range.start, self._range.stop))
 
     if position >= self._range.start and position < self._range.stop:
       self._current_position = position

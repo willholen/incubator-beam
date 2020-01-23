@@ -66,7 +66,8 @@ class FnApiLogRecordHandler(logging.Handler):
 
     self._alive = True
     self._dropped_logs = 0
-    self._log_entry_queue = queue.Queue(maxsize=self._QUEUE_SIZE)  # type: queue.Queue[beam_fn_api_pb2.LogEntry]
+    self._log_entry_queue = queue.Queue(
+        maxsize=self._QUEUE_SIZE)  # type: queue.Queue[beam_fn_api_pb2.LogEntry]
 
     ch = GRPCChannelFactory.insecure_channel(log_service_descriptor.url)
     # Make sure the channel is ready to avoid [BEAM-4649]
@@ -99,8 +100,8 @@ class FnApiLogRecordHandler(logging.Handler):
     log_entry.severity = self.map_log_level(record.levelno)
     log_entry.message = self.format(record)
     log_entry.thread = record.threadName
-    log_entry.log_location = '%s:%s' % (
-        record.pathname or record.module, record.lineno or record.funcName)
+    log_entry.log_location = '%s:%s' % (record.pathname or record.module,
+                                        record.lineno or record.funcName)
     (fraction, seconds) = math.modf(record.created)
     nanoseconds = 1e9 * fraction
     log_entry.timestamp.seconds = int(seconds)
@@ -113,9 +114,8 @@ class FnApiLogRecordHandler(logging.Handler):
     tracker = statesampler.get_current_tracker()
     if tracker:
       current_state = tracker.current_state()
-      if (current_state
-          and current_state.name_context
-          and current_state.name_context.transform_id):
+      if (current_state and current_state.name_context and
+          current_state.name_context.transform_id):
         log_entry.transform_id = current_state.name_context.transform_id
 
     try:
@@ -184,5 +184,5 @@ class FnApiLogRecordHandler(logging.Handler):
         print("Logging client failed: {}... resetting".format(ex),
               file=sys.stderr)
         # Wait a bit before trying a reconnect
-        time.sleep(0.5) # 0.5 seconds
+        time.sleep(0.5)  # 0.5 seconds
       alive = self._alive

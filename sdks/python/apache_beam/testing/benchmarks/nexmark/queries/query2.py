@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Nexmark Query 2: Select auctions by auction id.
 
 The Nexmark suite is a series of queries (streaming pipelines) performed
@@ -35,10 +34,9 @@ from apache_beam.testing.benchmarks.nexmark.nexmark_util import display
 
 
 def load(raw_events, metadata=None):
-  return (raw_events
-          | 'ParseEventFn' >> beam.ParDo(ParseEventFn())
-          | 'FilterInAuctionsWithSelectedId' >> beam.Filter(
-              lambda event: (isinstance(event, nexmark_model.Auction)
-                             and event.id == metadata.get('auction_id')))
-          | 'DisplayQuery2' >> beam.Map(display)
-         )  # pylint: disable=expression-not-assigned
+  return (
+      raw_events | 'ParseEventFn' >> beam.ParDo(ParseEventFn()) |
+      'FilterInAuctionsWithSelectedId' >>
+      beam.Filter(lambda event: (isinstance(event, nexmark_model.Auction) and
+                                 event.id == metadata.get('auction_id'))) |
+      'DisplayQuery2' >> beam.Map(display))  # pylint: disable=expression-not-assigned

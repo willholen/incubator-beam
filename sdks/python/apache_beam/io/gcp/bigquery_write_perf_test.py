@@ -76,6 +76,7 @@ if os.environ.get('LOAD_TEST_ENABLED') == 'true':
 
 @unittest.skipIf(not load_test_enabled, 'Enabled only for phrase triggering.')
 class BigQueryWritePerfTest(LoadTest):
+
   def setUp(self):
     super(BigQueryWritePerfTest, self).setUp()
     self.output_dataset = self.pipeline.get_option('output_dataset')
@@ -100,13 +101,14 @@ class BigQueryWritePerfTest(LoadTest):
       return {'data': base64.b64encode(record[1])}
 
     # pylint: disable=expression-not-assigned
-    (self.pipeline
-     | 'Produce rows' >> Read(SyntheticSource(self.parseTestPipelineOptions()))
-     | 'Count messages' >> ParDo(CountMessages(self.metrics_namespace))
-     | 'Format' >> Map(format_record)
-     | 'Measure time' >> ParDo(MeasureTime(self.metrics_namespace))
-     | 'Write to BigQuery' >> WriteToBigQuery(
-         dataset=self.output_dataset, table=self.output_table,
+    (self.pipeline |
+     'Produce rows' >> Read(SyntheticSource(self.parseTestPipelineOptions())) |
+     'Count messages' >> ParDo(CountMessages(self.metrics_namespace)) |
+     'Format' >> Map(format_record) |
+     'Measure time' >> ParDo(MeasureTime(self.metrics_namespace)) |
+     'Write to BigQuery' >> WriteToBigQuery(
+         dataset=self.output_dataset,
+         table=self.output_table,
          schema=SCHEMA,
          create_disposition=BigQueryDisposition.CREATE_IF_NEEDED,
          write_disposition=BigQueryDisposition.WRITE_TRUNCATE))

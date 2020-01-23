@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """PValue, PCollection: one node of a dataflow graph.
 
 A node of a dataflow processing graph is a PValue. Currently, there is only
@@ -83,13 +82,14 @@ class PValue(object):
     (3) Has a value which is meaningful if the transform was executed.
   """
 
-  def __init__(self,
-               pipeline,  # type: Pipeline
-               tag=None,  # type: Optional[str]
-               element_type=None,  # type: Optional[type]
-               windowing=None,  # type: Optional[Windowing]
-               is_bounded=True,
-              ):
+  def __init__(
+      self,
+      pipeline,  # type: Pipeline
+      tag=None,  # type: Optional[str]
+      element_type=None,  # type: Optional[type]
+      windowing=None,  # type: Optional[Windowing]
+      is_bounded=True,
+  ):
     """Initializes a PValue with all arguments hidden behind keyword arguments.
 
     Args:
@@ -115,9 +115,8 @@ class PValue(object):
     return '<%s at %s>' % (self._str_internal(), hex(id(self)))
 
   def _str_internal(self):
-    return "%s[%s.%s]" % (self.__class__.__name__,
-                          self.producer.full_label if self.producer else None,
-                          self.tag)
+    return "%s[%s.%s]" % (self.__class__.__name__, self.producer.full_label
+                          if self.producer else None, self.tag)
 
   def apply(self, *args, **kwargs):
     """Applies a transform or callable to a PValue.
@@ -186,16 +185,15 @@ class PCollection(PValue, Generic[T]):
         unique_name=self._unique_name(),
         coder_id=context.coder_id_from_element_type(self.element_type),
         is_bounded=beam_runner_api_pb2.IsBounded.BOUNDED
-        if self.is_bounded
-        else beam_runner_api_pb2.IsBounded.UNBOUNDED,
+        if self.is_bounded else beam_runner_api_pb2.IsBounded.UNBOUNDED,
         windowing_strategy_id=context.windowing_strategies.get_id(
             self.windowing))
 
   def _unique_name(self):
     # type: () -> str
     if self.producer:
-      return '%d%s.%s' % (
-          len(self.producer.full_label), self.producer.full_label, self.tag)
+      return '%d%s.%s' % (len(
+          self.producer.full_label), self.producer.full_label, self.tag)
     else:
       return 'PCollection%s' % id(self)
 
@@ -239,12 +237,13 @@ class PDone(PValue):
 class DoOutputsTuple(object):
   """An object grouping the multiple outputs of a ParDo or FlatMap transform."""
 
-  def __init__(self,
-               pipeline,  # type: Pipeline
-               transform,  # type: ParDo
-               tags,  # type: Sequence[str]
-               main_tag  # type: Optional[str]
-              ):
+  def __init__(
+      self,
+      pipeline,  # type: Pipeline
+      transform,  # type: ParDo
+      tags,  # type: Sequence[str]
+      main_tag  # type: Optional[str]
+  ):
     self._pipeline = pipeline
     self._tags = tags
     self._main_tag = main_tag
@@ -293,10 +292,9 @@ class DoOutputsTuple(object):
     if tag == self._main_tag:
       tag = None
     elif self._tags and tag not in self._tags:
-      raise ValueError(
-          "Tag '%s' is neither the main tag '%s' "
-          "nor any of the tags %s" % (
-              tag, self._main_tag, self._tags))
+      raise ValueError("Tag '%s' is neither the main tag '%s' "
+                       "nor any of the tags %s" %
+                       (tag, self._main_tag, self._tags))
     # Check if we accessed this tag before.
     if tag in self._pcolls:
       return self._pcolls[tag]
@@ -304,7 +302,8 @@ class DoOutputsTuple(object):
     assert self.producer is not None
     if tag is not None:
       self._transform.output_tags.add(tag)
-      pcoll = PCollection(self._pipeline, tag=tag, element_type=typehints.Any)  # type: PValue
+      pcoll = PCollection(self._pipeline, tag=tag,
+                          element_type=typehints.Any)  # type: PValue
       # Transfer the producer from the DoOutputsTuple to the resulting
       # PCollection.
       pcoll.producer = self.producer.parts[0]
@@ -377,8 +376,7 @@ class AsSideInput(object):
     view_options = self._view_options()
     from_runtime_iterable = type(self)._from_runtime_iterable
     return SideInputData(
-        common_urns.side_inputs.ITERABLE.urn,
-        self._window_mapping_fn,
+        common_urns.side_inputs.ITERABLE.urn, self._window_mapping_fn,
         lambda iterable: from_runtime_iterable(iterable, view_options))
 
   def to_runner_api(self, context):
@@ -386,12 +384,12 @@ class AsSideInput(object):
     return self._side_input_data().to_runner_api(context)
 
   @staticmethod
-  def from_runner_api(proto,  # type: beam_runner_api_pb2.SideInput
-                      context  # type: PipelineContext
-                     ):
+  def from_runner_api(
+      proto,  # type: beam_runner_api_pb2.SideInput
+      context  # type: PipelineContext
+  ):
     # type: (...) -> _UnpickledSideInput
-    return _UnpickledSideInput(
-        SideInputData.from_runner_api(proto, context))
+    return _UnpickledSideInput(SideInputData.from_runner_api(proto, context))
 
   @staticmethod
   def _from_runtime_iterable(it, options):
@@ -402,6 +400,7 @@ class AsSideInput(object):
 
 
 class _UnpickledSideInput(AsSideInput):
+
   def __init__(self, side_input_data):
     # type: (SideInputData) -> None
     self._data = side_input_data
@@ -424,11 +423,12 @@ class _UnpickledSideInput(AsSideInput):
 
 class SideInputData(object):
   """All of the data about a side input except for the bound PCollection."""
-  def __init__(self,
-               access_pattern,  # type: str
-               window_mapping_fn,  # type: sideinputs.WindowMappingFn
-               view_fn
-              ):
+
+  def __init__(
+      self,
+      access_pattern,  # type: str
+      window_mapping_fn,  # type: sideinputs.WindowMappingFn
+      view_fn):
     self.access_pattern = access_pattern
     self.window_mapping_fn = window_mapping_fn
     self.view_fn = view_fn
@@ -438,9 +438,9 @@ class SideInputData(object):
     return beam_runner_api_pb2.SideInput(
         access_pattern=beam_runner_api_pb2.FunctionSpec(
             urn=self.access_pattern),
-        view_fn=beam_runner_api_pb2.FunctionSpec(
-            urn=python_urns.PICKLED_VIEWFN,
-            payload=pickler.dumps(self.view_fn)),
+        view_fn=beam_runner_api_pb2.FunctionSpec(urn=python_urns.PICKLED_VIEWFN,
+                                                 payload=pickler.dumps(
+                                                     self.view_fn)),
         window_mapping_fn=beam_runner_api_pb2.FunctionSpec(
             urn=python_urns.PICKLED_WINDOW_MAPPING_FN,
             payload=pickler.dumps(self.window_mapping_fn)))
@@ -449,12 +449,11 @@ class SideInputData(object):
   def from_runner_api(proto, unused_context):
     # type: (beam_runner_api_pb2.SideInput, PipelineContext) -> SideInputData
     assert proto.view_fn.urn == python_urns.PICKLED_VIEWFN
-    assert (proto.window_mapping_fn.urn ==
-            python_urns.PICKLED_WINDOW_MAPPING_FN)
-    return SideInputData(
-        proto.access_pattern.urn,
-        pickler.loads(proto.window_mapping_fn.payload),
-        pickler.loads(proto.view_fn.payload))
+    assert (
+        proto.window_mapping_fn.urn == python_urns.PICKLED_WINDOW_MAPPING_FN)
+    return SideInputData(proto.access_pattern.urn,
+                         pickler.loads(proto.window_mapping_fn.payload),
+                         pickler.loads(proto.view_fn.payload))
 
 
 class AsSingleton(AsSideInput):
@@ -498,8 +497,8 @@ class AsSingleton(AsSideInput):
       return head[0]
     raise ValueError(
         'PCollection of size %d with more than one element accessed as a '
-        'singleton view. First two elements encountered are "%s", "%s".' % (
-            len(head), str(head[0]), str(head[1])))
+        'singleton view. First two elements encountered are "%s", "%s".' %
+        (len(head), str(head[0]), str(head[1])))
 
   @property
   def element_type(self):
@@ -529,10 +528,8 @@ class AsIter(AsSideInput):
 
   def _side_input_data(self):
     # type: () -> SideInputData
-    return SideInputData(
-        common_urns.side_inputs.ITERABLE.urn,
-        self._window_mapping_fn,
-        lambda iterable: iterable)
+    return SideInputData(common_urns.side_inputs.ITERABLE.urn,
+                         self._window_mapping_fn, lambda iterable: iterable)
 
   @property
   def element_type(self):
@@ -560,10 +557,8 @@ class AsList(AsSideInput):
 
   def _side_input_data(self):
     # type: () -> SideInputData
-    return SideInputData(
-        common_urns.side_inputs.ITERABLE.urn,
-        self._window_mapping_fn,
-        list)
+    return SideInputData(common_urns.side_inputs.ITERABLE.urn,
+                         self._window_mapping_fn, list)
 
 
 class AsDict(AsSideInput):
@@ -588,10 +583,8 @@ class AsDict(AsSideInput):
 
   def _side_input_data(self):
     # type: () -> SideInputData
-    return SideInputData(
-        common_urns.side_inputs.ITERABLE.urn,
-        self._window_mapping_fn,
-        dict)
+    return SideInputData(common_urns.side_inputs.ITERABLE.urn,
+                         self._window_mapping_fn, dict)
 
 
 class AsMultiMap(AsSideInput):
@@ -615,10 +608,8 @@ class AsMultiMap(AsSideInput):
 
   def _side_input_data(self):
     # type: () -> SideInputData
-    return SideInputData(
-        common_urns.side_inputs.MULTIMAP.urn,
-        self._window_mapping_fn,
-        lambda x: x)
+    return SideInputData(common_urns.side_inputs.MULTIMAP.urn,
+                         self._window_mapping_fn, lambda x: x)
 
   def requires_keyed_input(self):
     return True

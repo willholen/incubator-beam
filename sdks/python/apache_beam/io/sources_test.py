@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the sources framework."""
 # pytype: skip-file
 
@@ -68,9 +67,7 @@ class LineSource(iobase.BoundedSource):
     bundle_start = 0
     while bundle_start < size:
       bundle_stop = min(bundle_start + LineSource.TEST_BUNDLE_SIZE, size)
-      yield iobase.SourceBundle(bundle_stop - bundle_start,
-                                self,
-                                bundle_start,
+      yield iobase.SourceBundle(bundle_stop - bundle_start, self, bundle_start,
                                 bundle_stop)
       bundle_start = bundle_stop
 
@@ -114,8 +111,8 @@ class SourcesTest(unittest.TestCase):
     result = [line for line in source.read(range_tracker)]
 
     self.assertCountEqual([b'aaaa', b'bbbb', b'cccc', b'dddd'], result)
-    self.assertTrue(range_tracker.last_attempted_record_start
-                    >= range_tracker.stop_position())
+    self.assertTrue(range_tracker.last_attempted_record_start >=
+                    range_tracker.stop_position())
 
   def test_source_estimated_size(self):
     file_name = self._create_temp_file(b'aaaa\n')
@@ -128,7 +125,6 @@ class SourcesTest(unittest.TestCase):
     with TestPipeline() as pipeline:
       pcoll = pipeline | beam.io.Read(LineSource(file_name))
       assert_that(pcoll, equal_to([b'aaaa', b'bbbb', b'cccc', b'dddd']))
-
 
 
 if __name__ == '__main__':

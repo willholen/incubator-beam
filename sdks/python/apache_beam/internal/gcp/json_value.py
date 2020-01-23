@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """JSON conversion utility functions."""
 
 # pytype: skip-file
@@ -34,9 +33,8 @@ except ImportError:
   extra_types = None
 # pylint: enable=wrong-import-order, wrong-import-position
 
-
 _MAXINT64 = (1 << 63) - 1
-_MININT64 = - (1 << 63)
+_MININT64 = -(1 << 63)
 
 
 def get_typed_value_descriptor(obj):
@@ -95,15 +93,15 @@ def to_json_value(obj, with_type=False):
   if obj is None:
     return extra_types.JsonValue(is_null=True)
   elif isinstance(obj, (list, tuple)):
-    return extra_types.JsonValue(
-        array_value=extra_types.JsonArray(
-            entries=[to_json_value(o, with_type=with_type) for o in obj]))
+    return extra_types.JsonValue(array_value=extra_types.JsonArray(
+        entries=[to_json_value(o, with_type=with_type) for o in obj]))
   elif isinstance(obj, dict):
     json_object = extra_types.JsonObject()
     for k, v in obj.items():
       json_object.properties.append(
-          extra_types.JsonObject.Property(
-              key=k, value=to_json_value(v, with_type=with_type)))
+          extra_types.JsonObject.Property(key=k,
+                                          value=to_json_value(
+                                              v, with_type=with_type)))
     return extra_types.JsonValue(object_value=json_object)
   elif with_type:
     return to_json_value(get_typed_value_descriptor(obj), with_type=False)

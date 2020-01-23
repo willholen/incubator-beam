@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for microbenchmarks code."""
 
 # pytype: skip-file
@@ -31,11 +30,14 @@ from apache_beam.tools import utils
 
 
 class MicrobenchmarksTest(unittest.TestCase):
+
   def test_coders_microbenchmark(self):
     # Right now, we don't evaluate performance impact, only check that
     # microbenchmark code can successfully run.
-    coders_microbenchmark.run_coder_benchmarks(
-        num_runs=1, input_size=10, seed=1, verbose=False)
+    coders_microbenchmark.run_coder_benchmarks(num_runs=1,
+                                               input_size=10,
+                                               seed=1,
+                                               verbose=False)
 
   def is_cython_installed(self):
     try:

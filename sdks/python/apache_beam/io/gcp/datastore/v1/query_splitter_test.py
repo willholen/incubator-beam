@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Cloud Datastore query splitter test."""
 
 # pytype: skip-file
@@ -45,14 +44,19 @@ except (ImportError, TypeError):
 
 
 class QuerySplitterTest(unittest.TestCase):
-  @unittest.skipIf(
-      sys.version_info[0] == 3,
-      'v1/query_splitter does not support Python 3 TODO: BEAM-4543')
+
+  @unittest.skipIf(sys.version_info[0] == 3,
+                   'v1/query_splitter does not support Python 3 TODO: BEAM-4543'
+                  )
   @unittest.skipIf(datastore_pb2 is None, 'GCP dependencies are not installed')
   def setUp(self):
     pass
 
-  def create_query(self, kinds=(), order=False, limit=None, offset=None,
+  def create_query(self,
+                   kinds=(),
+                   order=False,
+                   limit=None,
+                   offset=None,
                    inequality_filter=False):
     query = query_pb2.Query()
     for kind in kinds:
@@ -102,7 +106,7 @@ class QuerySplitterTest(unittest.TestCase):
     scatter_query = self.query_splitter._create_scatter_query(query, num_splits)
     self.assertEqual(scatter_query.kind[0], query.kind[0])
     self.assertEqual(scatter_query.limit.value,
-                     (num_splits -1) * self.query_splitter.KEYS_PER_SPLIT)
+                     (num_splits - 1) * self.query_splitter.KEYS_PER_SPLIT)
     self.assertEqual(scatter_query.order[0].direction,
                      query_pb2.PropertyOrder.ASCENDING)
     self.assertEqual(scatter_query.projection[0].property.name,
@@ -191,16 +195,16 @@ class QuerySplitterTest(unittest.TestCase):
       mock_datastore.run_query.side_effect = \
           fake_datastore.create_run_query(entities, batch_size)
 
-      split_queries = self.query_splitter.get_splits(
-          mock_datastore, query, num_splits)
+      split_queries = self.query_splitter.get_splits(mock_datastore, query,
+                                                     num_splits)
 
       # if request num_splits is greater than num_entities, the best it can
       # do is one entity per split.
       expected_num_splits = min(num_splits, num_entities + 1)
       self.assertEqual(len(split_queries), expected_num_splits)
 
-      expected_requests = self.create_scatter_requests(
-          query, num_splits, batch_size, num_entities)
+      expected_requests = self.create_scatter_requests(query, num_splits,
+                                                       batch_size, num_entities)
 
       expected_calls = []
       for req in expected_requests:

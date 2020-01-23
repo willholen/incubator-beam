@@ -85,8 +85,8 @@ class StatusServer(object):
         """Do not log any messages."""
         pass
 
-    self.httpd = httpd = http.server.HTTPServer(
-        ('localhost', status_http_port), StatusHttpHandler)
+    self.httpd = httpd = http.server.HTTPServer(('localhost', status_http_port),
+                                                StatusHttpHandler)
     _LOGGER.info('Status HTTP server running at %s:%s', httpd.server_name,
                  httpd.server_port)
 
@@ -139,8 +139,9 @@ def main(unused_argv):
     _load_main_session(semi_persistent_directory)
   except Exception:  # pylint: disable=broad-except
     exception_details = traceback.format_exc()
-    _LOGGER.error(
-        'Could not load main session: %s', exception_details, exc_info=True)
+    _LOGGER.error('Could not load main session: %s',
+                  exception_details,
+                  exc_info=True)
 
   try:
     _LOGGER.info('Python sdk harness started with pipeline_options: %s',
@@ -150,15 +151,13 @@ def main(unused_argv):
                       service_descriptor)
     # TODO(robertwb): Support credentials.
     assert not service_descriptor.oauth2_client_credentials_grant.url
-    SdkHarness(
-        control_address=service_descriptor.url,
-        worker_id=_worker_id,
-        state_cache_size=_get_state_cache_size(sdk_pipeline_options),
-        data_buffer_time_limit_ms=_get_data_buffer_time_limit_ms(
-            sdk_pipeline_options),
-        profiler_factory=profiler.Profile.factory_from_options(
-            sdk_pipeline_options.view_as(ProfilingOptions))
-    ).run()
+    SdkHarness(control_address=service_descriptor.url,
+               worker_id=_worker_id,
+               state_cache_size=_get_state_cache_size(sdk_pipeline_options),
+               data_buffer_time_limit_ms=_get_data_buffer_time_limit_ms(
+                   sdk_pipeline_options),
+               profiler_factory=profiler.Profile.factory_from_options(
+                   sdk_pipeline_options.view_as(ProfilingOptions))).run()
     _LOGGER.info('Python sdk harness exiting.')
   except:  # pylint: disable=broad-except
     _LOGGER.exception('Python sdk harness failed: ')
@@ -177,9 +176,8 @@ def _parse_pipeline_options(options_json):
     # Remove extra urn part from the key.
     portable_option_regex = r'^beam:option:(?P<key>.*):v1$'
     return PipelineOptions.from_dictionary({
-        re.match(portable_option_regex, k).group('key')
-        if re.match(portable_option_regex, k) else k: v
-        for k, v in options.items()
+        re.match(portable_option_regex, k).group('key') if re.match(
+            portable_option_regex, k) else k: v for k, v in options.items()
     })
 
 

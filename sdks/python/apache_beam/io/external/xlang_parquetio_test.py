@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for cross-language parquet io read/write."""
 
 # pytype: skip-file
@@ -39,12 +38,10 @@ PARQUET_WRITE_URN = "beam:transforms:xlang:parquet_write"
 
 
 @attr('UsesCrossLanguageTransforms')
-@unittest.skipUnless(
-    os.environ.get('EXPANSION_JAR'),
-    "EXPANSION_JAR environment variable is not set.")
-@unittest.skipUnless(
-    os.environ.get('EXPANSION_PORT'),
-    "EXPANSION_PORT environment var is not provided.")
+@unittest.skipUnless(os.environ.get('EXPANSION_JAR'),
+                     "EXPANSION_JAR environment variable is not set.")
+@unittest.skipUnless(os.environ.get('EXPANSION_PORT'),
+                     "EXPANSION_PORT environment var is not provided.")
 class XlangParquetIOTest(unittest.TestCase):
   # TODO: add verification for the file written by external transform
   #  after fixing BEAM-7612
@@ -54,8 +51,8 @@ class XlangParquetIOTest(unittest.TestCase):
     address = 'localhost:%s' % port
     try:
       with TestPipeline() as p:
-        p.get_pipeline_options().view_as(
-            DebugOptions).experiments.append('jar_packages='+expansion_jar)
+        p.get_pipeline_options().view_as(DebugOptions).experiments.append(
+            'jar_packages=' + expansion_jar)
         p.not_use_test_runner_api = True
         _ = p \
           | beam.Create([

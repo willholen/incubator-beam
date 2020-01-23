@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A job server submitting portable pipelines as uber jars to Flink."""
 
 # pytype: skip-file
@@ -48,10 +47,10 @@ class FlinkUberJarJobServer(abstract_job_service.AbstractJobServiceServicer):
   def __init__(self, master_url, options):
     super(FlinkUberJarJobServer, self).__init__()
     self._master_url = master_url
-    self._executable_jar = (options.view_as(pipeline_options.FlinkRunnerOptions)
-                            .flink_job_server_jar)
-    self._artifact_port = (options.view_as(pipeline_options.JobServerOptions)
-                           .artifact_port)
+    self._executable_jar = (options.view_as(
+        pipeline_options.FlinkRunnerOptions).flink_job_server_jar)
+    self._artifact_port = (options.view_as(
+        pipeline_options.JobServerOptions).artifact_port)
     self._temp_dir = tempfile.mkdtemp(prefix='apache-beam-flink')
 
   def start(self):
@@ -61,38 +60,44 @@ class FlinkUberJarJobServer(abstract_job_service.AbstractJobServiceServicer):
     pass
 
   def executable_jar(self):
-    url = (self._executable_jar or
-           job_server.JavaJarJobServer.path_to_beam_jar(
-               'runners:flink:%s:job-server:shadowJar' % self.flink_version()))
+    url = (self._executable_jar or job_server.JavaJarJobServer.path_to_beam_jar(
+        'runners:flink:%s:job-server:shadowJar' % self.flink_version()))
     return job_server.JavaJarJobServer.local_jar(url)
 
   def flink_version(self):
-    full_version = requests.get(
-        '%s/v1/config' % self._master_url).json()['flink-version']
+    full_version = requests.get('%s/v1/config' %
+                                self._master_url).json()['flink-version']
     # Only return up to minor version.
     return '.'.join(full_version.split('.')[:2])
 
   def create_beam_job(self, job_id, job_name, pipeline, options):
-    return FlinkBeamJob(
-        self._master_url,
-        self.executable_jar(),
-        job_id,
-        job_name,
-        pipeline,
-        options,
-        artifact_port=self._artifact_port)
+    return FlinkBeamJob(self._master_url,
+                        self.executable_jar(),
+                        job_id,
+                        job_name,
+                        pipeline,
+                        options,
+                        artifact_port=self._artifact_port)
 
 
 class FlinkBeamJob(abstract_job_service.UberJarBeamJob):
   """Runs a single Beam job on Flink by staging all contents into a Jar
   and uploading it via the Flink Rest API."""
 
-  def __init__(
-      self, master_url, executable_jar, job_id, job_name, pipeline, options,
-      artifact_port=0):
-    super(FlinkBeamJob, self).__init__(
-        executable_jar, job_id, job_name, pipeline, options,
-        artifact_port=artifact_port)
+  def __init__(self,
+               master_url,
+               executable_jar,
+               job_id,
+               job_name,
+               pipeline,
+               options,
+               artifact_port=0):
+    super(FlinkBeamJob, self).__init__(executable_jar,
+                                       job_id,
+                                       job_name,
+                                       pipeline,
+                                       options,
+                                       artifact_port=artifact_port)
     self._master_url = master_url
 
   def request(self, method, path, expected_status=200, **kwargs):
@@ -124,9 +129,9 @@ class FlinkBeamJob(abstract_job_service.UberJarBeamJob):
 
     # Upload the jar and start the job.
     with open(self._jar, 'rb') as jar_file:
-      self._flink_jar_id = self.post(
-          'v1/jars/upload',
-          files={'jarfile': ('beam.jar', jar_file)})['filename'].split('/')[-1]
+      self._flink_jar_id = self.post('v1/jars/upload',
+                                     files={'jarfile': ('beam.jar', jar_file)
+                                           })['filename'].split('/')[-1]
     self._jar_uploaded = True
     self._flink_job_id = self.post(
         'v1/jars/%s/run' % self._flink_jar_id,
@@ -146,8 +151,8 @@ class FlinkBeamJob(abstract_job_service.UberJarBeamJob):
       try:
         self.delete('v1/jars/%s' % self._flink_jar_id)
       except Exception:
-        _LOGGER.info(
-            'Error deleting jar %s' % self._flink_jar_id, exc_info=True)
+        _LOGGER.info('Error deleting jar %s' % self._flink_jar_id,
+                     exc_info=True)
 
   def _get_state(self):
     """Query flink to get the current state.
@@ -156,8 +161,8 @@ class FlinkBeamJob(abstract_job_service.UberJarBeamJob):
       timestamp will be None if the state has not changed since the last query.
     """
     # For just getting the status, execution-result seems cheaper.
-    flink_status = self.get(
-        'v1/jobs/%s/execution-result' % self._flink_job_id)['status']['id']
+    flink_status = self.get('v1/jobs/%s/execution-result' %
+                            self._flink_job_id)['status']['id']
     if flink_status == 'COMPLETED':
       flink_status = self.get('v1/jobs/%s' % self._flink_job_id)['state']
     beam_state = {
@@ -188,6 +193,7 @@ class FlinkBeamJob(abstract_job_service.UberJarBeamJob):
       return state, timestamp
 
   def get_state_stream(self):
+
     def _state_iter():
       sleep_secs = 1.0
       while True:
@@ -211,8 +217,8 @@ class FlinkBeamJob(abstract_job_service.UberJarBeamJob):
           yield beam_job_api_pb2.JobMessage(
               message_id='message%d' % ix,
               time=str(exc['timestamp']),
-              importance=
-              beam_job_api_pb2.JobMessage.MessageImportance.JOB_MESSAGE_ERROR,
+              importance=beam_job_api_pb2.JobMessage.MessageImportance.
+              JOB_MESSAGE_ERROR,
               message_text=exc['exception'])
         yield state, timestamp
         break

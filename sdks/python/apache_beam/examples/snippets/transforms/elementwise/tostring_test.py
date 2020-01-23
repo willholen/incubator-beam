@@ -68,6 +68,7 @@ def check_plants_csv(actual):
 @mock.patch(
     'apache_beam.examples.snippets.transforms.elementwise.tostring.print', str)
 class ToStringTest(unittest.TestCase):
+
   def test_tostring_kvs(self):
     tostring.tostring_kvs(check_plants)
 

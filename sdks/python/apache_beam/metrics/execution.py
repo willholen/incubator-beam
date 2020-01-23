@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 This module is for internal use only; no backwards-compatibility guarantees.
 
@@ -52,6 +51,7 @@ class MetricKey(object):
   and any extra label metadata added by the runner specific metric collection
   service.
   """
+
   def __init__(self, step, metric, labels=None):
     """Initializes ``MetricKey``.
 
@@ -65,8 +65,7 @@ class MetricKey(object):
     self.labels = labels if labels else dict()
 
   def __eq__(self, other):
-    return (self.step == other.step and
-            self.metric == other.metric and
+    return (self.step == other.step and self.metric == other.metric and
             self.labels == other.labels)
 
   def __ne__(self, other):
@@ -96,6 +95,7 @@ class MetricResult(object):
     attempted: The logical updates of the metric. This attribute's type is that
       of metric type result (e.g. int, DistributionResult, GaugeResult).
   """
+
   def __init__(self, key, committed, attempted):
     """Initializes ``MetricResult``.
     Args:
@@ -108,8 +108,7 @@ class MetricResult(object):
     self.attempted = attempted
 
   def __eq__(self, other):
-    return (self.key == other.key and
-            self.committed == other.committed and
+    return (self.key == other.key and self.committed == other.committed and
             self.attempted == other.attempted)
 
   def __ne__(self, other):
@@ -140,6 +139,7 @@ class _MetricsEnvironment(object):
   This class is not meant to be instantiated, instead being used to keep
   track of global state.
   """
+
   def current_container(self):
     """Returns the current MetricsContainer."""
     sampler = statesampler.get_current_tracker()
@@ -153,20 +153,21 @@ MetricsEnvironment = _MetricsEnvironment()
 
 class _TypedMetricName(object):
   """Like MetricName, but also stores the cell type of the metric."""
+
   def __init__(self, cell_type, metric_name):
     self.cell_type = cell_type
     self.metric_name = metric_name
     if isinstance(metric_name, str):
       self.fast_name = metric_name
     else:
-      self.fast_name = '%d_%s%s' % (
-          len(metric_name.name), metric_name.name, metric_name.namespace)
+      self.fast_name = '%d_%s%s' % (len(
+          metric_name.name), metric_name.name, metric_name.namespace)
     # Cached for speed, as this is used as a key for every counter update.
     self._hash = hash((cell_type, self.fast_name))
 
   def __eq__(self, other):
-    return self is other or (
-        self.cell_type == other.cell_type and self.fast_name == other.fast_name)
+    return self is other or (self.cell_type == other.cell_type and
+                             self.fast_name == other.fast_name)
 
   def __ne__(self, other):
     return not self == other
@@ -183,6 +184,7 @@ _DEFAULT = None
 
 class MetricUpdater(object):
   """A callable that updates the metric as quickly as possible."""
+
   def __init__(self, cell_type, metric_name, default=None):
     self.typed_metric_name = _TypedMetricName(cell_type, metric_name)
     self.default = default
@@ -190,22 +192,20 @@ class MetricUpdater(object):
   def __call__(self, value=_DEFAULT):
     if value is _DEFAULT:
       if self.default is _DEFAULT:
-        raise ValueError(
-            'Missing value for update of %s' % self.metric_name)
+        raise ValueError('Missing value for update of %s' % self.metric_name)
       value = self.default
     tracker = get_current_tracker()
     if tracker is not None:
       tracker.update_metric(self.typed_metric_name, value)
 
   def __reduce__(self):
-    return MetricUpdater, (
-        self.typed_metric_name.cell_type,
-        self.typed_metric_name.metric_name,
-        self.default)
+    return MetricUpdater, (self.typed_metric_name.cell_type,
+                           self.typed_metric_name.metric_name, self.default)
 
 
 class MetricsContainer(object):
   """Holds the metrics of a single step and a single bundle."""
+
   def __init__(self, step_name):
     self.step_name = step_name
     self.metrics = dict()
@@ -230,31 +230,39 @@ class MetricsContainer(object):
 
     This returns all the cumulative values for all metrics.
     """
-    counters = {MetricKey(self.step_name, k.metric_name): v.get_cumulative()
-                for k, v in self.metrics.items()
-                if k.cell_type == CounterCell}
+    counters = {
+        MetricKey(self.step_name, k.metric_name): v.get_cumulative()
+        for k, v in self.metrics.items()
+        if k.cell_type == CounterCell
+    }
 
     distributions = {
         MetricKey(self.step_name, k.metric_name): v.get_cumulative()
         for k, v in self.metrics.items()
-        if k.cell_type == DistributionCell}
+        if k.cell_type == DistributionCell
+    }
 
-    gauges = {MetricKey(self.step_name, k.metric_name): v.get_cumulative()
-              for k, v in self.metrics.items()
-              if k.cell_type == GaugeCell}
+    gauges = {
+        MetricKey(self.step_name, k.metric_name): v.get_cumulative()
+        for k, v in self.metrics.items()
+        if k.cell_type == GaugeCell
+    }
 
     return MetricUpdates(counters, distributions, gauges)
 
   def to_runner_api(self):
-    return [cell.to_runner_api_user_metric(key.metric_name)
-            for key, cell in self.metrics.items()]
+    return [
+        cell.to_runner_api_user_metric(key.metric_name)
+        for key, cell in self.metrics.items()
+    ]
 
   def to_runner_api_monitoring_infos(self, transform_id):
     """Returns a list of MonitoringInfos for the metrics in this container."""
     all_user_metrics = [
         cell.to_runner_api_monitoring_info(key.metric_name, transform_id)
-        for key, cell in self.metrics.items()]
-    return {monitoring_infos.to_key(mi) : mi for mi in all_user_metrics}
+        for key, cell in self.metrics.items()
+    ]
+    return {monitoring_infos.to_key(mi): mi for mi in all_user_metrics}
 
   def reset(self):
     for metric in self.metrics.values():
@@ -271,6 +279,7 @@ class MetricUpdates(object):
   For Distribution metrics, it is DistributionData, and for Counter metrics,
   it's an int.
   """
+
   def __init__(self, counters=None, distributions=None, gauges=None):
     """Create a MetricUpdates object.
 

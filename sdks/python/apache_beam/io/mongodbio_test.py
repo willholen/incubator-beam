@@ -125,11 +125,15 @@ class _MockMongoDb(object):
     # Return ids of elements in the range with chunk size skip and exclude
     # head element. For simplicity of tests every document is considered 1Mb
     # by default.
-    return {'splitKeys': [{'_id': x['_id']} for x in
-                          self.docs[start_index:end_index:maxChunkSize]][1:]}
+    return {
+        'splitKeys': [{
+            '_id': x['_id']
+        } for x in self.docs[start_index:end_index:maxChunkSize]][1:]
+    }
 
 
 class _MockMongoClient(object):
+
   def __init__(self, docs):
     self.docs = docs
 
@@ -144,6 +148,7 @@ class _MockMongoClient(object):
 
 
 class MongoSourceTest(unittest.TestCase):
+
   @mock.patch('apache_beam.io.mongodbio.MongoClient')
   def setUp(self, mock_client):
     self._ids = [
@@ -242,6 +247,7 @@ class MongoSourceTest(unittest.TestCase):
 
 
 class ReadFromMongoDBTest(unittest.TestCase):
+
   @mock.patch('apache_beam.io.mongodbio.MongoClient')
   def test_read_from_mongodb(self, mock_client):
     documents = [{'_id': objectid.ObjectId(), 'x': i} for i in range(3)]
@@ -254,6 +260,7 @@ class ReadFromMongoDBTest(unittest.TestCase):
 
 
 class GenerateObjectIdFnTest(unittest.TestCase):
+
   def test_process(self):
     with TestPipeline() as p:
       output = (p | "Create" >> beam.Create([{
@@ -261,19 +268,19 @@ class GenerateObjectIdFnTest(unittest.TestCase):
       }, {
           'x': 2,
           '_id': 123
-      }])
-                | "Generate ID" >> beam.ParDo(_GenerateObjectIdFn())
-                | "Check" >> beam.Map(lambda x: '_id' in x))
+      }]) | "Generate ID" >> beam.ParDo(_GenerateObjectIdFn()) |
+                "Check" >> beam.Map(lambda x: '_id' in x))
       assert_that(output, equal_to([True] * 2))
 
 
 class WriteMongoFnTest(unittest.TestCase):
+
   @mock.patch('apache_beam.io.mongodbio._MongoSink')
   def test_process(self, mock_sink):
     docs = [{'x': 1}, {'x': 2}, {'x': 3}]
     with TestPipeline() as p:
-      _ = (p | "Create" >> beam.Create(docs)
-           | "Write" >> beam.ParDo(_WriteMongoFn(batch_size=2)))
+      _ = (p | "Create" >> beam.Create(docs) |
+           "Write" >> beam.ParDo(_WriteMongoFn(batch_size=2)))
       p.run()
 
       self.assertEqual(
@@ -285,6 +292,7 @@ class WriteMongoFnTest(unittest.TestCase):
 
 
 class MongoSinkTest(unittest.TestCase):
+
   @mock.patch('apache_beam.io.mongodbio.MongoClient')
   def test_write(self, mock_client):
     docs = [{'x': 1}, {'x': 2}, {'x': 3}]
@@ -294,14 +302,15 @@ class MongoSinkTest(unittest.TestCase):
 
 
 class WriteToMongoDBTest(unittest.TestCase):
+
   @mock.patch('apache_beam.io.mongodbio.MongoClient')
   def test_write_to_mongodb_with_existing_id(self, mock_client):
     id = objectid.ObjectId()
     docs = [{'x': 1, '_id': id}]
     expected_update = [ReplaceOne({'_id': id}, {'x': 1, '_id': id}, True, None)]
     with TestPipeline() as p:
-      _ = (p | "Create" >> beam.Create(docs)
-           | "Write" >> WriteToMongoDB(db='test', coll='test'))
+      _ = (p | "Create" >> beam.Create(docs) |
+           "Write" >> WriteToMongoDB(db='test', coll='test'))
       p.run()
       mock_client.return_value.__getitem__.return_value.__getitem__. \
         return_value.bulk_write.assert_called_with(expected_update)
@@ -316,14 +325,15 @@ class WriteToMongoDBTest(unittest.TestCase):
         }, True, None)
     ]
     with TestPipeline() as p:
-      _ = (p | "Create" >> beam.Create(docs)
-           | "Write" >> WriteToMongoDB(db='test', coll='test'))
+      _ = (p | "Create" >> beam.Create(docs) |
+           "Write" >> WriteToMongoDB(db='test', coll='test'))
       p.run()
       mock_client.return_value.__getitem__.return_value.__getitem__. \
         return_value.bulk_write.assert_called_with(expected_update)
 
 
 class ObjectIdHelperTest(TestCase):
+
   def test_conversion(self):
     test_cases = [
         (objectid.ObjectId('000000000000000000000000'), 0),
@@ -365,6 +375,7 @@ class ObjectIdHelperTest(TestCase):
 
 
 class ObjectRangeTrackerTest(TestCase):
+
   def test_fraction_position_conversion(self):
     start_int = 0
     stop_int = 2**96 - 1

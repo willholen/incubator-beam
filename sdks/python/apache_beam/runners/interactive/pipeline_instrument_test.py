@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for apache_beam.runners.interactive.pipeline_instrument."""
 # pytype: skip-file
 
@@ -53,8 +52,8 @@ class PipelineInstrumentTest(unittest.TestCase):
     # pylint: disable=range-builtin-not-iterating
     init_pcoll = p | 'Init Create' >> beam.Impulse()
     _, ctx = p.to_runner_api(use_fake_coders=True, return_context=True)
-    self.assertEqual(instr.pcolls_to_pcoll_id(p, ctx), {
-        str(init_pcoll): 'ref_PCollection_PCollection_1'})
+    self.assertEqual(instr.pcolls_to_pcoll_id(p, ctx),
+                     {str(init_pcoll): 'ref_PCollection_PCollection_1'})
 
   def test_cacheable_key_without_version_map(self):
     p = beam.Pipeline(interactive_runner.InteractiveRunner())
@@ -85,8 +84,8 @@ class PipelineInstrumentTest(unittest.TestCase):
     # The cacheable_key should use id(init_pcoll) as prefix even when
     # init_pcoll_2 is supplied as long as the version map is given.
     self.assertEqual(
-        instr.cacheable_key(init_pcoll_2, instr.pcolls_to_pcoll_id(p2, ctx), {
-            'ref_PCollection_PCollection_10': str(id(init_pcoll))}),
+        instr.cacheable_key(init_pcoll_2, instr.pcolls_to_pcoll_id(
+            p2, ctx), {'ref_PCollection_PCollection_10': str(id(init_pcoll))}),
         str(id(init_pcoll)) + '_ref_PCollection_PCollection_10')
 
   def test_cache_key(self):
@@ -94,50 +93,53 @@ class PipelineInstrumentTest(unittest.TestCase):
     # pylint: disable=range-builtin-not-iterating
     init_pcoll = p | 'Init Create' >> beam.Create(range(10))
     squares = init_pcoll | 'Square' >> beam.Map(lambda x: x * x)
-    cubes = init_pcoll | 'Cube' >> beam.Map(lambda x: x ** 3)
+    cubes = init_pcoll | 'Cube' >> beam.Map(lambda x: x**3)
     # Watch the local variables, i.e., the Beam pipeline defined.
     ib.watch(locals())
 
     pin = instr.pin(p)
-    self.assertEqual(pin.cache_key(init_pcoll), 'init_pcoll_' + str(
-        id(init_pcoll)) + '_' + str(id(init_pcoll.producer)))
-    self.assertEqual(pin.cache_key(squares), 'squares_' + str(
-        id(squares)) + '_' + str(id(squares.producer)))
-    self.assertEqual(pin.cache_key(cubes), 'cubes_' + str(
-        id(cubes)) + '_' + str(id(cubes.producer)))
+    self.assertEqual(
+        pin.cache_key(init_pcoll), 'init_pcoll_' + str(id(init_pcoll)) + '_' +
+        str(id(init_pcoll.producer)))
+    self.assertEqual(
+        pin.cache_key(squares),
+        'squares_' + str(id(squares)) + '_' + str(id(squares.producer)))
+    self.assertEqual(pin.cache_key(cubes),
+                     'cubes_' + str(id(cubes)) + '_' + str(id(cubes.producer)))
 
   def test_cacheables(self):
     p = beam.Pipeline(interactive_runner.InteractiveRunner())
     # pylint: disable=range-builtin-not-iterating
     init_pcoll = p | 'Init Create' >> beam.Create(range(10))
     squares = init_pcoll | 'Square' >> beam.Map(lambda x: x * x)
-    cubes = init_pcoll | 'Cube' >> beam.Map(lambda x: x ** 3)
+    cubes = init_pcoll | 'Cube' >> beam.Map(lambda x: x**3)
     ib.watch(locals())
 
     pin = instr.pin(p)
-    self.assertEqual(pin.cacheables, {
-        pin._cacheable_key(init_pcoll): {
-            'var': 'init_pcoll',
-            'version': str(id(init_pcoll)),
-            'pcoll_id': 'ref_PCollection_PCollection_10',
-            'producer_version': str(id(init_pcoll.producer)),
-            'pcoll': init_pcoll
-        },
-        pin._cacheable_key(squares): {
-            'var': 'squares',
-            'version': str(id(squares)),
-            'pcoll_id': 'ref_PCollection_PCollection_11',
-            'producer_version': str(id(squares.producer)),
-            'pcoll': squares
-        },
-        pin._cacheable_key(cubes): {
-            'var': 'cubes',
-            'version': str(id(cubes)),
-            'pcoll_id': 'ref_PCollection_PCollection_12',
-            'producer_version': str(id(cubes.producer)),
-            'pcoll': cubes
-        }
-    })
+    self.assertEqual(
+        pin.cacheables, {
+            pin._cacheable_key(init_pcoll): {
+                'var': 'init_pcoll',
+                'version': str(id(init_pcoll)),
+                'pcoll_id': 'ref_PCollection_PCollection_10',
+                'producer_version': str(id(init_pcoll.producer)),
+                'pcoll': init_pcoll
+            },
+            pin._cacheable_key(squares): {
+                'var': 'squares',
+                'version': str(id(squares)),
+                'pcoll_id': 'ref_PCollection_PCollection_11',
+                'producer_version': str(id(squares.producer)),
+                'pcoll': squares
+            },
+            pin._cacheable_key(cubes): {
+                'var': 'cubes',
+                'version': str(id(cubes)),
+                'pcoll_id': 'ref_PCollection_PCollection_12',
+                'producer_version': str(id(cubes.producer)),
+                'pcoll': cubes
+            }
+        })
 
   def test_has_unbounded_source(self):
     p = beam.Pipeline(interactive_runner.InteractiveRunner())
@@ -242,8 +244,8 @@ class PipelineInstrumentTest(unittest.TestCase):
     p_copy, _, _ = self._example_pipeline(False)
 
     # Mock as if cacheable PCollections are cached.
-    init_pcoll_cache_key = 'init_pcoll_' + str(
-        id(init_pcoll)) + '_' + str(id(init_pcoll.producer))
+    init_pcoll_cache_key = 'init_pcoll_' + str(id(init_pcoll)) + '_' + str(
+        id(init_pcoll.producer))
     self._mock_write_cache(init_pcoll, init_pcoll_cache_key)
     second_pcoll_cache_key = 'second_pcoll_' + str(
         id(second_pcoll)) + '_' + str(id(second_pcoll.producer))

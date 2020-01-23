@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A word-counting workflow that uses Google Cloud Datastore.
 
 This example shows how to use ``datastoreio`` to read from and write to
@@ -127,6 +126,7 @@ class WordExtractingDoFn(beam.DoFn):
 
 class EntityWrapper(object):
   """Create a Cloud Datastore entity from the given string."""
+
   def __init__(self, namespace, kind, ancestor):
     self._namespace = namespace
     self._kind = kind
@@ -150,12 +150,11 @@ def write_to_datastore(user_options, pipeline_options):
   with beam.Pipeline(options=pipeline_options) as p:
 
     # pylint: disable=expression-not-assigned
-    (p
-     | 'read' >> ReadFromText(user_options.input)
-     | 'create entity' >> beam.Map(
+    (p | 'read' >> ReadFromText(user_options.input) |
+     'create entity' >> beam.Map(
          EntityWrapper(user_options.namespace, user_options.kind,
-                       user_options.ancestor).make_entity)
-     | 'write to datastore' >> WriteToDatastore(user_options.dataset))
+                       user_options.ancestor).make_entity) |
+     'write to datastore' >> WriteToDatastore(user_options.dataset))
 
 
 def make_ancestor_query(kind, namespace, ancestor):
@@ -172,8 +171,9 @@ def make_ancestor_query(kind, namespace, ancestor):
   query = query_pb2.Query()
   query.kind.add().name = kind
 
-  datastore_helper.set_property_filter(
-      query.filter, '__key__', PropertyFilter.HAS_ANCESTOR, ancestor_key)
+  datastore_helper.set_property_filter(query.filter, '__key__',
+                                       PropertyFilter.HAS_ANCESTOR,
+                                       ancestor_key)
 
   return query
 
@@ -194,12 +194,10 @@ def read_from_datastore(user_options, pipeline_options):
     (word, ones) = word_ones
     return (word, sum(ones))
 
-  counts = (lines
-            | 'split' >> (beam.ParDo(WordExtractingDoFn())
-                          .with_output_types(unicode))
-            | 'pair_with_one' >> beam.Map(lambda x: (x, 1))
-            | 'group' >> beam.GroupByKey()
-            | 'count' >> beam.Map(count_ones))
+  counts = (lines | 'split' >>
+            (beam.ParDo(WordExtractingDoFn()).with_output_types(unicode)) |
+            'pair_with_one' >> beam.Map(lambda x: (x, 1)) |
+            'group' >> beam.GroupByKey() | 'count' >> beam.Map(count_ones))
 
   # Format the counts into a PCollection of strings.
   def format_result(word_count):
@@ -248,12 +246,13 @@ def run(argv=None):
   parser.add_argument('--read_only',
                       action='store_true',
                       help='Read an existing dataset, do not write first')
-  parser.add_argument('--num_shards',
-                      dest='num_shards',
-                      type=int,
-                      # If the system should choose automatically.
-                      default=0,
-                      help='Number of output shards')
+  parser.add_argument(
+      '--num_shards',
+      dest='num_shards',
+      type=int,
+      # If the system should choose automatically.
+      default=0,
+      help='Number of output shards')
 
   known_args, pipeline_args = parser.parse_known_args(argv)
   # We use the save_main_session option because one or more DoFn's in this

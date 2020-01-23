@@ -36,7 +36,10 @@ class ExtraAssertionsMixinTest(ExtraAssertionsMixin, unittest.TestCase):
 
   def test_assert_array_count_equal_mixed(self):
     data1 = [
-        {'a': 1, 123: 1.234},
+        {
+            'a': 1,
+            123: 1.234
+        },
         ['d', 1],
         u"±♠Ωℑ",
         np.zeros((3, 6)),
@@ -48,7 +51,10 @@ class ExtraAssertionsMixinTest(ExtraAssertionsMixin, unittest.TestCase):
         None,
     ]
     data2 = [
-        {123: 1.234, 'a': 1},
+        {
+            123: 1.234,
+            'a': 1
+        },
         ('a', 'b', 'c'),
         ['d', 1],
         None,

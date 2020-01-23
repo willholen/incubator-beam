@@ -110,8 +110,9 @@ def eval_input_receiver_fn(tf_transform_output, schema):
   # Notice that the inputs are raw features, not transformed features here.
   raw_feature_spec = taxi.get_raw_feature_spec(schema)
 
-  serialized_tf_example = tf.placeholder(
-      dtype=tf.string, shape=[None], name='input_example_tensor')
+  serialized_tf_example = tf.placeholder(dtype=tf.string,
+                                         shape=[None],
+                                         name='input_example_tensor')
 
   # Add a parse_example operator to the tensorflow graph, which will parse
   # raw, untransformed, tf examples.
@@ -119,8 +120,7 @@ def eval_input_receiver_fn(tf_transform_output, schema):
 
   # Now that we have our raw examples, process them through the tf-transform
   # function computed during the preprocessing step.
-  transformed_features = tf_transform_output.transform_raw_features(
-      features)
+  transformed_features = tf_transform_output.transform_raw_features(features)
 
   # The key name MUST be 'examples'.
   receiver_tensors = {'examples': serialized_tf_example}
@@ -137,9 +137,8 @@ def eval_input_receiver_fn(tf_transform_output, schema):
 
 def _gzip_reader_fn():
   """Small utility returning a record reader that can read gzip'ed files."""
-  return tf.TFRecordReader(
-      options=tf.python_io.TFRecordOptions(
-          compression_type=tf.python_io.TFRecordCompressionType.GZIP))
+  return tf.TFRecordReader(options=tf.python_io.TFRecordOptions(
+      compression_type=tf.python_io.TFRecordCompressionType.GZIP))
 
 
 def input_fn(filenames, tf_transform_output, batch_size=200):

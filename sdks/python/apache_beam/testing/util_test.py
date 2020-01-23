@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for testing utilities."""
 
 # pytype: skip-file
@@ -45,7 +44,7 @@ from apache_beam.utils.timestamp import MIN_TIMESTAMP
 class UtilTest(unittest.TestCase):
 
   def setUp(self):
-    try:                    # Python 3
+    try:  # Python 3
       _ = self.assertRaisesRegex
     except AttributeError:  # Python 2
       self.assertRaisesRegex = self.assertRaisesRegexp
@@ -82,9 +81,9 @@ class UtilTest(unittest.TestCase):
         assert_that(p | Create(['a', 'b']), equal_to(['a', 'b', 'c']))
 
   def test_assert_unexpected(self):
-    with self.assertRaisesRegex(BeamAssertException,
-                                r"unexpected elements \['c', 'd'\]|"
-                                r"unexpected elements \['d', 'c'\]"):
+    with self.assertRaisesRegex(
+        BeamAssertException, r"unexpected elements \['c', 'd'\]|"
+        r"unexpected elements \['d', 'c'\]"):
       with TestPipeline() as p:
         assert_that(p | Create(['a', 'b', 'c', 'd']), equal_to(['a', 'b']))
 
@@ -93,37 +92,44 @@ class UtilTest(unittest.TestCase):
         BeamAssertException,
         r"unexpected elements \['c'\].*missing elements \['d'\]"):
       with TestPipeline() as p:
-        assert_that(p | Create(['a', 'b', 'c']),
-                    equal_to(['a', 'b', 'd']))
+        assert_that(p | Create(['a', 'b', 'c']), equal_to(['a', 'b', 'd']))
 
   def test_reified_value_passes(self):
-    expected = [TestWindowedValue(v, MIN_TIMESTAMP, [GlobalWindow()])
-                for v in [1, 2, 3]]
+    expected = [
+        TestWindowedValue(v, MIN_TIMESTAMP, [GlobalWindow()])
+        for v in [1, 2, 3]
+    ]
     with TestPipeline() as p:
       assert_that(p | Create([2, 3, 1]), equal_to(expected), reify_windows=True)
 
   def test_reified_value_assert_fail_unmatched_value(self):
-    expected = [TestWindowedValue(v + 1, MIN_TIMESTAMP, [GlobalWindow()])
-                for v in [1, 2, 3]]
+    expected = [
+        TestWindowedValue(v + 1, MIN_TIMESTAMP, [GlobalWindow()])
+        for v in [1, 2, 3]
+    ]
     with self.assertRaises(Exception):
       with TestPipeline() as p:
-        assert_that(p | Create([2, 3, 1]), equal_to(expected),
+        assert_that(p | Create([2, 3, 1]),
+                    equal_to(expected),
                     reify_windows=True)
 
   def test_reified_value_assert_fail_unmatched_timestamp(self):
-    expected = [TestWindowedValue(v, 1, [GlobalWindow()])
-                for v in [1, 2, 3]]
+    expected = [TestWindowedValue(v, 1, [GlobalWindow()]) for v in [1, 2, 3]]
     with self.assertRaises(Exception):
       with TestPipeline() as p:
-        assert_that(p | Create([2, 3, 1]), equal_to(expected),
+        assert_that(p | Create([2, 3, 1]),
+                    equal_to(expected),
                     reify_windows=True)
 
   def test_reified_value_assert_fail_unmatched_window(self):
-    expected = [TestWindowedValue(v, MIN_TIMESTAMP, [IntervalWindow(0, 1)])
-                for v in [1, 2, 3]]
+    expected = [
+        TestWindowedValue(v, MIN_TIMESTAMP, [IntervalWindow(0, 1)])
+        for v in [1, 2, 3]
+    ]
     with self.assertRaises(Exception):
       with TestPipeline() as p:
-        assert_that(p | Create([2, 3, 1]), equal_to(expected),
+        assert_that(p | Create([2, 3, 1]),
+                    equal_to(expected),
                     reify_windows=True)
 
   def test_assert_that_fails_on_empty_input(self):
@@ -152,14 +158,11 @@ class UtilTest(unittest.TestCase):
         window.IntervalWindow(start, end): [('k', [1])],
     }
     with TestPipeline(options=StandardOptions(streaming=True)) as p:
-      assert_that((p
-                   | Create([1])
-                   | beam.WindowInto(
-                       FixedWindows(20),
-                       trigger=trigger.AfterWatermark(),
-                       accumulation_mode=trigger.AccumulationMode.DISCARDING)
-                   | beam.Map(lambda x: ('k', x))
-                   | beam.GroupByKey()),
+      assert_that((p | Create([1]) | beam.WindowInto(
+          FixedWindows(20),
+          trigger=trigger.AfterWatermark(),
+          accumulation_mode=trigger.AccumulationMode.DISCARDING) |
+                   beam.Map(lambda x: ('k', x)) | beam.GroupByKey()),
                   equal_to_per_window(expected),
                   reify_windows=True)
 
@@ -169,14 +172,11 @@ class UtilTest(unittest.TestCase):
           window.IntervalWindow(50, 100): [('k', [1])],
       }
       with TestPipeline(options=StandardOptions(streaming=True)) as p:
-        assert_that((p
-                     | Create([1])
-                     | beam.WindowInto(
-                         FixedWindows(20),
-                         trigger=trigger.AfterWatermark(),
-                         accumulation_mode=trigger.AccumulationMode.DISCARDING)
-                     | beam.Map(lambda x: ('k', x))
-                     | beam.GroupByKey()),
+        assert_that((p | Create([1]) | beam.WindowInto(
+            FixedWindows(20),
+            trigger=trigger.AfterWatermark(),
+            accumulation_mode=trigger.AccumulationMode.DISCARDING) |
+                     beam.Map(lambda x: ('k', x)) | beam.GroupByKey()),
                     equal_to_per_window(expected),
                     reify_windows=True)
 
@@ -188,14 +188,11 @@ class UtilTest(unittest.TestCase):
           window.IntervalWindow(start, end): [('k', [1]), ('k', [2])],
       }
       with TestPipeline(options=StandardOptions(streaming=True)) as p:
-        assert_that((p
-                     | Create([1])
-                     | beam.WindowInto(
-                         FixedWindows(20),
-                         trigger=trigger.AfterWatermark(),
-                         accumulation_mode=trigger.AccumulationMode.DISCARDING)
-                     | beam.Map(lambda x: ('k', x))
-                     | beam.GroupByKey()),
+        assert_that((p | Create([1]) | beam.WindowInto(
+            FixedWindows(20),
+            trigger=trigger.AfterWatermark(),
+            accumulation_mode=trigger.AccumulationMode.DISCARDING) |
+                     beam.Map(lambda x: ('k', x)) | beam.GroupByKey()),
                     equal_to_per_window(expected),
                     reify_windows=True)
 
@@ -206,14 +203,11 @@ class UtilTest(unittest.TestCase):
         window.IntervalWindow(start, end): [('k', [1])],
     }
     with TestPipeline(options=StandardOptions(streaming=True)) as p:
-      assert_that((p
-                   | Create([1])
-                   | beam.WindowInto(
-                       FixedWindows(20),
-                       trigger=trigger.AfterWatermark(),
-                       accumulation_mode=trigger.AccumulationMode.DISCARDING)
-                   | beam.Map(lambda x: ('k', x))
-                   | beam.GroupByKey()),
+      assert_that((p | Create([1]) | beam.WindowInto(
+          FixedWindows(20),
+          trigger=trigger.AfterWatermark(),
+          accumulation_mode=trigger.AccumulationMode.DISCARDING) |
+                   beam.Map(lambda x: ('k', x)) | beam.GroupByKey()),
                   equal_to_per_window(expected))
 
   def test_equal_to_per_window_fail_unexpected_element(self):
@@ -224,14 +218,11 @@ class UtilTest(unittest.TestCase):
           window.IntervalWindow(start, end): [('k', [1])],
       }
       with TestPipeline(options=StandardOptions(streaming=True)) as p:
-        assert_that((p
-                     | Create([1, 2])
-                     | beam.WindowInto(
-                         FixedWindows(20),
-                         trigger=trigger.AfterWatermark(),
-                         accumulation_mode=trigger.AccumulationMode.DISCARDING)
-                     | beam.Map(lambda x: ('k', x))
-                     | beam.GroupByKey()),
+        assert_that((p | Create([1, 2]) | beam.WindowInto(
+            FixedWindows(20),
+            trigger=trigger.AfterWatermark(),
+            accumulation_mode=trigger.AccumulationMode.DISCARDING) |
+                     beam.Map(lambda x: ('k', x)) | beam.GroupByKey()),
                     equal_to_per_window(expected),
                     reify_windows=True)
 

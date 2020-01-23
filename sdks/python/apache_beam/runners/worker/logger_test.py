@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for worker logging utilities."""
 
 # pytype: skip-file
@@ -39,16 +38,16 @@ class PerThreadLoggingContextTest(unittest.TestCase):
   def thread_check_attribute(self, name):
     self.assertFalse(name in logger.per_thread_worker_data.get_data())
     with logger.PerThreadLoggingContext(**{name: 'thread-value'}):
-      self.assertEqual(
-          logger.per_thread_worker_data.get_data()[name], 'thread-value')
+      self.assertEqual(logger.per_thread_worker_data.get_data()[name],
+                       'thread-value')
     self.assertFalse(name in logger.per_thread_worker_data.get_data())
 
   def test_per_thread_attribute(self):
     self.assertFalse('xyz' in logger.per_thread_worker_data.get_data())
     with logger.PerThreadLoggingContext(xyz='value'):
       self.assertEqual(logger.per_thread_worker_data.get_data()['xyz'], 'value')
-      thread = threading.Thread(
-          target=self.thread_check_attribute, args=('xyz',))
+      thread = threading.Thread(target=self.thread_check_attribute,
+                                args=('xyz',))
       thread.start()
       thread.join()
       self.assertEqual(logger.per_thread_worker_data.get_data()['xyz'], 'value')
@@ -65,8 +64,8 @@ class PerThreadLoggingContextTest(unittest.TestCase):
     with logger.PerThreadLoggingContext(xyz='value'):
       self.assertEqual(logger.per_thread_worker_data.get_data()['xyz'], 'value')
       with logger.PerThreadLoggingContext(xyz='value2'):
-        self.assertEqual(
-            logger.per_thread_worker_data.get_data()['xyz'], 'value2')
+        self.assertEqual(logger.per_thread_worker_data.get_data()['xyz'],
+                         'value2')
       self.assertEqual(logger.per_thread_worker_data.get_data()['xyz'], 'value')
     self.assertFalse('xyz' in logger.per_thread_worker_data.get_data())
 
@@ -74,17 +73,31 @@ class PerThreadLoggingContextTest(unittest.TestCase):
 class JsonLogFormatterTest(unittest.TestCase):
 
   SAMPLE_RECORD = {
-      'created': 123456.789, 'msecs': 789.654321,
-      'msg': '%s:%d:%.2f', 'args': ('xyz', 4, 3.14),
+      'created': 123456.789,
+      'msecs': 789.654321,
+      'msg': '%s:%d:%.2f',
+      'args': ('xyz', 4, 3.14),
       'levelname': 'WARNING',
-      'process': 'pid', 'thread': 'tid',
-      'name': 'name', 'filename': 'file', 'funcName': 'func',
-      'exc_info': None}
+      'process': 'pid',
+      'thread': 'tid',
+      'name': 'name',
+      'filename': 'file',
+      'funcName': 'func',
+      'exc_info': None
+  }
 
   SAMPLE_OUTPUT = {
-      'timestamp': {'seconds': 123456, 'nanos': 789654321},
-      'severity': 'WARN', 'message': 'xyz:4:3.14', 'thread': 'pid:tid',
-      'job': 'jobid', 'worker': 'workerid', 'logger': 'name:file:func'}
+      'timestamp': {
+          'seconds': 123456,
+          'nanos': 789654321
+      },
+      'severity': 'WARN',
+      'message': 'xyz:4:3.14',
+      'thread': 'pid:tid',
+      'job': 'jobid',
+      'worker': 'workerid',
+      'logger': 'name:file:func'
+  }
 
   def create_log_record(self, **kwargs):
 
@@ -117,18 +130,42 @@ class JsonLogFormatterTest(unittest.TestCase):
 
   def test_record_with_format_character(self):
     test_cases = [
-        {'msg': '%A', 'args': (), 'expected': '%A'},
-        {'msg': '%s', 'args': (), 'expected': '%s'},
-        {'msg': '%A%s', 'args': ('xy'), 'expected': '%A%s with args (xy)'},
-        {'msg': '%s%s', 'args': (1), 'expected': '%s%s with args (1)'},
+        {
+            'msg': '%A',
+            'args': (),
+            'expected': '%A'
+        },
+        {
+            'msg': '%s',
+            'args': (),
+            'expected': '%s'
+        },
+        {
+            'msg': '%A%s',
+            'args': ('xy'),
+            'expected': '%A%s with args (xy)'
+        },
+        {
+            'msg': '%s%s',
+            'args': (1),
+            'expected': '%s%s with args (1)'
+        },
     ]
 
     self.execute_multiple_cases(test_cases)
 
   def test_record_with_arbitrary_messages(self):
     test_cases = [
-        {'msg': ImportError('abc'), 'args': (), 'expected': 'abc'},
-        {'msg': TypeError('abc %s'), 'args': ('def'), 'expected': 'abc def'},
+        {
+            'msg': ImportError('abc'),
+            'args': (),
+            'expected': 'abc'
+        },
+        {
+            'msg': TypeError('abc %s'),
+            'args': ('def'),
+            'expected': 'abc def'
+        },
     ]
 
     self.execute_multiple_cases(test_cases)
@@ -143,8 +180,11 @@ class JsonLogFormatterTest(unittest.TestCase):
         record = self.create_log_record(**self.SAMPLE_RECORD)
         log_output = json.loads(formatter.format(record))
     expected_output = dict(self.SAMPLE_OUTPUT)
-    expected_output.update(
-        {'work': 'workitem', 'stage': 'stage', 'step': 'step'})
+    expected_output.update({
+        'work': 'workitem',
+        'stage': 'stage',
+        'step': 'step'
+    })
     self.assertEqual(log_output, expected_output)
     statesampler.set_current_tracker(None)
 
@@ -169,12 +209,15 @@ class JsonLogFormatterTest(unittest.TestCase):
     record = self.create_log_record(**self.SAMPLE_RECORD)
     log_output4 = json.loads(formatter.format(record))
 
-    self.assertEqual(log_output1, dict(
-        self.SAMPLE_OUTPUT, work='workitem', stage='stage', step='step1'))
-    self.assertEqual(log_output2, dict(
-        self.SAMPLE_OUTPUT, work='workitem', stage='stage', step='step2'))
-    self.assertEqual(log_output3, dict(
-        self.SAMPLE_OUTPUT, work='workitem', stage='stage', step='step1'))
+    self.assertEqual(
+        log_output1,
+        dict(self.SAMPLE_OUTPUT, work='workitem', stage='stage', step='step1'))
+    self.assertEqual(
+        log_output2,
+        dict(self.SAMPLE_OUTPUT, work='workitem', stage='stage', step='step2'))
+    self.assertEqual(
+        log_output3,
+        dict(self.SAMPLE_OUTPUT, work='workitem', stage='stage', step='step1'))
     self.assertEqual(log_output4, self.SAMPLE_OUTPUT)
 
   def test_exception_record(self):

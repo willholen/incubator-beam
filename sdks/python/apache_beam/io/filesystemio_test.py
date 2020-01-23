@@ -214,8 +214,9 @@ class TestPipeStream(unittest.TestCase):
         parent_conn, child_conn = multiprocessing.Pipe()
         stream = filesystemio.PipeStream(child_conn)
         success = [False]
-        child_thread = threading.Thread(
-            target=target, args=(stream, expected, buffer_size, success))
+        child_thread = threading.Thread(target=target,
+                                        args=(stream, expected, buffer_size,
+                                              success))
         child_thread.start()
         for data in data_blocks:
           parent_conn.send_bytes(data)

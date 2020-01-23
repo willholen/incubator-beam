@@ -66,13 +66,13 @@ class PortableStagerTest(unittest.TestCase):
     test_port = server.add_insecure_port('[::]:0')
     server.start()
     stager = portable_stager.PortableStager(
-        artifact_service_channel=grpc.insecure_channel(
-            'localhost:%s' % test_port),
+        artifact_service_channel=grpc.insecure_channel('localhost:%s' %
+                                                       test_port),
         staging_session_token='token')
     for from_file, to_file in files:
-      stager.stage_artifact(
-          local_path_to_artifact=os.path.join(self._temp_dir, from_file),
-          artifact_name=to_file)
+      stager.stage_artifact(local_path_to_artifact=os.path.join(
+          self._temp_dir, from_file),
+                            artifact_name=to_file)
     stager.commit_manifest()
     return staging_service.manifest.artifact, staging_service.retrieval_tokens
 
@@ -86,9 +86,8 @@ class PortableStagerTest(unittest.TestCase):
     copied_files, retrieval_tokens = self._stage_files([('test_local.txt',
                                                          'test_remote.txt')])
     self.assertTrue(
-        filecmp.cmp(
-            os.path.join(self._temp_dir, from_file),
-            os.path.join(self._remote_dir, to_file)))
+        filecmp.cmp(os.path.join(self._temp_dir, from_file),
+                    os.path.join(self._remote_dir, to_file)))
     self.assertEqual(
         [to_file],
         [staged_file_metadata.name for staged_file_metadata in copied_files])
@@ -112,19 +111,20 @@ class PortableStagerTest(unittest.TestCase):
       random.shuffle(chars)
       chars = list(int(size / len(chars)) * chars + chars[0:size % len(chars)])
       if type == 's':
-        with open(
-            os.path.join(self._temp_dir, from_file), 'w',
-            buffering=2 << 22) as f:
+        with open(os.path.join(self._temp_dir, from_file),
+                  'w',
+                  buffering=2 << 22) as f:
           f.write(''.join(chars))
       if type == 'b':
         chars = [char.encode('ascii') for char in chars]
-        with open(
-            os.path.join(self._temp_dir, from_file), 'wb',
-            buffering=2 << 22) as f:
+        with open(os.path.join(self._temp_dir, from_file),
+                  'wb',
+                  buffering=2 << 22) as f:
           f.write(b''.join(chars))
 
-    copied_files, retrieval_tokens = self._stage_files(
-        [(from_file, to_file) for (from_file, to_file, _, _) in files])
+    copied_files, retrieval_tokens = self._stage_files([
+        (from_file, to_file) for (from_file, to_file, _, _) in files
+    ])
 
     for from_file, to_file, _, _ in files:
       from_file = os.path.join(self._temp_dir, from_file)

@@ -34,7 +34,9 @@ from apache_beam.transforms.core import DoFn
 class DoFnSignatureTest(unittest.TestCase):
 
   def test_dofn_validate_process_error(self):
+
     class MyDoFn(DoFn):
+
       def process(self, element, w1=DoFn.WindowParam, w2=DoFn.WindowParam):
         pass
 
@@ -42,7 +44,9 @@ class DoFnSignatureTest(unittest.TestCase):
       DoFnSignature(MyDoFn())
 
   def test_dofn_validate_start_bundle_error(self):
+
     class MyDoFn(DoFn):
+
       def process(self, element):
         pass
 
@@ -53,7 +57,9 @@ class DoFnSignatureTest(unittest.TestCase):
       DoFnSignature(MyDoFn())
 
   def test_dofn_validate_finish_bundle_error(self):
+
     class MyDoFn(DoFn):
+
       def process(self, element):
         pass
 
@@ -72,7 +78,9 @@ class DoFnProcessTest(unittest.TestCase):
     DoFnProcessTest.all_records = []
 
   def record_dofn(self):
+
     class RecordDoFn(DoFn):
+
       def process(self, element):
         DoFnProcessTest.all_records.append(element)
 
@@ -89,20 +97,17 @@ class DoFnProcessTest(unittest.TestCase):
 
     with TestPipeline(options=pipeline_options) as p:
       test_stream = (TestStream().advance_watermark_to(10).add_elements([1, 2]))
-      (p
-       | test_stream
-       | beam.Map(lambda x: (x, "some-value"))
-       | "window_into" >> beam.WindowInto(
+      (p | test_stream | beam.Map(lambda x: (x, "some-value")) |
+       "window_into" >> beam.WindowInto(
            window.FixedWindows(5),
-           accumulation_mode=trigger.AccumulationMode.DISCARDING)
-       | beam.ParDo(DoFnProcessWithKeyparam())
-       | beam.ParDo(self.record_dofn()))
+           accumulation_mode=trigger.AccumulationMode.DISCARDING) |
+       beam.ParDo(DoFnProcessWithKeyparam()) | beam.ParDo(self.record_dofn()))
 
-    self.assertEqual(
-        ['1-verify', '2-verify'],
-        sorted(DoFnProcessTest.all_records))
+    self.assertEqual(['1-verify', '2-verify'],
+                     sorted(DoFnProcessTest.all_records))
 
   def test_dofn_process_keyparam_error_no_key(self):
+
     class DoFnProcessWithKeyparam(DoFn):
 
       def process(self, element, mykey=DoFn.KeyParam):
@@ -112,9 +117,7 @@ class DoFnProcessTest(unittest.TestCase):
     with self.assertRaises(ValueError),\
          TestPipeline(options=pipeline_options) as p:
       test_stream = (TestStream().advance_watermark_to(10).add_elements([1, 2]))
-      (p
-       | test_stream
-       | beam.ParDo(DoFnProcessWithKeyparam()))
+      (p | test_stream | beam.ParDo(DoFnProcessWithKeyparam()))
 
 
 if __name__ == '__main__':

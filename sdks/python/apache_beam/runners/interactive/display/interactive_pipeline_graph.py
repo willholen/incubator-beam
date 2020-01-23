@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Helper to render pipeline graph in IPython when running interactively.
 
 This module is experimental. No backwards-compatibility guarantees.
@@ -75,11 +74,13 @@ class InteractivePipelineGraph(pipeline_graph.PipelineGraph):
     self._referenced_pcollections = referenced_pcollections or set()
     self._cached_pcollections = cached_pcollections or set()
 
-    super(InteractivePipelineGraph, self).__init__(
-        pipeline=pipeline,
-        default_vertex_attrs={'color': 'gray', 'fontcolor': 'gray'},
-        default_edge_attrs={'color': 'gray'}
-    )
+    super(InteractivePipelineGraph,
+          self).__init__(pipeline=pipeline,
+                         default_vertex_attrs={
+                             'color': 'gray',
+                             'fontcolor': 'gray'
+                         },
+                         default_edge_attrs={'color': 'gray'})
 
     transform_updates, pcollection_updates = self._generate_graph_update_dicts()
     self._update_graph(transform_updates, pcollection_updates)

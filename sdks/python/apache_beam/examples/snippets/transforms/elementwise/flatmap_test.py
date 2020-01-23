@@ -56,6 +56,7 @@ def check_valid_plants(actual):
 @mock.patch(
     'apache_beam.examples.snippets.transforms.elementwise.flatmap.print', str)
 class FlatMapTest(unittest.TestCase):
+
   def test_flatmap_simple(self):
     flatmap.flatmap_simple(check_plants)
 

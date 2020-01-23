@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Test for the BigQuery tornadoes example."""
 
 # pytype: skip-file
@@ -35,14 +34,33 @@ class BigQueryTornadoesTest(unittest.TestCase):
 
   def test_basics(self):
     with TestPipeline() as p:
-      rows = (p | 'create' >> beam.Create([
-          {'month': 1, 'day': 1, 'tornado': False},
-          {'month': 1, 'day': 2, 'tornado': True},
-          {'month': 1, 'day': 3, 'tornado': True},
-          {'month': 2, 'day': 1, 'tornado': True}]))
+      rows = (p | 'create' >> beam.Create([{
+          'month': 1,
+          'day': 1,
+          'tornado': False
+      }, {
+          'month': 1,
+          'day': 2,
+          'tornado': True
+      }, {
+          'month': 1,
+          'day': 3,
+          'tornado': True
+      }, {
+          'month': 2,
+          'day': 1,
+          'tornado': True
+      }]))
       results = bigquery_tornadoes.count_tornadoes(rows)
-      assert_that(results, equal_to([{'month': 1, 'tornado_count': 2},
-                                     {'month': 2, 'tornado_count': 1}]))
+      assert_that(
+          results,
+          equal_to([{
+              'month': 1,
+              'tornado_count': 2
+          }, {
+              'month': 2,
+              'tornado_count': 1
+          }]))
 
 
 if __name__ == '__main__':

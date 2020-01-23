@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A word-counting workflow."""
 
 # pytype: skip-file
@@ -45,8 +44,8 @@ class WordExtractingDoFn(beam.DoFn):
     beam.DoFn.__init__(self)
     self.words_counter = Metrics.counter(self.__class__, 'words')
     self.word_lengths_counter = Metrics.counter(self.__class__, 'word_lengths')
-    self.word_lengths_dist = Metrics.distribution(
-        self.__class__, 'word_len_dist')
+    self.word_lengths_dist = Metrics.distribution(self.__class__,
+                                                  'word_len_dist')
     self.empty_line_counter = Metrics.counter(self.__class__, 'empty_lines')
 
   def process(self, element):
@@ -98,12 +97,10 @@ def run(argv=None, save_main_session=True):
     (word, ones) = word_ones
     return (word, sum(ones))
 
-  counts = (lines
-            | 'split' >> (beam.ParDo(WordExtractingDoFn())
-                          .with_output_types(unicode))
-            | 'pair_with_one' >> beam.Map(lambda x: (x, 1))
-            | 'group' >> beam.GroupByKey()
-            | 'count' >> beam.Map(count_ones))
+  counts = (lines | 'split' >>
+            (beam.ParDo(WordExtractingDoFn()).with_output_types(unicode)) |
+            'pair_with_one' >> beam.Map(lambda x: (x, 1)) |
+            'group' >> beam.GroupByKey() | 'count' >> beam.Map(count_ones))
 
   # Format the counts into a PCollection of strings.
   def format_result(word_count):
@@ -120,8 +117,8 @@ def run(argv=None, save_main_session=True):
   result.wait_until_finish()
 
   # Do not query metrics when creating a template which doesn't run
-  if (not hasattr(result, 'has_job')    # direct runner
-      or result.has_job):               # not just a template creation
+  if (not hasattr(result, 'has_job')  # direct runner
+      or result.has_job):  # not just a template creation
     empty_lines_filter = MetricsFilter().with_name('empty_lines')
     query_result = result.metrics().query(empty_lines_filter)
     if query_result['counters']:

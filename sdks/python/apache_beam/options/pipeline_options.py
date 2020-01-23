@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Pipeline options obtained from command line parsing."""
 
 # pytype: skip-file
@@ -54,10 +53,9 @@ __all__ = [
     'ProfilingOptions',
     'SetupOptions',
     'TestOptions',
-    ]
+]
 
 PipelineOptionsT = TypeVar('PipelineOptionsT', bound='PipelineOptions')
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,9 +71,11 @@ def _static_value_provider_of(value_type):
     A partially constructed StaticValueProvider in the form of a function.
 
   """
+
   def _f(value):
     _f.__name__ = value_type.__name__
     return StaticValueProvider(value_type, value)
+
   return _f
 
 
@@ -93,6 +93,7 @@ class _BeamArgumentParser(argparse.ArgumentParser):
         parser.add_argument('--non_vp_arg')
 
   """
+
   def add_value_provider_argument(self, *args, **kwargs):
     """ValueProvider arguments can be either of type keyword or positional.
     At runtime, even positional arguments will need to be supplied in the
@@ -116,11 +117,9 @@ class _BeamArgumentParser(argparse.ArgumentParser):
     # reassign default to default_value to make room for using
     # RuntimeValueProvider as the default for add_argument
     default_value = kwargs.get('default')
-    kwargs['default'] = RuntimeValueProvider(
-        option_name=option_name,
-        value_type=value_type,
-        default_value=default_value
-    )
+    kwargs['default'] = RuntimeValueProvider(option_name=option_name,
+                                             value_type=value_type,
+                                             default_value=default_value)
 
     # have add_argument do most of the work
     self.add_argument(*args, **kwargs)
@@ -171,6 +170,7 @@ class PipelineOptions(HasDisplayData):
   By default the options classes will use command line arguments to initialize
   the options.
   """
+
   def __init__(self, flags=None, **kwargs):
     # type: (Optional[List[str]], **Any) -> None
     """Initialize an options class.
@@ -253,10 +253,11 @@ class PipelineOptions(HasDisplayData):
 
     return cls(flags)
 
-  def get_all_options(self,
-                      drop_default=False,
-                      add_extra_args_fn=None  # type: Optional[Callable[[_BeamArgumentParser], None]]
-                     ):
+  def get_all_options(
+      self,
+      drop_default=False,
+      add_extra_args_fn=None  # type: Optional[Callable[[_BeamArgumentParser], None]]
+  ):
     # type: (...) -> Dict[str, Any]
     """Returns a dictionary of all defined arguments.
 
@@ -292,8 +293,7 @@ class PipelineOptions(HasDisplayData):
     for k in list(result):
       if k in self._all_options:
         result[k] = self._all_options[k]
-      if (drop_default and
-          parser.get_default(k) == result[k] and
+      if (drop_default and parser.get_default(k) == result[k] and
           not isinstance(parser.get_default(k), ValueProvider)):
         del result[k]
 
@@ -343,13 +343,13 @@ class PipelineOptions(HasDisplayData):
 
   def _visible_option_list(self):
     # type: () -> List[str]
-    return sorted(option
-                  for option in dir(self._visible_options) if option[0] != '_')
+    return sorted(
+        option for option in dir(self._visible_options) if option[0] != '_')
 
   def __dir__(self):
     # type: () -> List[str]
-    return sorted(dir(type(self)) + list(self.__dict__) +
-                  self._visible_option_list())
+    return sorted(
+        dir(type(self)) + list(self.__dict__) + self._visible_option_list())
 
   def __getattr__(self, name):
     # Special methods which may be accessed before the object is
@@ -372,9 +372,9 @@ class PipelineOptions(HasDisplayData):
                            (type(self).__name__, name))
 
   def __str__(self):
-    return '%s(%s)' % (type(self).__name__,
-                       ', '.join('%s=%s' % (option, getattr(self, option))
-                                 for option in self._visible_option_list()))
+    return '%s(%s)' % (type(self).__name__, ', '.join(
+        '%s=%s' % (option, getattr(self, option))
+        for option in self._visible_option_list()))
 
 
 class StandardOptions(PipelineOptions):
@@ -435,17 +435,15 @@ class DirectOptions(PipelineOptions):
         default=0,
         help='replay every bundle this many extra times, for profiling'
         'and debugging')
-    parser.add_argument(
-        '--direct_num_workers',
-        type=int,
-        default=1,
-        help='number of parallel running workers.')
+    parser.add_argument('--direct_num_workers',
+                        type=int,
+                        default=1,
+                        help='number of parallel running workers.')
     parser.add_argument(
         '--direct_running_mode',
         default='in_memory',
         choices=['in_memory', 'multi_threading', 'multi_processing'],
-        help='Workers running environment.'
-        )
+        help='Workers running environment.')
 
 
 class GoogleCloudOptions(PipelineOptions):
@@ -461,9 +459,9 @@ class GoogleCloudOptions(PipelineOptions):
     parser.add_argument(
         '--dataflow_endpoint',
         default=cls.DATAFLOW_ENDPOINT,
-        help=
-        ('The URL for the Dataflow API. If not set, the default public URL '
-         'will be used.'))
+        help=(
+            'The URL for the Dataflow API. If not set, the default public URL '
+            'will be used.'))
     # Remote execution must check that this option is not None.
     parser.add_argument('--project',
                         default=None,
@@ -503,7 +501,8 @@ class GoogleCloudOptions(PipelineOptions):
     parser.add_argument('--template_location',
                         default=None,
                         help='Save job to specified local or GCS location.')
-    parser.add_argument('--label', '--labels',
+    parser.add_argument('--label',
+                        '--labels',
                         dest='labels',
                         action='append',
                         default=None,
@@ -559,8 +558,8 @@ class GoogleCloudOptions(PipelineOptions):
       raw_output = processes.check_output(cmd, stderr=DEVNULL)
       formatted_output = raw_output.decode('utf-8').strip()
       if formatted_output:
-        _LOGGER.info('Using default GCP region %s from `%s`',
-                     formatted_output, ' '.join(cmd))
+        _LOGGER.info('Using default GCP region %s from `%s`', formatted_output,
+                     ' '.join(cmd))
         return formatted_output
     except RuntimeError:
       pass
@@ -598,21 +597,15 @@ class HadoopFileSystemOptions(PipelineOptions):
 
   @classmethod
   def _add_argparse_args(cls, parser):
-    parser.add_argument(
-        '--hdfs_host',
-        default=None,
-        help=
-        ('Hostname or address of the HDFS namenode.'))
-    parser.add_argument(
-        '--hdfs_port',
-        default=None,
-        help=
-        ('Port of the HDFS namenode.'))
-    parser.add_argument(
-        '--hdfs_user',
-        default=None,
-        help=
-        ('HDFS username to use.'))
+    parser.add_argument('--hdfs_host',
+                        default=None,
+                        help=('Hostname or address of the HDFS namenode.'))
+    parser.add_argument('--hdfs_port',
+                        default=None,
+                        help=('Port of the HDFS namenode.'))
+    parser.add_argument('--hdfs_user',
+                        default=None,
+                        help=('HDFS username to use.'))
 
   def validate(self, validator):
     errors = []
@@ -631,24 +624,25 @@ class WorkerOptions(PipelineOptions):
         '--num_workers',
         type=int,
         default=None,
-        help=
-        ('Number of workers to use when executing the Dataflow job. If not '
-         'set, the Dataflow service will use a reasonable default.'))
+        help=(
+            'Number of workers to use when executing the Dataflow job. If not '
+            'set, the Dataflow service will use a reasonable default.'))
     parser.add_argument(
         '--max_num_workers',
         type=int,
         default=None,
-        help=
-        ('Maximum number of workers to use when executing the Dataflow job.'))
+        help=(
+            'Maximum number of workers to use when executing the Dataflow job.'
+        ))
     parser.add_argument(
         '--autoscaling_algorithm',
         type=str,
         choices=['NONE', 'THROUGHPUT_BASED'],
         default=None,  # Meaning unset, distinct from 'NONE' meaning don't scale
-        help=
-        ('If and how to autoscale the workerpool.'))
+        help=('If and how to autoscale the workerpool.'))
     parser.add_argument(
-        '--worker_machine_type', '--machine_type',
+        '--worker_machine_type',
+        '--machine_type',
         dest='machine_type',
         default=None,
         help=('Machine type to create Dataflow worker VMs as. See '
@@ -664,7 +658,8 @@ class WorkerOptions(PipelineOptions):
         ('Remote worker disk size, in gigabytes, or 0 to use the default size. '
          'If not set, the Dataflow service will use a reasonable default.'))
     parser.add_argument(
-        '--worker_disk_type', '--disk_type',
+        '--worker_disk_type',
+        '--disk_type',
         dest='disk_type',
         default=None,
         help=('Specifies what type of persistent disk should be used.'))
@@ -702,12 +697,11 @@ class WorkerOptions(PipelineOptions):
     parser.add_argument(
         '--subnetwork',
         default=None,
-        help=(
-            'GCE subnetwork for launching workers. Default is up to the '
-            'Dataflow service. Expected format is '
-            'regions/REGION/subnetworks/SUBNETWORK or the fully qualified '
-            'subnetwork name. For more information, see '
-            'https://cloud.google.com/compute/docs/vpc/'))
+        help=('GCE subnetwork for launching workers. Default is up to the '
+              'Dataflow service. Expected format is '
+              'regions/REGION/subnetworks/SUBNETWORK or the fully qualified '
+              'subnetwork name. For more information, see '
+              'https://cloud.google.com/compute/docs/vpc/'))
     parser.add_argument(
         '--worker_harness_container_image',
         default=None,
@@ -730,16 +724,14 @@ class WorkerOptions(PipelineOptions):
         '--min_cpu_platform',
         dest='min_cpu_platform',
         type=str,
-        help='GCE minimum CPU platform. Default is determined by GCP.'
-    )
+        help='GCE minimum CPU platform. Default is determined by GCP.')
     parser.add_argument(
         '--dataflow_worker_jar',
         dest='dataflow_worker_jar',
         type=str,
         help='Dataflow worker jar file. If specified, the jar file is staged '
-             'in GCS, then gets loaded by workers. End users usually '
-             'should not use this feature.'
-    )
+        'in GCS, then gets loaded by workers. End users usually '
+        'should not use this feature.')
 
   def validate(self, validator):
     errors = []
@@ -758,24 +750,24 @@ class DebugOptions(PipelineOptions):
                         default=None,
                         help='Debug file to write the workflow specification.')
     parser.add_argument(
-        '--experiment', '--experiments',
+        '--experiment',
+        '--experiments',
         dest='experiments',
         action='append',
         default=None,
-        help=
-        ('Runners may provide a number of experimental features that can be '
-         'enabled with this flag. Please sync with the owners of the runner '
-         'before enabling any experiments.'))
+        help=(
+            'Runners may provide a number of experimental features that can be '
+            'enabled with this flag. Please sync with the owners of the runner '
+            'before enabling any experiments.'))
 
     parser.add_argument(
         '--number_of_worker_harness_threads',
         type=int,
         default=None,
-        help=
-        ('Number of threads per worker to use on the runner. If left '
-         'unspecified, the runner will compute an appropriate number of '
-         'threads to use. Currently only enabled for DataflowRunner when '
-         'experiment \'use_unified_worker\' is enabled.'))
+        help=('Number of threads per worker to use on the runner. If left '
+              'unspecified, the runner will compute an appropriate number of '
+              'threads to use. Currently only enabled for DataflowRunner when '
+              'experiment \'use_unified_worker\' is enabled.'))
 
   def add_experiment(self, experiment):
     # pylint: disable=access-member-before-definition
@@ -823,22 +815,20 @@ class SetupOptions(PipelineOptions):
     parser.add_argument(
         '--requirements_file',
         default=None,
-        help=
-        ('Path to a requirements file containing package dependencies. '
-         'Typically it is produced by a pip freeze command. More details: '
-         'https://pip.pypa.io/en/latest/reference/pip_freeze.html. '
-         'If used, all the packages specified will be downloaded, '
-         'cached (use --requirements_cache to change default location), '
-         'and then staged so that they can be automatically installed in '
-         'workers during startup. The cache is refreshed as needed '
-         'avoiding extra downloads for existing packages. Typically the '
-         'file is named requirements.txt.'))
+        help=('Path to a requirements file containing package dependencies. '
+              'Typically it is produced by a pip freeze command. More details: '
+              'https://pip.pypa.io/en/latest/reference/pip_freeze.html. '
+              'If used, all the packages specified will be downloaded, '
+              'cached (use --requirements_cache to change default location), '
+              'and then staged so that they can be automatically installed in '
+              'workers during startup. The cache is refreshed as needed '
+              'avoiding extra downloads for existing packages. Typically the '
+              'file is named requirements.txt.'))
     parser.add_argument(
         '--requirements_cache',
         default=None,
-        help=
-        ('Path to a folder to cache the packages specified in '
-         'the requirements file using the --requirements_file option.'))
+        help=('Path to a folder to cache the packages specified in '
+              'the requirements file using the --requirements_file option.'))
     parser.add_argument(
         '--setup_file',
         default=None,
@@ -852,7 +842,8 @@ class SetupOptions(PipelineOptions):
          'worker will install the resulting package before running any custom '
          'code.'))
     parser.add_argument(
-        '--beam_plugin', '--beam_plugin',
+        '--beam_plugin',
+        '--beam_plugin',
         dest='beam_plugins',
         action='append',
         default=None,
@@ -883,7 +874,8 @@ class SetupOptions(PipelineOptions):
          'If set to the string "default", a standard SDK location is used. If '
          'empty, no SDK is copied.'))
     parser.add_argument(
-        '--extra_package', '--extra_packages',
+        '--extra_package',
+        '--extra_packages',
         dest='extra_packages',
         action='append',
         default=None,
@@ -904,33 +896,40 @@ class PortableOptions(PipelineOptions):
   the portable runners. Should generally be kept in sync with
   PortablePipelineOptions.java.
   """
+
   @classmethod
   def _add_argparse_args(cls, parser):
     parser.add_argument(
-        '--job_endpoint', default=None,
+        '--job_endpoint',
+        default=None,
         help=('Job service endpoint to use. Should be in the form of host '
               'and port, e.g. localhost:8099.'))
     parser.add_argument(
-        '--artifact_endpoint', default=None,
+        '--artifact_endpoint',
+        default=None,
         help=('Artifact staging endpoint to use. Should be in the form of host '
               'and port, e.g. localhost:8098. If none is specified, the '
               'artifact endpoint sent from the job server is used.'))
     parser.add_argument(
-        '--job-server-timeout', default=60, type=int,
+        '--job-server-timeout',
+        default=60,
+        type=int,
         help=('Job service request timeout in seconds. The timeout '
               'determines the max time the driver program will wait to '
               'get a response from the job server. NOTE: the timeout does not '
               'apply to the actual pipeline run time. The driver program can '
               'still wait for job completion indefinitely.'))
     parser.add_argument(
-        '--environment_type', default=None,
+        '--environment_type',
+        default=None,
         help=('Set the default environment type for running '
               'user code. DOCKER (default) runs user code in a container. '
               'PROCESS runs user code in processes that are automatically '
               'started on each worker node. LOOPBACK runs user code on the '
               'same process that originally submitted the job.'))
     parser.add_argument(
-        '--environment_config', default=None,
+        '--environment_config',
+        default=None,
         help=('Set environment configuration for running the user code.\n For '
               'DOCKER: Url for the docker image.\n For PROCESS: json of the '
               'form {"os": "<OS>", "arch": "<ARCHITECTURE>", "command": '
@@ -938,16 +937,19 @@ class PortableOptions(PipelineOptions):
               '"<ENV_VAL>"} }. All fields in the json are optional except '
               'command.'))
     parser.add_argument(
-        '--sdk_worker_parallelism', default=1,
+        '--sdk_worker_parallelism',
+        default=1,
         help=('Sets the number of sdk worker processes that will run on each '
               'worker node. Default is 1. If 0, a value will be chosen by the '
               'runner.'))
     parser.add_argument(
-        '--environment_cache_millis', default=0,
+        '--environment_cache_millis',
+        default=0,
         help=('Duration in milliseconds for environment cache within a job. '
               '0 means no caching.'))
     parser.add_argument(
-        '--output_executable_path', default=None,
+        '--output_executable_path',
+        default=None,
         help=('Create an executable jar at this path rather than running '
               'the pipeline.'))
 
@@ -956,21 +958,26 @@ class JobServerOptions(PipelineOptions):
   """Options for starting a Beam job server. Roughly corresponds to
   JobServerDriver.ServerConfiguration in Java.
   """
+
   @classmethod
   def _add_argparse_args(cls, parser):
-    parser.add_argument('--artifacts_dir', default=None,
+    parser.add_argument('--artifacts_dir',
+                        default=None,
                         help='The location to store staged artifact files. '
-                             'Any Beam-supported file system is allowed. '
-                             'If unset, the local temp dir will be used.')
-    parser.add_argument('--job_port', default=0,
+                        'Any Beam-supported file system is allowed. '
+                        'If unset, the local temp dir will be used.')
+    parser.add_argument('--job_port',
+                        default=0,
                         help='Port to use for the job service. 0 to use a '
-                             'dynamic port.')
-    parser.add_argument('--artifact_port', default=0,
+                        'dynamic port.')
+    parser.add_argument('--artifact_port',
+                        default=0,
                         help='Port to use for artifact staging. 0 to use a '
-                             'dynamic port.')
-    parser.add_argument('--expansion_port', default=0,
+                        'dynamic port.')
+    parser.add_argument('--expansion_port',
+                        default=0,
                         help='Port to use for artifact staging. 0 to use a '
-                             'dynamic port.')
+                        'dynamic port.')
 
 
 class FlinkRunnerOptions(PipelineOptions):
@@ -982,10 +989,10 @@ class FlinkRunnerOptions(PipelineOptions):
     parser.add_argument('--flink_master',
                         default='[auto]',
                         help='Flink master address (http://host:port)'
-                             ' Use "[local]" to start a local cluster'
-                             ' for the execution. Use "[auto]" if you'
-                             ' plan to either execute locally or let the'
-                             ' Flink job server infer the cluster address.')
+                        ' Use "[local]" to start a local cluster'
+                        ' for the execution. Use "[auto]" if you'
+                        ' plan to either execute locally or let the'
+                        ' Flink job server infer the cluster address.')
     parser.add_argument('--flink_version',
                         default=cls.PUBLISHED_FLINK_VERSIONS[-1],
                         choices=cls.PUBLISHED_FLINK_VERSIONS,
@@ -996,31 +1003,32 @@ class FlinkRunnerOptions(PipelineOptions):
                         default=False,
                         action='store_true',
                         help='Create and upload an uberjar to the flink master'
-                             ' directly, rather than starting up a job server.'
-                             ' Only applies when flink_master is set to a'
-                             ' cluster address.  Requires Python 3.6+.')
+                        ' directly, rather than starting up a job server.'
+                        ' Only applies when flink_master is set to a'
+                        ' cluster address.  Requires Python 3.6+.')
 
 
 class SparkRunnerOptions(PipelineOptions):
+
   @classmethod
   def _add_argparse_args(cls, parser):
     parser.add_argument('--spark_master_url',
                         default='local[4]',
                         help='Spark master URL (spark://HOST:PORT). '
-                             'Use "local" (single-threaded) or "local[*]" '
-                             '(multi-threaded) to start a local cluster for '
-                             'the execution.')
+                        'Use "local" (single-threaded) or "local[*]" '
+                        '(multi-threaded) to start a local cluster for '
+                        'the execution.')
     parser.add_argument('--spark_job_server_jar',
                         help='Path or URL to a Beam Spark jobserver jar.')
     parser.add_argument('--spark_submit_uber_jar',
                         default=False,
                         action='store_true',
                         help='Create and upload an uber jar to the Spark REST'
-                             ' endpoint, rather than starting up a job server.'
-                             ' Requires Python 3.6+.')
+                        ' endpoint, rather than starting up a job server.'
+                        ' Requires Python 3.6+.')
     parser.add_argument('--spark_rest_url',
                         help='URL for the Spark REST endpoint. '
-                             'Only required when using spark_submit_uber_jar.')
+                        'Only required when using spark_submit_uber_jar.')
 
 
 class TestOptions(PipelineOptions):
@@ -1044,8 +1052,8 @@ class TestOptions(PipelineOptions):
         default=None,
         type=int,
         help='The time to wait (in milliseconds) for test pipeline to finish. '
-             'If it is set to None, it will wait indefinitely until the job '
-             'is finished.')
+        'If it is set to None, it will wait indefinitely until the job '
+        'is finished.')
 
   def validate(self, validator):
     errors = []
@@ -1064,7 +1072,8 @@ class TestDataflowOptions(PipelineOptions):
         '--pubsub_root_url',
         dest='pubsubRootUrl',
         default=None,
-        help='Root URL for use with the Google Cloud Pub/Sub API.',)
+        help='Root URL for use with the Google Cloud Pub/Sub API.',
+    )
 
 
 # TODO(silviuc): Add --files_to_stage option.

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 Utility functions used for integrating Metrics API into load tests pipelines.
 
@@ -56,24 +55,23 @@ SUBMIT_TIMESTAMP_LABEL = 'timestamp'
 METRICS_TYPE_LABEL = 'metric'
 VALUE_LABEL = 'value'
 
-SCHEMA = [
-    {'name': ID_LABEL,
-     'field_type': 'STRING',
-     'mode': 'REQUIRED'
-    },
-    {'name': SUBMIT_TIMESTAMP_LABEL,
-     'field_type': 'TIMESTAMP',
-     'mode': 'REQUIRED'
-    },
-    {'name': METRICS_TYPE_LABEL,
-     'field_type': 'STRING',
-     'mode': 'REQUIRED'
-    },
-    {'name': VALUE_LABEL,
-     'field_type': 'FLOAT',
-     'mode': 'REQUIRED'
-    }
-]
+SCHEMA = [{
+    'name': ID_LABEL,
+    'field_type': 'STRING',
+    'mode': 'REQUIRED'
+}, {
+    'name': SUBMIT_TIMESTAMP_LABEL,
+    'field_type': 'TIMESTAMP',
+    'mode': 'REQUIRED'
+}, {
+    'name': METRICS_TYPE_LABEL,
+    'field_type': 'STRING',
+    'mode': 'REQUIRED'
+}, {
+    'name': VALUE_LABEL,
+    'field_type': 'FLOAT',
+    'mode': 'REQUIRED'
+}]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,11 +123,9 @@ def get_generic_distributions(generic_dists, metric_id):
   Returns:
     list of dictionaries made from :class:`DistributionMetric`
   """
-  return sum(
-      (get_all_distributions_by_type(dist, metric_id)
-       for dist in generic_dists),
-      []
-  )
+  return sum((
+      get_all_distributions_by_type(dist, metric_id) for dist in generic_dists),
+             [])
 
 
 def get_all_distributions_by_type(dist, metric_id):
@@ -145,8 +141,7 @@ def get_all_distributions_by_type(dist, metric_id):
   submit_timestamp = time.time()
   dist_types = ['mean', 'max', 'min', 'sum']
   return [
-      get_distribution_dict(dist_type, submit_timestamp,
-                            dist, metric_id)
+      get_distribution_dict(dist_type, submit_timestamp, dist, metric_id)
       for dist_type in dist_types
   ]
 
@@ -175,8 +170,12 @@ class MetricsReader(object):
   """
   publishers = []  # type: List[ConsoleMetricsPublisher]
 
-  def __init__(self, project_name=None, bq_table=None, bq_dataset=None,
-               publish_to_bq=False, filters=None):
+  def __init__(self,
+               project_name=None,
+               bq_table=None,
+               bq_dataset=None,
+               publish_to_bq=False,
+               filters=None):
     """Initializes :class:`MetricsReader` .
 
     Args:
@@ -190,8 +189,8 @@ class MetricsReader(object):
 
     check = project_name and bq_table and bq_dataset and publish_to_bq
     if check:
-      bq_publisher = BigQueryMetricsPublisher(
-          project_name, bq_table, bq_dataset)
+      bq_publisher = BigQueryMetricsPublisher(project_name, bq_table,
+                                              bq_dataset)
       self.publishers.append(bq_publisher)
     self.filters = filters
 
@@ -238,8 +237,12 @@ class MetricsReader(object):
 class Metric(object):
   """Metric base class in ready-to-save format."""
 
-  def __init__(self, submit_timestamp, metric_id, value,
-               metric=None, label=None):
+  def __init__(self,
+               submit_timestamp,
+               metric_id,
+               value,
+               metric=None,
+               label=None):
     """Initializes :class:`Metric`
 
     Args:
@@ -257,11 +260,12 @@ class Metric(object):
     self.value = value
 
   def as_dict(self):
-    return {SUBMIT_TIMESTAMP_LABEL: self.submit_timestamp,
-            ID_LABEL: self.metric_id,
-            VALUE_LABEL: self.value,
-            METRICS_TYPE_LABEL: self.label
-           }
+    return {
+        SUBMIT_TIMESTAMP_LABEL: self.submit_timestamp,
+        ID_LABEL: self.metric_id,
+        VALUE_LABEL: self.value,
+        METRICS_TYPE_LABEL: self.label
+    }
 
 
 class CounterMetric(Metric):
@@ -272,10 +276,11 @@ class CounterMetric(Metric):
     submit_timestamp (float): date-time of saving metric to database
     metric_id (uuid): unique id to identify test run
   """
+
   def __init__(self, counter_metric, submit_timestamp, metric_id):
     value = counter_metric.committed
-    super(CounterMetric, self).__init__(submit_timestamp, metric_id,
-                                        value, counter_metric)
+    super(CounterMetric, self).__init__(submit_timestamp, metric_id, value,
+                                        counter_metric)
 
 
 class DistributionMetric(Metric):
@@ -286,6 +291,7 @@ class DistributionMetric(Metric):
     submit_timestamp (float): date-time of saving metric to database
     metric_id (uuid): unique id to identify test run
   """
+
   def __init__(self, dist_metric, submit_timestamp, metric_id, metric_type):
     custom_label = dist_metric.key.metric.namespace + \
                    '_' + parse_step(dist_metric.key.step) + \
@@ -304,6 +310,7 @@ class RuntimeMetric(Metric):
       with runtime name
     metric_id(uuid): unique id to identify test run
   """
+
   def __init__(self, runtime_list, metric_id):
     value = self._prepare_runtime_metrics(runtime_list)
     submit_timestamp = time.time()
@@ -311,8 +318,8 @@ class RuntimeMetric(Metric):
     # out of many steps
     label = runtime_list[0].key.metric.namespace + \
             '_' + RUNTIME_METRIC
-    super(RuntimeMetric, self).__init__(submit_timestamp, metric_id,
-                                        value, None, label)
+    super(RuntimeMetric, self).__init__(submit_timestamp, metric_id, value,
+                                        None, label)
 
   def _prepare_runtime_metrics(self, distributions):
     min_values = []
@@ -332,6 +339,7 @@ class RuntimeMetric(Metric):
 class ConsoleMetricsPublisher(object):
   """A :class:`ConsoleMetricsPublisher` publishes collected metrics
   to console output."""
+
   def publish(self, results):
     if len(results) > 0:
       log = "Load test results for test: %s and timestamp: %s:" \
@@ -348,6 +356,7 @@ class ConsoleMetricsPublisher(object):
 class BigQueryMetricsPublisher(object):
   """A :class:`BigQueryMetricsPublisher` publishes collected metrics
   to BigQuery output."""
+
   def __init__(self, project_name, table, dataset):
     self.bq = BigQueryClient(project_name, table, dataset)
 
@@ -358,13 +367,14 @@ class BigQueryMetricsPublisher(object):
         errors = output['errors']
         for err in errors:
           _LOGGER.error(err['message'])
-          raise ValueError(
-              'Unable save rows in BigQuery: {}'.format(err['message']))
+          raise ValueError('Unable save rows in BigQuery: {}'.format(
+              err['message']))
 
 
 class BigQueryClient(object):
   """A :class:`BigQueryClient` publishes collected metrics to
   BigQuery output."""
+
   def __init__(self, project_name, table, dataset):
     self._namespace = table
     self._client = bigquery.Client(project=project_name)
@@ -396,10 +406,8 @@ class BigQueryClient(object):
     try:
       bq_dataset = self._client.get_dataset(bq_dataset_ref)
     except NotFound:
-      raise ValueError(
-          'Dataset {} does not exist in your project. '
-          'You have to create table first.'
-          .format(dataset_name))
+      raise ValueError('Dataset {} does not exist in your project. '
+                       'You have to create table first.'.format(dataset_name))
     return bq_dataset
 
   def save(self, results):
@@ -409,6 +417,7 @@ class BigQueryClient(object):
 class MeasureTime(beam.DoFn):
   """A distribution metric prepared to be added to pipeline as ParDo
    to measure runtime."""
+
   def __init__(self, namespace):
     """Initializes :class:`MeasureTime`.
 

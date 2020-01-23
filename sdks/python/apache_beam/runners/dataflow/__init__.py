@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """The DataflowRunner executes pipelines on Google Cloud Dataflow.
 
 Anything in this package not imported here is an internal implementation detail

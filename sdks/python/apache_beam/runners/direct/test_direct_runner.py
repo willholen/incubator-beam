@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Wrapper of Beam runners that's built for running and verifying e2e tests."""
 
 # pytype: skip-file
@@ -32,6 +31,7 @@ __all__ = ['TestDirectRunner']
 
 
 class TestDirectRunner(DirectRunner):
+
   def run_pipeline(self, pipeline, options):
     """Execute test pipeline and verify test matcher"""
     test_options = options.view_as(TestOptions)

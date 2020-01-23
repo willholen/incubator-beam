@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """AvroRecord for AvroGenericCoder."""
 
 # pytype: skip-file
@@ -31,10 +30,7 @@ class AvroRecord(object):
     self.record = value
 
   def __eq__(self, other):
-    return (
-        issubclass(type(other), AvroRecord) and
-        self.record == other.record
-    )
+    return (issubclass(type(other), AvroRecord) and self.record == other.record)
 
   def __hash__(self):
     return hash(self.record)

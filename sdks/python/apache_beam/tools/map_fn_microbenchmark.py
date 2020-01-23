@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A microbenchmark for measuring changes in overhead for critical code paths.
 
 This runs a sequence of trivial Maps over a variable number of inputs to
@@ -55,8 +54,9 @@ def run_benchmark(num_maps=100, num_runs=10, num_elements_step=1000):
       for ix in range(num_maps):
         pc = pc | 'Map%d' % ix >> beam.FlatMap(lambda x: (None,))
     timings[num_elements] = time.time() - start
-    print("%6d element%s %g sec" % (
-        num_elements, " " if num_elements == 1 else "s", timings[num_elements]))
+    print("%6d element%s %g sec" %
+          (num_elements, " " if num_elements == 1 else "s",
+           timings[num_elements]))
 
   print()
   # pylint: disable=unused-variable

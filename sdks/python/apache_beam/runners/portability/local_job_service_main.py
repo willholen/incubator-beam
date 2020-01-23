@@ -33,7 +33,8 @@ def run(argv):
   if argv[0] == __file__:
     argv = argv[1:]
   parser = argparse.ArgumentParser()
-  parser.add_argument('-p', '--port',
+  parser.add_argument('-p',
+                      '--port',
                       type=int,
                       help='port on which to serve the job api')
   parser.add_argument('--staging_dir')

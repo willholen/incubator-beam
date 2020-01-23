@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Timestamp utilities.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -62,11 +61,11 @@ class Timestamp(object):
   def __init__(self, seconds=0, micros=0):
     # type: (Union[int, float], Union[int, float]) -> None
     if not isinstance(seconds, (int, long, float)):
-      raise TypeError('Cannot interpret %s %s as seconds.' % (
-          seconds, type(seconds)))
+      raise TypeError('Cannot interpret %s %s as seconds.' %
+                      (seconds, type(seconds)))
     if not isinstance(micros, (int, long, float)):
-      raise TypeError('Cannot interpret %s %s as micros.' % (
-          micros, type(micros)))
+      raise TypeError('Cannot interpret %s %s as micros.' %
+                      (micros, type(micros)))
     self.micros = int(seconds * 1000000) + int(micros)
 
   @staticmethod
@@ -84,8 +83,8 @@ class Timestamp(object):
     """
 
     if not isinstance(seconds, (int, long, float, Timestamp)):
-      raise TypeError('Cannot interpret %s %s as Timestamp.' % (
-          seconds, type(seconds)))
+      raise TypeError('Cannot interpret %s %s as Timestamp.' %
+                      (seconds, type(seconds)))
     if isinstance(seconds, Timestamp):
       return seconds
     return Timestamp(seconds)
@@ -246,10 +245,10 @@ class Timestamp(object):
     return Duration(micros=self.micros % other.micros)
 
 
-MIN_TIMESTAMP = Timestamp(micros=int(
-    common_urns.constants.MIN_TIMESTAMP_MILLIS.constant)*1000)
-MAX_TIMESTAMP = Timestamp(micros=int(
-    common_urns.constants.MAX_TIMESTAMP_MILLIS.constant)*1000)
+MIN_TIMESTAMP = Timestamp(
+    micros=int(common_urns.constants.MIN_TIMESTAMP_MILLIS.constant) * 1000)
+MAX_TIMESTAMP = Timestamp(
+    micros=int(common_urns.constants.MAX_TIMESTAMP_MILLIS.constant) * 1000)
 
 
 @functools.total_ordering

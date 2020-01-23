@@ -56,7 +56,8 @@ class WorkerIdInterceptor(grpc.StreamStreamClientInterceptor):
     if 'worker_id' in metadata:
       raise RuntimeError('Header metadata alreay have worker_id.')
     metadata.append(('worker_id', self._worker_id))
-    new_client_details = _ClientCallDetails(
-        client_call_details.method, client_call_details.timeout, metadata,
-        client_call_details.credentials)
+    new_client_details = _ClientCallDetails(client_call_details.method,
+                                            client_call_details.timeout,
+                                            metadata,
+                                            client_call_details.credentials)
     return continuation(new_client_details, request_iterator)

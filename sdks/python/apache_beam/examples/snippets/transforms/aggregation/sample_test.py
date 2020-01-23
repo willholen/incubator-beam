@@ -51,9 +51,10 @@ def check_samples_per_key(actual):
 
 
 @mock.patch('apache_beam.Pipeline', TestPipeline)
-@mock.patch(
-    'apache_beam.examples.snippets.transforms.aggregation.sample.print', str)
+@mock.patch('apache_beam.examples.snippets.transforms.aggregation.sample.print',
+            str)
 class SampleTest(unittest.TestCase):
+
   def test_sample_fixed_size_globally(self):
     sample.sample_fixed_size_globally(check_sample)
 

@@ -50,13 +50,16 @@ except ImportError:
   pa = None
   pq = None
 
-__all__ = ['ReadFromParquet', 'ReadAllFromParquet', 'ReadFromParquetBatched',
-           'ReadAllFromParquetBatched', 'WriteToParquet']
+__all__ = [
+    'ReadFromParquet', 'ReadAllFromParquet', 'ReadFromParquetBatched',
+    'ReadAllFromParquetBatched', 'WriteToParquet'
+]
 
 
 class _ArrowTableToRowDictionaries(DoFn):
   """ A DoFn that consumes an Arrow table and yields a python dictionary for
   each row in the table."""
+
   def process(self, table):
     num_rows = table.num_rows
     data_items = table.to_pydict().items()
@@ -72,8 +75,11 @@ class ReadFromParquetBatched(PTransform):
      Parquet files as a `PCollection` of `pyarrow.Table`. This `PTransform` is
      currently experimental. No backward-compatibility guarantees."""
 
-  def __init__(self, file_pattern=None, min_bundle_size=0,
-               validate=True, columns=None):
+  def __init__(self,
+               file_pattern=None,
+               min_bundle_size=0,
+               validate=True,
+               columns=None):
     """ Initializes :class:`~ReadFromParquetBatched`
 
     An alternative to :class:`~ReadFromParquet` that yields each row group from
@@ -132,8 +138,11 @@ class ReadFromParquet(PTransform):
      Parquet files as a `PCollection` of dictionaries. This `PTransform` is
      currently experimental. No backward-compatibility guarantees."""
 
-  def __init__(self, file_pattern=None, min_bundle_size=0,
-               validate=True, columns=None):
+  def __init__(self,
+               file_pattern=None,
+               min_bundle_size=0,
+               validate=True,
+               columns=None):
     """Initializes :class:`ReadFromParquet`.
 
     Uses source ``_ParquetSource`` to read a set of Parquet files defined by
@@ -205,7 +214,8 @@ class ReadAllFromParquetBatched(PTransform):
 
   DEFAULT_DESIRED_BUNDLE_SIZE = 64 * 1024 * 1024  # 64MB
 
-  def __init__(self, min_bundle_size=0,
+  def __init__(self,
+               min_bundle_size=0,
                desired_bundle_size=DEFAULT_DESIRED_BUNDLE_SIZE,
                columns=None,
                label='ReadAllFiles'):
@@ -221,11 +231,9 @@ class ReadAllFromParquetBatched(PTransform):
                        'a.b', 'a.c', and 'a.d.e'
     """
     super(ReadAllFromParquetBatched, self).__init__()
-    source_from_file = partial(
-        _create_parquet_source,
-        min_bundle_size=min_bundle_size,
-        columns=columns
-    )
+    source_from_file = partial(_create_parquet_source,
+                               min_bundle_size=min_bundle_size,
+                               columns=columns)
     self._read_all_files = filebasedsource.ReadAllFiles(
         True, CompressionTypes.UNCOMPRESSED, desired_bundle_size,
         min_bundle_size, source_from_file)
@@ -237,6 +245,7 @@ class ReadAllFromParquetBatched(PTransform):
 
 
 class ReadAllFromParquet(PTransform):
+
   def __init__(self, **kwargs):
     self._read_batches = ReadAllFromParquetBatched(**kwargs)
 
@@ -258,6 +267,7 @@ def _create_parquet_source(file_pattern=None,
 
 
 class _ParquetUtils(object):
+
   @staticmethod
   def find_first_row_group_index(pf, start_offset):
     for i in range(_ParquetUtils.get_number_of_row_groups(pf)):
@@ -283,12 +293,11 @@ class _ParquetUtils(object):
 class _ParquetSource(filebasedsource.FileBasedSource):
   """A source for reading Parquet files.
   """
+
   def __init__(self, file_pattern, min_bundle_size, validate, columns):
-    super(_ParquetSource, self).__init__(
-        file_pattern=file_pattern,
-        min_bundle_size=min_bundle_size,
-        validate=validate
-    )
+    super(_ParquetSource, self).__init__(file_pattern=file_pattern,
+                                         min_bundle_size=min_bundle_size,
+                                         validate=validate)
     self._columns = columns
 
   def read_records(self, file_name, range_tracker):
@@ -345,7 +354,7 @@ class WriteToParquet(PTransform):
   def __init__(self,
                file_path_prefix,
                schema,
-               row_group_buffer_size=64*1024*1024,
+               row_group_buffer_size=64 * 1024 * 1024,
                record_batch_size=1000,
                codec='none',
                use_deprecated_int96_timestamps=False,
@@ -449,15 +458,9 @@ class WriteToParquet(PTransform):
     return {'sink_dd': self._sink}
 
 
-def _create_parquet_sink(file_path_prefix,
-                         schema,
-                         codec,
-                         row_group_buffer_size,
-                         record_batch_size,
-                         use_deprecated_int96_timestamps,
-                         file_name_suffix,
-                         num_shards,
-                         shard_name_template,
+def _create_parquet_sink(file_path_prefix, schema, codec, row_group_buffer_size,
+                         record_batch_size, use_deprecated_int96_timestamps,
+                         file_name_suffix, num_shards, shard_name_template,
                          mime_type):
   return \
     _ParquetSink(
@@ -477,17 +480,9 @@ def _create_parquet_sink(file_path_prefix,
 class _ParquetSink(filebasedsink.FileBasedSink):
   """A sink for parquet files."""
 
-  def __init__(self,
-               file_path_prefix,
-               schema,
-               codec,
-               row_group_buffer_size,
-               record_batch_size,
-               use_deprecated_int96_timestamps,
-               file_name_suffix,
-               num_shards,
-               shard_name_template,
-               mime_type):
+  def __init__(self, file_path_prefix, schema, codec, row_group_buffer_size,
+               record_batch_size, use_deprecated_int96_timestamps,
+               file_name_suffix, num_shards, shard_name_template, mime_type):
     super(_ParquetSink, self).__init__(
         file_path_prefix,
         file_name_suffix=file_name_suffix,
@@ -511,9 +506,10 @@ class _ParquetSink(filebasedsink.FileBasedSink):
   def open(self, temp_path):
     self._file_handle = super(_ParquetSink, self).open(temp_path)
     return pq.ParquetWriter(
-        self._file_handle, self._schema, compression=self._codec,
-        use_deprecated_int96_timestamps=self._use_deprecated_int96_timestamps
-    )
+        self._file_handle,
+        self._schema,
+        compression=self._codec,
+        use_deprecated_int96_timestamps=self._use_deprecated_int96_timestamps)
 
   def write_record(self, writer, value):
     if len(self._buffer[0]) >= self._buffer_size:

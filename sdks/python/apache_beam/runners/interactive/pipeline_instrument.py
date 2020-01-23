@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Module to instrument interactivity to the given pipeline.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -38,9 +37,7 @@ WRITE_CACHE = "_WriteCache_"
 # Use a tuple to define the list of unbounded sources. It is not always feasible
 # to correctly find all the unbounded sources in the SDF world. This is
 # because SDF allows the source to dynamically create sources at runtime.
-REPLACEABLE_UNBOUNDED_SOURCES = (
-    ReadFromPubSub,
-)
+REPLACEABLE_UNBOUNDED_SOURCES = (ReadFromPubSub,)
 
 
 class PipelineInstrument(object):
@@ -66,14 +63,10 @@ class PipelineInstrument(object):
     # proto is stable. The snapshot of pipeline will not be mutated within this
     # module and can be used to recover original pipeline if needed.
     self._pipeline_snap = beam.pipeline.Pipeline.from_runner_api(
-        pipeline.to_runner_api(use_fake_coders=True),
-        pipeline.runner,
-        options)
+        pipeline.to_runner_api(use_fake_coders=True), pipeline.runner, options)
 
     self._background_caching_pipeline = beam.pipeline.Pipeline.from_runner_api(
-        pipeline.to_runner_api(use_fake_coders=True),
-        pipeline.runner,
-        options)
+        pipeline.to_runner_api(use_fake_coders=True), pipeline.runner, options)
 
     # Snapshot of original pipeline information.
     (self._original_pipeline_proto,
@@ -90,11 +83,12 @@ class PipelineInstrument(object):
 
     # A mapping from PCollection id to python id() value in user defined
     # pipeline instance.
-    (self._pcoll_version_map,
-     self._cacheables,
-     # A dict from pcoll_id to variable name of the referenced PCollection.
-     # (Dict[str, str])
-     self._cacheable_var_by_pcoll_id) = cacheables(self.pcolls_to_pcoll_id)
+    (
+        self._pcoll_version_map,
+        self._cacheables,
+        # A dict from pcoll_id to variable name of the referenced PCollection.
+        # (Dict[str, str])
+        self._cacheable_var_by_pcoll_id) = cacheables(self.pcolls_to_pcoll_id)
 
     # A dict from cache key to PCollection that is read from cache.
     # If exists, caller should reuse the PCollection read. If not, caller
@@ -127,20 +121,24 @@ class PipelineInstrument(object):
     required_transforms = {k: transforms[k] for k in required_transforms_ids}
 
     # Cache all the output PCollections of the transforms.
-    pcollection_ids = [pc for t in required_transforms.values()
-                       for pc in t.outputs.values()]
-    required_pcollections = {pc_id: pcollections[pc_id]
-                             for pc_id in pcollection_ids}
+    pcollection_ids = [
+        pc for t in required_transforms.values() for pc in t.outputs.values()
+    ]
+    required_pcollections = {
+        pc_id: pcollections[pc_id] for pc_id in pcollection_ids
+    }
 
     # Cache all the PCollection coders.
     coder_ids = [pc.coder_id for pc in required_pcollections.values()]
     required_coders = {c_id: coders[c_id] for c_id in coder_ids}
 
     # Cache all the windowing strategy ids.
-    windowing_strategies_ids = [pc.windowing_strategy_id
-                                for pc in required_pcollections.values()]
-    required_windowing_strategies = {ws_id: windowing_strategies[ws_id]
-                                     for ws_id in windowing_strategies_ids}
+    windowing_strategies_ids = [
+        pc.windowing_strategy_id for pc in required_pcollections.values()
+    ]
+    required_windowing_strategies = {
+        ws_id: windowing_strategies[ws_id] for ws_id in windowing_strategies_ids
+    }
 
     subtransforms = {}
     subpcollections = {}
@@ -193,14 +191,17 @@ class PipelineInstrument(object):
     # It's added there so that multiple calls to this method won't add multiple
     # caching operations (idempotent).
     transforms = pipeline_proto.components.transforms
-    caching_transform_ids = [t_id for root in roots
-                             for t_id in transforms[root].subtransforms
-                             if WRITE_CACHE in t_id]
+    caching_transform_ids = [
+        t_id for root in roots for t_id in transforms[root].subtransforms
+        if WRITE_CACHE in t_id
+    ]
 
     # Get the IDs of the unbounded sources.
     required_transform_labels = [src.full_label for src in sources]
-    unbounded_source_ids = [k for k, v in transforms.items()
-                            if v.unique_name in required_transform_labels]
+    unbounded_source_ids = [
+        k for k, v in transforms.items()
+        if v.unique_name in required_transform_labels
+    ]
 
     # The required transforms are the tranforms that we want to cut out of
     # the pipeline_proto and insert into a new pipeline to return.
@@ -227,7 +228,8 @@ class PipelineInstrument(object):
       root = pipeline_to_execute.components.transforms[root_id]
       root.subtransforms[:] = [
           transform_id for transform_id in root.subtransforms
-          if transform_id in pipeline_to_execute.components.transforms]
+          if transform_id in pipeline_to_execute.components.transforms
+      ]
 
     return pipeline_to_execute
 
@@ -402,10 +404,8 @@ class PipelineInstrument(object):
       if key not in self._cached_pcoll_read:
         # Mutates the pipeline with cache read transform attached
         # to root of the pipeline.
-        pcoll_from_cache = (
-            pipeline
-            | '{}{}'.format(READ_CACHE, key) >> cache.ReadCache(
-                self._cache_manager, key))
+        pcoll_from_cache = (pipeline | '{}{}'.format(READ_CACHE, key) >>
+                            cache.ReadCache(self._cache_manager, key))
         self._cached_pcoll_read[key] = pcoll_from_cache
     # else: NOOP when cache doesn't exist, just compute the original graph.
 
@@ -469,8 +469,7 @@ class PipelineInstrument(object):
     """
     cacheable = self.cacheables.get(self._cacheable_key(pcoll), None)
     if cacheable:
-      return '_'.join((cacheable['var'],
-                       cacheable['version'],
+      return '_'.join((cacheable['var'], cacheable['version'],
                        cacheable['producer_version']))
     return ''
 

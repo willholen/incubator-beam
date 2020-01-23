@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A microbenchmark for measuring changes in the critical path of FnApiRunner.
 This microbenchmark attempts to measure the overhead of the main data paths
 for the FnApiRunner. Specifically state, timers, and shuffling of data.
@@ -99,26 +98,22 @@ class BagInStateOutputAfterTimer(beam.DoFn):
     return [(random.randint(0, 1000), v) for v in values]
 
 
-def _build_serial_stages(pipeline,
-                         num_serial_stages,
-                         num_elements,
+def _build_serial_stages(pipeline, num_serial_stages, num_elements,
                          stage_count):
-  pc = (pipeline |
-        ('start_stage%s' % stage_count) >> beam.Create([
-            (random.randint(0, 1000), i) for i in range(num_elements)])
-        | ('gbk_start_stage%s' % stage_count) >> beam.GroupByKey())
+  pc = (pipeline | ('start_stage%s' % stage_count) >> beam.Create([
+      (random.randint(0, 1000), i) for i in range(num_elements)
+  ]) | ('gbk_start_stage%s' % stage_count) >> beam.GroupByKey())
 
   for i in range(num_serial_stages):
-    pc = (pc
-          | ('stage%s_map%s' % (stage_count, i)) >> beam.ParDo(
-              BagInStateOutputAfterTimer()).with_output_types(
-                  typehints.KV[int, int])
+    pc = (pc | ('stage%s_map%s' % (stage_count, i)) >> beam.ParDo(
+        BagInStateOutputAfterTimer()).with_output_types(typehints.KV[int, int])
           | ('stage%s_gbk%s' % (stage_count, i)) >> beam.GroupByKey())
 
   return pc
 
 
 def run_single_pipeline(size):
+
   def _pipeline_runner():
     with beam.Pipeline(runner=FnApiRunner()) as p:
       for i in range(NUM_PARALLEL_STAGES):
@@ -129,8 +124,9 @@ def run_single_pipeline(size):
 
 def run_benchmark(starting_point, num_runs, num_elements_step, verbose):
   suite = [
-      utils.LinearRegressionBenchmarkConfig(
-          run_single_pipeline, starting_point, num_elements_step, num_runs)]
+      utils.LinearRegressionBenchmarkConfig(run_single_pipeline, starting_point,
+                                            num_elements_step, num_runs)
+  ]
   utils.run_benchmarks(suite, verbose=verbose)
 
 
@@ -144,7 +140,5 @@ if __name__ == '__main__':
   parser.add_argument('--verbose', default=True, type=bool)
   options = parser.parse_args()
 
-  run_benchmark(options.starting_point,
-                options.num_runs,
-                options.increment,
+  run_benchmark(options.starting_point, options.num_runs, options.increment,
                 options.verbose)

@@ -17,7 +17,6 @@
 
 # cython: language_level=3
 # cython: profile=True
-
 """Counters collect the progress of the Worker for reporting to the service."""
 
 # pytype: skip-file
@@ -130,12 +129,12 @@ class SideInputReadCounter(TransformIOCounter):
   not be the only step that spends time reading from this side input.
   """
 
-  def __init__(self,
-               counter_factory,
-               state_sampler,  # type: StateSampler
-               declaring_step,
-               input_index
-              ):
+  def __init__(
+      self,
+      counter_factory,
+      state_sampler,  # type: StateSampler
+      declaring_step,
+      input_index):
     """Create a side input read counter.
 
     Args:
@@ -162,15 +161,11 @@ class SideInputReadCounter(TransformIOCounter):
   def _update_counters_for_requesting_step(self, step_name):
     side_input_id = counters.side_input_id(step_name, self.input_index)
     self.scoped_state = self._state_sampler.scoped_state(
-        self.declaring_step,
-        'read-sideinput',
-        io_target=side_input_id)
+        self.declaring_step, 'read-sideinput', io_target=side_input_id)
     self.bytes_read_counter = self._counter_factory.get_counter(
-        CounterName(
-            'read-sideinput-byte-count',
-            step_name=self.declaring_step,
-            io_target=side_input_id),
-        Counter.SUM)
+        CounterName('read-sideinput-byte-count',
+                    step_name=self.declaring_step,
+                    io_target=side_input_id), Counter.SUM)
 
 
 class SumAccumulator(object):
@@ -189,12 +184,12 @@ class SumAccumulator(object):
 class OperationCounters(object):
   """The set of basic counters to attach to an Operation."""
 
-  def __init__(self,
-               counter_factory,
-               step_name,  # type: str
-               coder,
-               output_index
-              ):
+  def __init__(
+      self,
+      counter_factory,
+      step_name,  # type: str
+      coder,
+      output_index):
     self._counter_factory = counter_factory
     self.element_counter = counter_factory.get_counter(
         '%s-out%s-ElementCount' % (step_name, output_index), Counter.SUM)
@@ -214,6 +209,7 @@ class OperationCounters(object):
       self.do_sample(windowed_value)
 
   def _observable_callback(self, inner_coder_impl, accumulator):
+
     def _observable_callback_inner(value, is_encoded=False):
       # TODO(ccy): If this stream is large, sample it as well.
       # To do this, we'll need to compute the average size of elements
@@ -225,6 +221,7 @@ class OperationCounters(object):
         accumulator.update(size)
       else:
         accumulator.update(inner_coder_impl.estimate_size(value))
+
     return _observable_callback_inner
 
   def do_sample(self, windowed_value):
@@ -238,8 +235,8 @@ class OperationCounters(object):
       self.active_accumulator.update(size)
       for observable, inner_coder_impl in observables:
         observable.register_observer(
-            self._observable_callback(
-                inner_coder_impl, self.active_accumulator))
+            self._observable_callback(inner_coder_impl,
+                                      self.active_accumulator))
 
   def update_collect(self):
     """Collects the accumulated size estimates.
@@ -317,8 +314,8 @@ class OperationCounters(object):
     self._sample_counter = 0
 
   def __str__(self):
-    return '<%s [%s]>' % (self.__class__.__name__,
-                          ', '.join([str(x) for x in self.__iter__()]))
+    return '<%s [%s]>' % (self.__class__.__name__, ', '.join(
+        [str(x) for x in self.__iter__()]))
 
   def __repr__(self):
     return '<%s %s at %s>' % (self.__class__.__name__,

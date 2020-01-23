@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Collection of useful coders.
 
 Only those coders listed in __all__ are part of the public API of this module.
@@ -63,7 +62,6 @@ except ImportError:
   from .slow_stream import get_varint_size
 # pylint: enable=wrong-import-order, wrong-import-position, ungrouped-imports
 
-
 # pylint: disable=wrong-import-order, wrong-import-position
 # Avoid dependencies on the full SDK.
 try:
@@ -75,24 +73,18 @@ except ImportError:
   # full Python SDK.
   import dill
 
-
 __all__ = [
-    'Coder',
-    'AvroGenericCoder', 'BooleanCoder', 'BytesCoder', 'DillCoder',
+    'Coder', 'AvroGenericCoder', 'BooleanCoder', 'BytesCoder', 'DillCoder',
     'FastPrimitivesCoder', 'FloatCoder', 'IterableCoder', 'PickleCoder',
     'ProtoCoder', 'SingletonCoder', 'StrUtf8Coder', 'TimestampCoder',
-    'TupleCoder', 'TupleSequenceCoder', 'VarIntCoder',
-    'WindowedValueCoder', 'ParamWindowedValueCoder'
+    'TupleCoder', 'TupleSequenceCoder', 'VarIntCoder', 'WindowedValueCoder',
+    'ParamWindowedValueCoder'
 ]
 
 T = TypeVar('T')
 CoderT = TypeVar('CoderT', bound='Coder')
 ProtoCoderT = TypeVar('ProtoCoderT', bound='ProtoCoder')
-ConstructorFn = Callable[
-    [Optional[Any],
-     List['Coder'],
-     'PipelineContext'],
-    Any]
+ConstructorFn = Callable[[Optional[Any], List['Coder'], 'PipelineContext'], Any]
 
 
 def serialize_coder(coder):
@@ -104,6 +96,8 @@ def serialize_coder(coder):
 def deserialize_coder(serialized):
   from apache_beam.internal import pickler
   return pickler.loads(serialized.split(b'$', 1)[1])
+
+
 # pylint: enable=wrong-import-order, wrong-import-position
 
 
@@ -272,8 +266,9 @@ class Coder(object):
 
   # pylint: disable=protected-access
   def __eq__(self, other):
-    return (self.__class__ == other.__class__
-            and self._dict_without_impl() == other._dict_without_impl())
+    return (self.__class__ == other.__class__ and
+            self._dict_without_impl() == other._dict_without_impl())
+
   # pylint: enable=protected-access
 
   def __ne__(self, other):
@@ -287,20 +282,22 @@ class Coder(object):
 
   @classmethod
   @overload
-  def register_urn(cls,
-                   urn,  # type: str
-                   parameter_type,  # type: Optional[Type[T]]
-                  ):
+  def register_urn(
+      cls,
+      urn,  # type: str
+      parameter_type,  # type: Optional[Type[T]]
+  ):
     # type: (...) -> Callable[[Callable[[T, List[Coder], PipelineContext], Any]], Callable[[T, List[Coder], PipelineContext], Any]]
     pass
 
   @classmethod
   @overload
-  def register_urn(cls,
-                   urn,  # type: str
-                   parameter_type,  # type: Optional[Type[T]]
-                   fn  # type: Callable[[T, List[Coder], PipelineContext], Any]
-                  ):
+  def register_urn(
+      cls,
+      urn,  # type: str
+      parameter_type,  # type: Optional[Type[T]]
+      fn  # type: Callable[[T, List[Coder], PipelineContext], Any]
+  ):
     # type: (...) -> None
     pass
 
@@ -317,9 +314,11 @@ class Coder(object):
     A corresponding to_runner_api_parameter method would be expected that
     returns the tuple ('beam:fn:foo', FooPayload)
     """
+
     def register(fn):
       cls._known_urns[urn] = parameter_type, fn
       return staticmethod(fn)
+
     if fn:
       # Used as a statement.
       register(fn)
@@ -333,8 +332,7 @@ class Coder(object):
     return beam_runner_api_pb2.Coder(
         spec=beam_runner_api_pb2.FunctionSpec(
             urn=urn,
-            payload=typed_param
-            if isinstance(typed_param, (bytes, type(None)))
+            payload=typed_param if isinstance(typed_param, (bytes, type(None)))
             else typed_param.SerializeToString()),
         component_coder_ids=[context.coders.get_id(c) for c in components])
 
@@ -348,22 +346,21 @@ class Coder(object):
     parameter_type, constructor = cls._known_urns[coder_proto.spec.urn]
     try:
       return constructor(
-          proto_utils.parse_Bytes(
-              coder_proto.spec.payload, parameter_type),
-          [context.coders.get_by_id(c)
-           for c in coder_proto.component_coder_ids],
-          context)
+          proto_utils.parse_Bytes(coder_proto.spec.payload, parameter_type), [
+              context.coders.get_by_id(c)
+              for c in coder_proto.component_coder_ids
+          ], context)
     except Exception:
       if context.allow_proto_holders:
-        return RunnerAPICoderHolder(coder_proto)  # type: ignore  # too ambiguous
+        return RunnerAPICoderHolder(
+            coder_proto)  # type: ignore  # too ambiguous
       raise
 
   def to_runner_api_parameter(self, context):
     # type: (Optional[PipelineContext]) -> Tuple[str, Any, Sequence[Coder]]
-    return (
-        python_urns.PICKLED_CODER,
-        google.protobuf.wrappers_pb2.BytesValue(value=serialize_coder(self)),
-        ())
+    return (python_urns.PICKLED_CODER,
+            google.protobuf.wrappers_pb2.BytesValue(
+                value=serialize_coder(self)), ())
 
   @staticmethod
   def register_structured_urn(urn, cls):
@@ -371,8 +368,8 @@ class Coder(object):
     """Register a coder that's completely defined by its urn and its
     component(s), if any, which are passed to construct the instance.
     """
-    cls.to_runner_api_parameter = (
-        lambda self, unused_context: (urn, None, self._get_component_coders()))
+    cls.to_runner_api_parameter = (lambda self, unused_context:
+                                   (urn, None, self._get_component_coders()))
 
     # pylint: disable=unused-variable
     @Coder.register_urn(urn, None)
@@ -383,8 +380,8 @@ class Coder(object):
         return cls()
 
 
-@Coder.register_urn(
-    python_urns.PICKLED_CODER, google.protobuf.wrappers_pb2.BytesValue)
+@Coder.register_urn(python_urns.PICKLED_CODER,
+                    google.protobuf.wrappers_pb2.BytesValue)
 def _pickle_from_runner_api_parameter(payload, components, context):
   return deserialize_coder(payload.value)
 
@@ -405,8 +402,7 @@ class StrUtf8Coder(Coder):
     return unicode
 
 
-Coder.register_structured_urn(
-    common_urns.coders.STRING_UTF8.urn, StrUtf8Coder)
+Coder.register_structured_urn(common_urns.coders.STRING_UTF8.urn, StrUtf8Coder)
 
 
 class ToStringCoder(Coder):
@@ -483,6 +479,7 @@ Coder.register_structured_urn(common_urns.coders.BYTES.urn, BytesCoder)
 
 
 class BooleanCoder(FastCoder):
+
   def _create_impl(self):
     return coder_impl.BooleanCoderImpl()
 
@@ -574,6 +571,7 @@ class _TimerCoder(FastCoder):
   """A coder used for timer values.
 
   For internal use."""
+
   def __init__(self, payload_coder):
     # type: (Coder) -> None
     self._payload_coder = payload_coder
@@ -590,15 +588,14 @@ class _TimerCoder(FastCoder):
     return self._payload_coder.is_deterministic()
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self._payload_coder == other._payload_coder)
+    return (type(self) == type(other) and
+            self._payload_coder == other._payload_coder)
 
   def __hash__(self):
     return hash(type(self)) + hash(self._payload_coder)
 
 
-Coder.register_structured_urn(
-    common_urns.coders.TIMER.urn, _TimerCoder)
+Coder.register_structured_urn(common_urns.coders.TIMER.urn, _TimerCoder)
 
 
 class SingletonCoder(FastCoder):
@@ -691,8 +688,8 @@ class PickleCoder(_PickleCoderBase):
   def _create_impl(self):
     dumps = pickle.dumps
     HIGHEST_PROTOCOL = pickle.HIGHEST_PROTOCOL
-    return coder_impl.CallbackCoderImpl(
-        lambda x: dumps(x, HIGHEST_PROTOCOL), pickle.loads)
+    return coder_impl.CallbackCoderImpl(lambda x: dumps(x, HIGHEST_PROTOCOL),
+                                        pickle.loads)
 
   def as_deterministic_coder(self, step_label, error_message=None):
     return DeterministicFastPrimitivesCoder(self, step_label)
@@ -742,13 +739,13 @@ class FastPrimitivesCoder(FastCoder):
 
   For unknown types, falls back to another coder (e.g. PickleCoder).
   """
+
   def __init__(self, fallback_coder=PickleCoder()):
     # type: (Coder) -> None
     self._fallback_coder = fallback_coder
 
   def _create_impl(self):
-    return coder_impl.FastPrimitivesCoderImpl(
-        self._fallback_coder.get_impl())
+    return coder_impl.FastPrimitivesCoderImpl(self._fallback_coder.get_impl())
 
   def is_deterministic(self):
     # () -> bool
@@ -800,6 +797,7 @@ class FastPrimitivesCoder(FastCoder):
 
 class Base64PickleCoder(Coder):
   """Coder of objects by Python pickle, then base64 encoding."""
+
   # TODO(robertwb): Do base64 encoding where it's needed (e.g. in json) rather
   # than via a special Coder.
 
@@ -861,8 +859,8 @@ class ProtoCoder(FastCoder):
     return DeterministicProtoCoder(self.proto_message_type)
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self.proto_message_type == other.proto_message_type)
+    return (type(self) == type(other) and
+            self.proto_message_type == other.proto_message_type)
 
   def __hash__(self):
     return hash(self.proto_message_type)
@@ -913,8 +911,7 @@ class AvroGenericCoder(FastCoder):
     return False
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self.schema == other.schema)
+    return (type(self) == type(other) and self.schema == other.schema)
 
   def __hash__(self):
     return hash(self.schema)
@@ -948,8 +945,10 @@ class TupleCoder(FastCoder):
     if self.is_deterministic():
       return self
     else:
-      return TupleCoder([c.as_deterministic_coder(step_label, error_message)
-                         for c in self._coders])
+      return TupleCoder([
+          c.as_deterministic_coder(step_label, error_message)
+          for c in self._coders
+      ])
 
   def to_type_hint(self):
     return typehints.Tuple[tuple(c.to_type_hint() for c in self._coders)]
@@ -1002,8 +1001,7 @@ class TupleCoder(FastCoder):
     return 'TupleCoder[%s]' % ', '.join(str(c) for c in self._coders)
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self._coders == other.coders())
+    return (type(self) == type(other) and self._coders == other.coders())
 
   def __hash__(self):
     return hash(self._coders)
@@ -1056,8 +1054,8 @@ class TupleSequenceCoder(FastCoder):
     return 'TupleSequenceCoder[%r]' % self._elem_coder
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self._elem_coder == other.value_coder())
+    return (type(self) == type(other) and
+            self._elem_coder == other.value_coder())
 
   def __hash__(self):
     return hash((type(self), self._elem_coder))
@@ -1114,8 +1112,8 @@ class IterableCoder(FastCoder):
     return 'IterableCoder[%r]' % self._elem_coder
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self._elem_coder == other.value_coder())
+    return (type(self) == type(other) and
+            self._elem_coder == other.value_coder())
 
   def __hash__(self):
     return hash((type(self), self._elem_coder))
@@ -1137,8 +1135,8 @@ class GlobalWindowCoder(SingletonCoder):
     }
 
 
-Coder.register_structured_urn(
-    common_urns.coders.GLOBAL_WINDOW.urn, GlobalWindowCoder)
+Coder.register_structured_urn(common_urns.coders.GLOBAL_WINDOW.urn,
+                              GlobalWindowCoder)
 
 
 class IntervalWindowCoder(FastCoder):
@@ -1163,8 +1161,8 @@ class IntervalWindowCoder(FastCoder):
     return hash(type(self))
 
 
-Coder.register_structured_urn(
-    common_urns.coders.INTERVAL_WINDOW.urn, IntervalWindowCoder)
+Coder.register_structured_urn(common_urns.coders.INTERVAL_WINDOW.urn,
+                              IntervalWindowCoder)
 
 
 class WindowedValueCoder(FastCoder):
@@ -1180,15 +1178,14 @@ class WindowedValueCoder(FastCoder):
 
   def _create_impl(self):
     return coder_impl.WindowedValueCoderImpl(
-        self.wrapped_value_coder.get_impl(),
-        self.timestamp_coder.get_impl(),
+        self.wrapped_value_coder.get_impl(), self.timestamp_coder.get_impl(),
         self.window_coder.get_impl())
 
   def is_deterministic(self):
     # () -> bool
-    return all(c.is_deterministic() for c in [self.wrapped_value_coder,
-                                              self.timestamp_coder,
-                                              self.window_coder])
+    return all(
+        c.is_deterministic() for c in
+        [self.wrapped_value_coder, self.timestamp_coder, self.window_coder])
 
   def as_cloud_object(self, coders_context=None):
     return {
@@ -1222,18 +1219,18 @@ class WindowedValueCoder(FastCoder):
     return 'WindowedValueCoder[%s]' % self.wrapped_value_coder
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self.wrapped_value_coder == other.wrapped_value_coder
-            and self.timestamp_coder == other.timestamp_coder
-            and self.window_coder == other.window_coder)
+    return (type(self) == type(other) and
+            self.wrapped_value_coder == other.wrapped_value_coder and
+            self.timestamp_coder == other.timestamp_coder and
+            self.window_coder == other.window_coder)
 
   def __hash__(self):
     return hash(
         (self.wrapped_value_coder, self.timestamp_coder, self.window_coder))
 
 
-Coder.register_structured_urn(
-    common_urns.coders.WINDOWED_VALUE.urn, WindowedValueCoder)
+Coder.register_structured_urn(common_urns.coders.WINDOWED_VALUE.urn,
+                              WindowedValueCoder)
 
 
 class ParamWindowedValueCoder(WindowedValueCoder):
@@ -1245,8 +1242,7 @@ class ParamWindowedValueCoder(WindowedValueCoder):
 
   def _create_impl(self):
     return coder_impl.ParamWindowedValueCoderImpl(
-        self.wrapped_value_coder.get_impl(),
-        self.window_coder.get_impl(),
+        self.wrapped_value_coder.get_impl(), self.window_coder.get_impl(),
         self.payload)
 
   def is_deterministic(self):
@@ -1260,23 +1256,20 @@ class ParamWindowedValueCoder(WindowedValueCoder):
     return 'ParamWindowedValueCoder[%s]' % self.wrapped_value_coder
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self.wrapped_value_coder == other.wrapped_value_coder
-            and self.window_coder == other.window_coder
-            and self.payload == other.payload)
+    return (type(self) == type(other) and
+            self.wrapped_value_coder == other.wrapped_value_coder and
+            self.window_coder == other.window_coder and
+            self.payload == other.payload)
 
   def __hash__(self):
-    return hash((self.wrapped_value_coder,
-                 self.window_coder,
-                 self.payload))
+    return hash((self.wrapped_value_coder, self.window_coder, self.payload))
 
   @Coder.register_urn(common_urns.coders.PARAM_WINDOWED_VALUE.urn, bytes)
   def from_runner_api_parameter(payload, components, unused_context):
     return ParamWindowedValueCoder(payload, components)
 
   def to_runner_api_parameter(self, context):
-    return (common_urns.coders.PARAM_WINDOWED_VALUE.urn,
-            self.payload,
+    return (common_urns.coders.PARAM_WINDOWED_VALUE.urn, self.payload,
             (self.wrapped_value_coder, self.window_coder))
 
 
@@ -1320,18 +1313,19 @@ class LengthPrefixCoder(FastCoder):
     return 'LengthPrefixCoder[%r]' % self._value_coder
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self._value_coder == other._value_coder)
+    return (type(self) == type(other) and
+            self._value_coder == other._value_coder)
 
   def __hash__(self):
     return hash((type(self), self._value_coder))
 
 
-Coder.register_structured_urn(
-    common_urns.coders.LENGTH_PREFIX.urn, LengthPrefixCoder)
+Coder.register_structured_urn(common_urns.coders.LENGTH_PREFIX.urn,
+                              LengthPrefixCoder)
 
 
 class StateBackedIterableCoder(FastCoder):
+
   def __init__(
       self,
       element_coder,  # type: Coder
@@ -1344,11 +1338,9 @@ class StateBackedIterableCoder(FastCoder):
     self._write_state_threshold = write_state_threshold
 
   def _create_impl(self):
-    return coder_impl.IterableCoderImpl(
-        self._element_coder.get_impl(),
-        self._read_state,
-        self._write_state,
-        self._write_state_threshold)
+    return coder_impl.IterableCoderImpl(self._element_coder.get_impl(),
+                                        self._read_state, self._write_state,
+                                        self._write_state_threshold)
 
   def is_deterministic(self):
     # () -> bool
@@ -1362,27 +1354,25 @@ class StateBackedIterableCoder(FastCoder):
     return 'StateBackedIterableCoder[%r]' % self._element_coder
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self._element_coder == other._element_coder
-            and self._write_state_threshold == other._write_state_threshold)
+    return (type(self) == type(other) and
+            self._element_coder == other._element_coder and
+            self._write_state_threshold == other._write_state_threshold)
 
   def __hash__(self):
     return hash((type(self), self._element_coder, self._write_state_threshold))
 
   def to_runner_api_parameter(self, context):
     # type: (Optional[PipelineContext]) -> Tuple[str, Any, Sequence[Coder]]
-    return (
-        common_urns.coders.STATE_BACKED_ITERABLE.urn,
-        str(self._write_state_threshold).encode('ascii'),
-        self._get_component_coders())
+    return (common_urns.coders.STATE_BACKED_ITERABLE.urn,
+            str(self._write_state_threshold).encode('ascii'),
+            self._get_component_coders())
 
   @Coder.register_urn(common_urns.coders.STATE_BACKED_ITERABLE.urn, bytes)
   def from_runner_api_parameter(payload, components, context):
-    return StateBackedIterableCoder(
-        components[0],
-        read_state=context.iterable_state_read,
-        write_state=context.iterable_state_write,
-        write_state_threshold=int(payload))
+    return StateBackedIterableCoder(components[0],
+                                    read_state=context.iterable_state_read,
+                                    write_state=context.iterable_state_write,
+                                    write_state_threshold=int(payload))
 
 
 class RunnerAPICoderHolder(Coder):

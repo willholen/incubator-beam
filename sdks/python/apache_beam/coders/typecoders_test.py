@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the typecoders module."""
 # pytype: skip-file
 
@@ -74,9 +73,10 @@ class TypeCodersTest(unittest.TestCase):
     with self.assertRaises(TypeError) as e:
       # When registering a coder the coder class must be specified.
       typecoders.registry.register_coder(CustomClass, coder)
-    self.assertEqual(e.exception.message,
-                     'Coder registration requires a coder class object. '
-                     'Received %r instead.' % coder)
+    self.assertEqual(
+        e.exception.message,
+        'Coder registration requires a coder class object. '
+        'Received %r instead.' % coder)
 
   def test_get_coder_with_custom_coder(self):
     typecoders.registry.register_coder(CustomClass, CustomCoder)
@@ -108,30 +108,25 @@ class TypeCodersTest(unittest.TestCase):
   def test_standard_int_coder(self):
     real_coder = typecoders.registry.get_coder(int)
     expected_coder = coders.VarIntCoder()
-    self.assertEqual(
-        real_coder.encode(0x0404), expected_coder.encode(0x0404))
+    self.assertEqual(real_coder.encode(0x0404), expected_coder.encode(0x0404))
     self.assertEqual(0x0404, real_coder.decode(real_coder.encode(0x0404)))
-    self.assertEqual(
-        real_coder.encode(0x040404040404),
-        expected_coder.encode(0x040404040404))
+    self.assertEqual(real_coder.encode(0x040404040404),
+                     expected_coder.encode(0x040404040404))
     self.assertEqual(0x040404040404,
                      real_coder.decode(real_coder.encode(0x040404040404)))
 
   def test_standard_str_coder(self):
     real_coder = typecoders.registry.get_coder(bytes)
     expected_coder = coders.BytesCoder()
-    self.assertEqual(
-        real_coder.encode(b'abc'), expected_coder.encode(b'abc'))
+    self.assertEqual(real_coder.encode(b'abc'), expected_coder.encode(b'abc'))
     self.assertEqual(b'abc', real_coder.decode(real_coder.encode(b'abc')))
 
   def test_standard_bool_coder(self):
     real_coder = typecoders.registry.get_coder(bool)
     expected_coder = coders.BooleanCoder()
-    self.assertEqual(
-        real_coder.encode(True), expected_coder.encode(True))
+    self.assertEqual(real_coder.encode(True), expected_coder.encode(True))
     self.assertEqual(True, real_coder.decode(real_coder.encode(True)))
-    self.assertEqual(
-        real_coder.encode(False), expected_coder.encode(False))
+    self.assertEqual(real_coder.encode(False), expected_coder.encode(False))
     self.assertEqual(False, real_coder.decode(real_coder.encode(False)))
 
   def test_iterable_coder(self):

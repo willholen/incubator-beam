@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the Pipeline class."""
 
 # pytype: skip-file
@@ -101,6 +100,7 @@ class FakeUnboundedSource(NativeSource):
 
 
 class DoubleParDo(beam.PTransform):
+
   def expand(self, input):
     return input | 'Inner' >> beam.Map(lambda a: a * 2)
 
@@ -109,6 +109,7 @@ class DoubleParDo(beam.PTransform):
 
 
 class TripleParDo(beam.PTransform):
+
   def expand(self, input):
     # Keeping labels the same intentionally to make sure that there is no label
     # conflict due to replacement.
@@ -116,6 +117,7 @@ class TripleParDo(beam.PTransform):
 
 
 class ToStringParDo(beam.PTransform):
+
   def expand(self, input):
     # We use copy.copy() here to make sure the typehint mechanism doesn't
     # automatically infer that the output type is str.
@@ -173,7 +175,8 @@ class PipelineTest(unittest.TestCase):
 
       pcoll3 = pcoll2 | 'm1' >> Map(lambda x: [x, 12])
       assert_that(pcoll3,
-                  equal_to([[11, 12], [12, 12], [13, 12]]), label='pcoll3')
+                  equal_to([[11, 12], [12, 12], [13, 12]]),
+                  label='pcoll3')
 
       pcoll4 = pcoll3 | 'do2' >> FlatMap(set)
       assert_that(pcoll4, equal_to([11, 12, 12, 12, 13]), label='pcoll4')
@@ -186,16 +189,16 @@ class PipelineTest(unittest.TestCase):
 
       # A test function with a tuple input, an auxiliary parameter,
       # and some side inputs.
-      fn = lambda e1, e2, t=DoFn.TimestampParam, s1=None, s2=None: (
-          e1, e2, t, s1, s2)
+      fn = lambda e1, e2, t=DoFn.TimestampParam, s1=None, s2=None: (e1, e2, t,
+                                                                    s1, s2)
       assert_that(pcoll | 'NoSides' >> beam.core.MapTuple(fn),
                   equal_to([('e1', 'e2', MIN_TIMESTAMP, None, None)]),
                   label='NoSidesCheck')
       assert_that(pcoll | 'StaticSides' >> beam.core.MapTuple(fn, 's1', 's2'),
                   equal_to([('e1', 'e2', MIN_TIMESTAMP, 's1', 's2')]),
                   label='StaticSidesCheck')
-      assert_that(pcoll | 'DynamicSides' >> beam.core.MapTuple(
-          fn, side1, side2),
+      assert_that(pcoll |
+                  'DynamicSides' >> beam.core.MapTuple(fn, side1, side2),
                   equal_to([('e1', 'e2', MIN_TIMESTAMP, 's1', 's2')]),
                   label='DynamicSidesCheck')
       assert_that(pcoll | 'MixedSides' >> beam.core.MapTuple(fn, s2=side2),
@@ -210,17 +213,17 @@ class PipelineTest(unittest.TestCase):
 
       # A test function with a tuple input, an auxiliary parameter,
       # and some side inputs.
-      fn = lambda e1, e2, t=DoFn.TimestampParam, s1=None, s2=None: (
-          e1, e2, t, s1, s2)
+      fn = lambda e1, e2, t=DoFn.TimestampParam, s1=None, s2=None: (e1, e2, t,
+                                                                    s1, s2)
       assert_that(pcoll | 'NoSides' >> beam.core.FlatMapTuple(fn),
                   equal_to(['e1', 'e2', MIN_TIMESTAMP, None, None]),
                   label='NoSidesCheck')
-      assert_that(pcoll | 'StaticSides' >> beam.core.FlatMapTuple(
-          fn, 's1', 's2'),
+      assert_that(pcoll |
+                  'StaticSides' >> beam.core.FlatMapTuple(fn, 's1', 's2'),
                   equal_to(['e1', 'e2', MIN_TIMESTAMP, 's1', 's2']),
                   label='StaticSidesCheck')
-      assert_that(pcoll
-                  | 'DynamicSides' >> beam.core.FlatMapTuple(fn, side1, side2),
+      assert_that(pcoll |
+                  'DynamicSides' >> beam.core.FlatMapTuple(fn, side1, side2),
                   equal_to(['e1', 'e2', MIN_TIMESTAMP, 's1', 's2']),
                   label='DynamicSidesCheck')
       assert_that(pcoll | 'MixedSides' >> beam.core.FlatMapTuple(fn, s2=side2),
@@ -263,8 +266,7 @@ class PipelineTest(unittest.TestCase):
     pipeline.visit(visitor)
     self.assertEqual(set([pcoll1, pcoll2, pcoll3, pcoll4, pcoll5]),
                      set(visitor.visited))
-    self.assertEqual(set(visitor.enter_composite),
-                     set(visitor.leave_composite))
+    self.assertEqual(set(visitor.enter_composite), set(visitor.leave_composite))
     self.assertEqual(2, len(visitor.enter_composite))
     self.assertEqual(visitor.enter_composite[1].transform, transform)
     self.assertEqual(visitor.leave_composite[0].transform, transform)
@@ -300,6 +302,7 @@ class PipelineTest(unittest.TestCase):
       assert_that(result2, equal_to([5, 6, 7]), label='r2')
 
   def test_transform_no_super_init(self):
+
     class AddSuffix(PTransform):
 
       def __init__(self, suffix):
@@ -309,9 +312,8 @@ class PipelineTest(unittest.TestCase):
       def expand(self, pcoll):
         return pcoll | Map(lambda x: x + self.suffix)
 
-    self.assertEqual(
-        ['a-x', 'b-x', 'c-x'],
-        sorted(['a', 'b', 'c'] | 'AddSuffix' >> AddSuffix('-x')))
+    self.assertEqual(['a-x', 'b-x', 'c-x'],
+                     sorted(['a', 'b', 'c'] | 'AddSuffix' >> AddSuffix('-x')))
 
   @unittest.skip("Fails on some platforms with new urllib3.")
   def test_memory_usage(self):
@@ -326,13 +328,13 @@ class PipelineTest(unittest.TestCase):
       self.skipTest('ru_maxrss is not in standard units.')
 
     def get_memory_usage_in_bytes():
-      return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * (2 ** 10)
+      return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * (2**10)
 
     def check_memory(value, memory_threshold):
       memory_usage = get_memory_usage_in_bytes()
       if memory_usage > memory_threshold:
-        raise RuntimeError(
-            'High memory usage: %d > %d' % (memory_usage, memory_threshold))
+        raise RuntimeError('High memory usage: %d > %d' %
+                           (memory_usage, memory_threshold))
       return value
 
     len_elements = 1000000
@@ -344,28 +346,30 @@ class PipelineTest(unittest.TestCase):
     with TestPipeline(runner='BundleBasedDirectRunner') as pipeline:
 
       # Consumed memory should not be proportional to the number of maps.
-      memory_threshold = (
-          get_memory_usage_in_bytes() + (5 * len_elements * num_elements))
+      memory_threshold = (get_memory_usage_in_bytes() +
+                          (5 * len_elements * num_elements))
 
       # Plus small additional slack for memory fluctuations during the test.
-      memory_threshold += 10 * (2 ** 20)
+      memory_threshold += 10 * (2**20)
 
       biglist = pipeline | 'oom:create' >> Create(
           ['x' * len_elements] * num_elements)
       for i in range(num_maps):
         biglist = biglist | ('oom:addone-%d' % i) >> Map(lambda x: x + 'y')
       result = biglist | 'oom:check' >> Map(check_memory, memory_threshold)
-      assert_that(result, equal_to(
-          ['x' * len_elements + 'y' * num_maps] * num_elements))
-
+      assert_that(
+          result,
+          equal_to(['x' * len_elements + 'y' * num_maps] * num_elements))
 
   def test_aggregator_empty_input(self):
     actual = [] | CombineGlobally(max).without_defaults()
     self.assertEqual(actual, [])
 
   def test_pipeline_as_context(self):
+
     def raise_exception(exn):
       raise exn
+
     with self.assertRaises(ValueError):
       with Pipeline() as p:
         # pylint: disable=expression-not-assigned
@@ -416,27 +420,26 @@ class PipelineTest(unittest.TestCase):
         return isinstance(applied_ptransform.transform, DoubleParDo)
 
       def get_replacement_transform(self, ptransform):
-        return (ToStringParDo()
-                .with_input_types(int)
-                .with_output_types(str))
+        return (ToStringParDo().with_input_types(int).with_output_types(str))
 
     for override, expected_type in [(NoTypeHintOverride(), typehints.Any),
                                     (WithTypeHintOverride(), str)]:
       p = TestPipeline()
-      pcoll = (p
-               | beam.Create([1, 2, 3])
-               | 'Operate' >> DoubleParDo()
-               | 'NoOp' >> beam.Map(lambda x: x))
+      pcoll = (p | beam.Create([1, 2, 3]) | 'Operate' >> DoubleParDo() |
+               'NoOp' >> beam.Map(lambda x: x))
 
       p.replace_all([override])
       self.assertEqual(pcoll.producer.inputs[0].element_type, expected_type)
 
   def test_ptransform_override_multiple_outputs(self):
+
     class MultiOutputComposite(PTransform):
+
       def __init__(self):
         self.output_tags = set()
 
       def expand(self, pcoll):
+
         def mux_input(x):
           x = x * 2
           if isinstance(x, int):
@@ -445,8 +448,10 @@ class PipelineTest(unittest.TestCase):
             yield TaggedOutput('letters', x)
 
         multi = pcoll | 'MyReplacement' >> beam.ParDo(mux_input).with_outputs()
-        letters = multi.letters | 'LettersComposite' >> beam.Map(lambda x: x*3)
-        numbers = multi.numbers | 'NumbersComposite' >> beam.Map(lambda x: x*5)
+        letters = multi.letters | 'LettersComposite' >> beam.Map(
+            lambda x: x * 3)
+        numbers = multi.numbers | 'NumbersComposite' >> beam.Map(
+            lambda x: x * 5)
 
         return {
             'letters': letters,
@@ -454,6 +459,7 @@ class PipelineTest(unittest.TestCase):
         }
 
     class MultiOutputOverride(PTransformOverride):
+
       def matches(self, applied_ptransform):
         return applied_ptransform.full_label == 'MyMultiOutput'
 
@@ -467,9 +473,8 @@ class PipelineTest(unittest.TestCase):
         yield TaggedOutput('letters', x)
 
     with TestPipeline() as p:
-      multi = (p
-               | beam.Create([1, 2, 3, 'a', 'b', 'c'])
-               | 'MyMultiOutput' >> beam.ParDo(mux_input).with_outputs())
+      multi = (p | beam.Create([1, 2, 3, 'a', 'b', 'c']) |
+               'MyMultiOutput' >> beam.ParDo(mux_input).with_outputs())
       letters = multi.letters | 'MyLetters' >> beam.Map(lambda x: x)
       numbers = multi.numbers | 'MyNumbers' >> beam.Map(lambda x: x)
 
@@ -479,10 +484,10 @@ class PipelineTest(unittest.TestCase):
       # an additional 3 and 5. Use prime numbers to ensure that each
       # transform is getting executed once.
       assert_that(letters,
-                  equal_to(['a'*2*3, 'b'*2*3, 'c'*2*3]),
+                  equal_to(['a' * 2 * 3, 'b' * 2 * 3, 'c' * 2 * 3]),
                   label='assert letters')
       assert_that(numbers,
-                  equal_to([1*2*5, 2*2*5, 3*2*5]),
+                  equal_to([1 * 2 * 5, 2 * 2 * 5, 3 * 2 * 5]),
                   label='assert numbers')
 
       # Do the replacement and run the element assertions.
@@ -511,7 +516,6 @@ class PipelineTest(unittest.TestCase):
     self.assertNotIn(multi.letters, visitor.visited)
     self.assertNotIn(multi.numbers, visitor.visited)
 
-
   def test_kv_ptransform_honor_type_hints(self):
 
     # The return type of this DoFn cannot be inferred by the default
@@ -523,23 +527,19 @@ class PipelineTest(unittest.TestCase):
         if count == 0:
           return ["some string"]
         else:
-          self.return_recursive(count-1)
+          self.return_recursive(count - 1)
 
       def process(self, element, counter=DoFn.StateParam(BYTES_STATE)):
         return self.return_recursive(1)
 
     with TestPipeline() as p:
-      pcoll = (p
-               | beam.Create([(1, 1), (2, 2), (3, 3)])
-               | beam.GroupByKey()
-               | beam.ParDo(StatefulDoFn()))
+      pcoll = (p | beam.Create([(1, 1), (2, 2), (3, 3)]) | beam.GroupByKey() |
+               beam.ParDo(StatefulDoFn()))
     self.assertEqual(pcoll.element_type, typehints.Any)
 
     with TestPipeline() as p:
-      pcoll = (p
-               | beam.Create([(1, 1), (2, 2), (3, 3)])
-               | beam.GroupByKey()
-               | beam.ParDo(StatefulDoFn()).with_output_types(str))
+      pcoll = (p | beam.Create([(1, 1), (2, 2), (3, 3)]) | beam.GroupByKey() |
+               beam.ParDo(StatefulDoFn()).with_output_types(str))
     self.assertEqual(pcoll.element_type, str)
 
   def test_track_pcoll_unbounded(self):
@@ -596,7 +596,9 @@ class PipelineTest(unittest.TestCase):
 class DoFnTest(unittest.TestCase):
 
   def test_element(self):
+
     class TestDoFn(DoFn):
+
       def process(self, element):
         yield element + 10
 
@@ -605,7 +607,9 @@ class DoFnTest(unittest.TestCase):
       assert_that(pcoll, equal_to([11, 12]))
 
   def test_side_input_no_tag(self):
+
     class TestDoFn(DoFn):
+
       def process(self, element, prefix, suffix):
         return ['%s-%s-%s' % (prefix, element, suffix)]
 
@@ -619,7 +623,9 @@ class DoFnTest(unittest.TestCase):
       assert_that(result, equal_to(['zyx-%s-xyz' % x for x in words_list]))
 
   def test_side_input_tagged(self):
+
     class TestDoFn(DoFn):
+
       def process(self, element, prefix, suffix=DoFn.SideInputParam):
         return ['%s-%s-%s' % (prefix, element, suffix)]
 
@@ -636,44 +642,43 @@ class DoFnTest(unittest.TestCase):
   def test_element_param(self):
     pipeline = TestPipeline()
     input = [1, 2]
-    pcoll = (pipeline
-             | 'Create' >> Create(input)
-             | 'Ele param' >> Map(lambda element=DoFn.ElementParam: element))
+    pcoll = (pipeline | 'Create' >> Create(input) |
+             'Ele param' >> Map(lambda element=DoFn.ElementParam: element))
     assert_that(pcoll, equal_to(input))
     pipeline.run()
 
   @attr('ValidatesRunner')
   def test_key_param(self):
     pipeline = TestPipeline()
-    pcoll = (pipeline
-             | 'Create' >> Create([('a', 1), ('b', 2)])
-             | 'Key param' >> Map(lambda _, key=DoFn.KeyParam: key))
+    pcoll = (pipeline | 'Create' >> Create([('a', 1), ('b', 2)]) |
+             'Key param' >> Map(lambda _, key=DoFn.KeyParam: key))
     assert_that(pcoll, equal_to(['a', 'b']))
     pipeline.run()
 
   def test_window_param(self):
+
     class TestDoFn(DoFn):
+
       def process(self, element, window=DoFn.WindowParam):
         yield (element, (float(window.start), float(window.end)))
 
     with TestPipeline() as pipeline:
-      pcoll = (pipeline
-               | Create([1, 7])
-               | Map(lambda x: TimestampedValue(x, x))
-               | WindowInto(windowfn=SlidingWindows(10, 5))
-               | ParDo(TestDoFn()))
-      assert_that(pcoll, equal_to([(1, (-5, 5)), (1, (0, 10)),
-                                   (7, (0, 10)), (7, (5, 15))]))
-      pcoll2 = pcoll | 'Again' >> ParDo(TestDoFn())
+      pcoll = (pipeline | Create([1, 7]) |
+               Map(lambda x: TimestampedValue(x, x)) |
+               WindowInto(windowfn=SlidingWindows(10, 5)) | ParDo(TestDoFn()))
       assert_that(
-          pcoll2,
-          equal_to([
-              ((1, (-5, 5)), (-5, 5)), ((1, (0, 10)), (0, 10)),
-              ((7, (0, 10)), (0, 10)), ((7, (5, 15)), (5, 15))]),
-          label='doubled windows')
+          pcoll,
+          equal_to([(1, (-5, 5)), (1, (0, 10)), (7, (0, 10)), (7, (5, 15))]))
+      pcoll2 = pcoll | 'Again' >> ParDo(TestDoFn())
+      assert_that(pcoll2,
+                  equal_to([((1, (-5, 5)), (-5, 5)), ((1, (0, 10)), (0, 10)),
+                            ((7, (0, 10)), (0, 10)), ((7, (5, 15)), (5, 15))]),
+                  label='doubled windows')
 
   def test_timestamp_param(self):
+
     class TestDoFn(DoFn):
+
       def process(self, element, timestamp=DoFn.TimestampParam):
         yield timestamp
 
@@ -690,19 +695,20 @@ class DoFnTest(unittest.TestCase):
   def test_pane_info_param(self):
     with TestPipeline() as p:
       pc = p | Create([(None, None)])
-      assert_that(
-          pc | beam.Map(lambda _, p=DoFn.PaneInfoParam: p),
-          equal_to([windowed_value.PANE_INFO_UNKNOWN]),
-          label='CheckUngrouped')
-      assert_that(
-          pc | beam.GroupByKey() | beam.Map(lambda _, p=DoFn.PaneInfoParam: p),
-          equal_to([windowed_value.PaneInfo(
-              is_first=True,
-              is_last=True,
-              timing=windowed_value.PaneInfoTiming.ON_TIME,
-              index=0,
-              nonspeculative_index=0)]),
-          label='CheckGrouped')
+      assert_that(pc | beam.Map(lambda _, p=DoFn.PaneInfoParam: p),
+                  equal_to([windowed_value.PANE_INFO_UNKNOWN]),
+                  label='CheckUngrouped')
+      assert_that(pc | beam.GroupByKey() |
+                  beam.Map(lambda _, p=DoFn.PaneInfoParam: p),
+                  equal_to([
+                      windowed_value.PaneInfo(
+                          is_first=True,
+                          is_last=True,
+                          timing=windowed_value.PaneInfoTiming.ON_TIME,
+                          index=0,
+                          nonspeculative_index=0)
+                  ]),
+                  label='CheckGrouped')
 
   def test_incomparable_default(self):
 
@@ -720,9 +726,8 @@ class DoFnTest(unittest.TestCase):
     # Ensure that we don't use default values in a context where they must be
     # comparable (see BEAM-8301).
     with TestPipeline() as pipeline:
-      pcoll = (pipeline
-               | beam.Create([None])
-               | Map(lambda e, x=IncomparableType(): (e, type(x).__name__)))
+      pcoll = (pipeline | beam.Create([None]) |
+               Map(lambda e, x=IncomparableType(): (e, type(x).__name__)))
       assert_that(pcoll, equal_to([(None, 'IncomparableType')]))
 
 
@@ -752,9 +757,8 @@ class PipelineOptionsTest(unittest.TestCase):
     self.assertEqual('sunny side up', options.style)
 
   def test_keyword_parsing(self):
-    options = Breakfast(
-        ['--slices=3', '--style=sunny side up', '--ignored'],
-        slices=10)
+    options = Breakfast(['--slices=3', '--style=sunny side up', '--ignored'],
+                        slices=10)
     self.assertEqual(10, options.slices)
     self.assertEqual('sunny side up', options.style)
 
@@ -786,20 +790,29 @@ class PipelineOptionsTest(unittest.TestCase):
   def test_dir(self):
     options = Breakfast()
     self.assertEqual(
-        set(['from_dictionary', 'get_all_options', 'slices', 'style',
-             'view_as', 'display_data']),
-        set([attr for attr in dir(options) if not attr.startswith('_') and
-             attr != 'next']))
+        set([
+            'from_dictionary', 'get_all_options', 'slices', 'style', 'view_as',
+            'display_data'
+        ]),
+        set([
+            attr for attr in dir(options)
+            if not attr.startswith('_') and attr != 'next'
+        ]))
     self.assertEqual(
-        set(['from_dictionary', 'get_all_options', 'style', 'view_as',
-             'display_data']),
-        set([attr for attr in dir(options.view_as(Eggs))
-             if not attr.startswith('_') and attr != 'next']))
+        set([
+            'from_dictionary', 'get_all_options', 'style', 'view_as',
+            'display_data'
+        ]),
+        set([
+            attr for attr in dir(options.view_as(Eggs))
+            if not attr.startswith('_') and attr != 'next'
+        ]))
 
 
 class RunnerApiTest(unittest.TestCase):
 
   def test_parent_pointer(self):
+
     class MyPTransform(beam.PTransform):
 
       def expand(self, p):

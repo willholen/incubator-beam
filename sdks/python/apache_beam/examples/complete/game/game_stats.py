@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Fourth in a series of four pipelines that tell a story in a 'gaming' domain.
 
 New concepts: session windows and finding session duration; use of both
@@ -107,6 +106,7 @@ class ParseGameEventFn(beam.DoFn):
 
   The human-readable time string is not used here.
   """
+
   def __init__(self):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(ParseGameEventFn, self).__init__()
@@ -133,6 +133,7 @@ class ExtractAndSumScore(beam.PTransform):
   The constructor argument `field` determines whether 'team' or 'user' info is
   extracted.
   """
+
   def __init__(self, field):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(ExtractAndSumScore, self).__init__()
@@ -140,9 +141,8 @@ class ExtractAndSumScore(beam.PTransform):
     self.field = field
 
   def expand(self, pcoll):
-    return (pcoll
-            | beam.Map(lambda elem: (elem[self.field], elem['score']))
-            | beam.CombinePerKey(sum))
+    return (pcoll | beam.Map(lambda elem: (elem[self.field], elem['score'])) |
+            beam.CombinePerKey(sum))
 
 
 class TeamScoresDict(beam.DoFn):
@@ -152,6 +152,7 @@ class TeamScoresDict(beam.DoFn):
   formats everything together into a dictionary. The dictionary is in the format
   {'bigquery_column': value}
   """
+
   def process(self, team_score, window=beam.DoFn.WindowParam):
     team, score = team_score
     start = timestamp2str(int(window.start))
@@ -165,6 +166,7 @@ class TeamScoresDict(beam.DoFn):
 
 class WriteToBigQuery(beam.PTransform):
   """Generate, format, and write BigQuery table row information."""
+
   def __init__(self, table_name, dataset, schema, project):
     """Initializes the transform.
     Args:
@@ -183,16 +185,13 @@ class WriteToBigQuery(beam.PTransform):
 
   def get_schema(self):
     """Build the output table schema."""
-    return ', '.join(
-        '%s:%s' % (col, self.schema[col]) for col in self.schema)
+    return ', '.join('%s:%s' % (col, self.schema[col]) for col in self.schema)
 
   def expand(self, pcoll):
-    return (
-        pcoll
-        | 'ConvertToRow' >> beam.Map(
-            lambda elem: {col: elem[col] for col in self.schema})
-        | beam.io.WriteToBigQuery(
-            self.table_name, self.dataset, self.project, self.get_schema()))
+    return (pcoll | 'ConvertToRow' >>
+            beam.Map(lambda elem: {col: elem[col] for col in self.schema}) |
+            beam.io.WriteToBigQuery(self.table_name, self.dataset, self.project,
+                                    self.get_schema()))
 
 
 # [START abuse_detect]
@@ -208,9 +207,7 @@ class CalculateSpammyUsers(beam.PTransform):
 
   def expand(self, user_scores):
     # Get the sum of scores for each user.
-    sum_scores = (
-        user_scores
-        | 'SumUsersScores' >> beam.CombinePerKey(sum))
+    sum_scores = (user_scores | 'SumUsersScores' >> beam.CombinePerKey(sum))
 
     # Extract the score from each element, and use it to find the global mean.
     global_mean_score = (
@@ -228,22 +225,23 @@ class CalculateSpammyUsers(beam.PTransform):
                 key_score[1] > global_mean * self.SCORE_WEIGHT,
             global_mean_score))
     return filtered
+
+
 # [END abuse_detect]
 
 
 class UserSessionActivity(beam.DoFn):
   """Calculate and output an element's session duration, in seconds."""
+
   def process(self, elem, window=beam.DoFn.WindowParam):
-    yield (window.end.micros - window.start.micros)//1000000
+    yield (window.end.micros - window.start.micros) // 1000000
 
 
 def run(argv=None, save_main_session=True):
   """Main entry point; defines and runs the hourly_team_score pipeline."""
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--topic',
-                      type=str,
-                      help='Pub/Sub topic to read from')
+  parser.add_argument('--topic', type=str, help='Pub/Sub topic to read from')
   parser.add_argument('--subscription',
                       type=str,
                       help='Pub/Sub subscription to read from')
@@ -260,17 +258,17 @@ def run(argv=None, save_main_session=True):
                       type=int,
                       default=60,
                       help='Numeric value of fixed window duration for user '
-                           'analysis, in minutes')
+                      'analysis, in minutes')
   parser.add_argument('--session_gap',
                       type=int,
                       default=5,
                       help='Numeric value of gap between user sessions, '
-                           'in minutes')
+                      'in minutes')
   parser.add_argument('--user_activity_window_duration',
                       type=int,
                       default=30,
                       help='Numeric value of fixed window for finding mean of '
-                           'user session duration, in minutes')
+                      'user session duration, in minutes')
 
   args, pipeline_args = parser.parse_known_args(argv)
 
@@ -305,26 +303,21 @@ def run(argv=None, save_main_session=True):
       scores = p | 'ReadPubSub' >> beam.io.ReadFromPubSub(
           subscription=args.subscription)
     else:
-      scores = p | 'ReadPubSub' >> beam.io.ReadFromPubSub(
-          topic=args.topic)
+      scores = p | 'ReadPubSub' >> beam.io.ReadFromPubSub(topic=args.topic)
     raw_events = (
-        scores
-        | 'DecodeString' >> beam.Map(lambda b: b.decode('utf-8'))
-        | 'ParseGameEventFn' >> beam.ParDo(ParseGameEventFn())
-        | 'AddEventTimestamps' >> beam.Map(
+        scores | 'DecodeString' >> beam.Map(lambda b: b.decode('utf-8')) |
+        'ParseGameEventFn' >> beam.ParDo(ParseGameEventFn()) |
+        'AddEventTimestamps' >> beam.Map(
             lambda elem: beam.window.TimestampedValue(elem, elem['timestamp'])))
 
     # Extract username/score pairs from the event stream
-    user_events = (
-        raw_events
-        | 'ExtractUserScores' >> beam.Map(
-            lambda elem: (elem['user'], elem['score'])))
+    user_events = (raw_events | 'ExtractUserScores' >>
+                   beam.Map(lambda elem: (elem['user'], elem['score'])))
 
     # Calculate the total score per user over fixed windows, and cumulative
     # updates for late data
     spammers_view = (
-        user_events
-        | 'UserFixedWindows' >> beam.WindowInto(
+        user_events | 'UserFixedWindows' >> beam.WindowInto(
             beam.window.FixedWindows(fixed_window_duration))
 
         # Filter out everyone but those with (SCORE_WEIGHT * avg) clickrate.
@@ -347,19 +340,19 @@ def run(argv=None, save_main_session=True):
 
      # Filter out the detected spammer users, using the side input derived above
      | 'FilterOutSpammers' >> beam.Filter(
-         lambda elem, spammers: elem['user'] not in spammers,
-         spammers_view)
+         lambda elem, spammers: elem['user'] not in spammers, spammers_view)
      # Extract and sum teamname/score pairs from the event data.
      | 'ExtractAndSumScore' >> ExtractAndSumScore('team')
      # [END filter_and_calc]
-     | 'TeamScoresDict' >> beam.ParDo(TeamScoresDict())
-     | 'WriteTeamScoreSums' >> WriteToBigQuery(
+     | 'TeamScoresDict' >> beam.ParDo(TeamScoresDict()) |
+     'WriteTeamScoreSums' >> WriteToBigQuery(
          args.table_name + '_teams', args.dataset, {
              'team': 'STRING',
              'total_score': 'INTEGER',
              'window_start': 'STRING',
              'processing_time': 'STRING',
-         }, options.view_as(GoogleCloudOptions).project))
+         },
+         options.view_as(GoogleCloudOptions).project))
 
     # [START session_calc]
     # Detect user sessions-- that is, a burst of activity separated by a gap
@@ -387,14 +380,15 @@ def run(argv=None, save_main_session=True):
          beam.window.FixedWindows(user_activity_window_duration))
 
      # Find the mean session duration in each window
-     | beam.CombineGlobally(beam.combiners.MeanCombineFn()).without_defaults()
-     | 'FormatAvgSessionLength' >> beam.Map(
-         lambda elem: {'mean_duration': float(elem)})
-     | 'WriteAvgSessionLength' >> WriteToBigQuery(
+     | beam.CombineGlobally(beam.combiners.MeanCombineFn()).without_defaults() |
+     'FormatAvgSessionLength' >>
+     beam.Map(lambda elem: {'mean_duration': float(elem)}) |
+     'WriteAvgSessionLength' >> WriteToBigQuery(
          args.table_name + '_sessions', args.dataset, {
              'mean_duration': 'FLOAT',
-         }, options.view_as(GoogleCloudOptions).project))
-     # [END rewindow]
+         },
+         options.view_as(GoogleCloudOptions).project))
+    # [END rewindow]
 
 
 if __name__ == '__main__':

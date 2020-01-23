@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 Implements a Cloud Datastore query splitter.
 
@@ -126,10 +125,12 @@ def _create_scatter_query(query, num_splits):
   # extra region following the last scatter point. Thus, we do not need the
   # scatter entity for the last region.
   limit = (num_splits - 1) * KEYS_PER_SPLIT
-  scatter_query = types.Query(
-      kind=query.kind, project=query.project, namespace=query.namespace,
-      order=[SCATTER_PROPERTY_NAME],
-      projection=[KEY_PROPERTY_NAME], limit=limit)
+  scatter_query = types.Query(kind=query.kind,
+                              project=query.project,
+                              namespace=query.namespace,
+                              order=[SCATTER_PROPERTY_NAME],
+                              projection=[KEY_PROPERTY_NAME],
+                              limit=limit)
   return scatter_query
 
 
@@ -139,6 +140,7 @@ class IdOrName(object):
    Implements sort ordering: by ID, then by name, keys with IDs before those
    with names.
    """
+
   def __init__(self, id_or_name):
     self.id_or_name = id_or_name
     if isinstance(id_or_name, (str, unicode)):
@@ -208,7 +210,8 @@ def _get_scatter_keys(client, query, num_splits):
   client_key_splits = [
       client_entity.key
       for client_entity in client_query.fetch(client=client,
-                                              limit=scatter_point_query.limit)]
+                                              limit=scatter_point_query.limit)
+  ]
   client_key_splits.sort(key=client_key_sort_key)
   return client_key_splits
 

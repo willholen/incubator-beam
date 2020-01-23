@@ -122,9 +122,10 @@ def check_split(actual):
 
 
 @mock.patch('apache_beam.Pipeline', TestPipeline)
-@mock.patch(
-    'apache_beam.examples.snippets.transforms.elementwise.regex.print', str)
+@mock.patch('apache_beam.examples.snippets.transforms.elementwise.regex.print',
+            str)
 class RegexTest(unittest.TestCase):
+
   def test_matches(self):
     regex.regex_matches(check_matches)
 

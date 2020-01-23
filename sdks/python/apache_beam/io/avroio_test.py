@@ -42,11 +42,10 @@ from fastavro import writer
 
 # pylint: disable=wrong-import-order, wrong-import-position, ungrouped-imports
 try:
-  from avro.schema import Parse # avro-python3 library for python3
+  from avro.schema import Parse  # avro-python3 library for python3
 except ImportError:
   from avro.schema import parse as Parse  # avro library for python2
 # pylint: enable=wrong-import-order, wrong-import-position, ungrouped-imports
-
 
 import apache_beam as beam
 from apache_beam import Create
@@ -69,26 +68,31 @@ except ImportError:
   snappy = None  # pylint: disable=invalid-name
   logging.warning('python-snappy is not installed; some tests will be skipped.')
 
-RECORDS = [
-    {'name': 'Thomas',
-     'favorite_number': 1,
-     'favorite_color': 'blue'},
-    {'name': 'Henry',
-     'favorite_number': 3,
-     'favorite_color': 'green'},
-    {'name': 'Toby',
-     'favorite_number': 7,
-     'favorite_color': 'brown'},
-    {'name': 'Gordon',
-     'favorite_number': 4,
-     'favorite_color': 'blue'},
-    {'name': 'Emily',
-     'favorite_number': -1,
-     'favorite_color': 'Red'},
-    {'name': 'Percy',
-     'favorite_number': 6,
-     'favorite_color': 'Green'}
-]
+RECORDS = [{
+    'name': 'Thomas',
+    'favorite_number': 1,
+    'favorite_color': 'blue'
+}, {
+    'name': 'Henry',
+    'favorite_number': 3,
+    'favorite_color': 'green'
+}, {
+    'name': 'Toby',
+    'favorite_number': 7,
+    'favorite_color': 'brown'
+}, {
+    'name': 'Gordon',
+    'favorite_number': 4,
+    'favorite_color': 'blue'
+}, {
+    'name': 'Emily',
+    'favorite_number': -1,
+    'favorite_color': 'Red'
+}, {
+    'name': 'Percy',
+    'favorite_number': 6,
+    'favorite_color': 'Green'
+}]
 
 
 class AvroBase(object):
@@ -156,10 +160,8 @@ class AvroBase(object):
         raise ValueError('Test is trivial. Please adjust it so that at least '
                          'two splits get generated')
 
-      sources_info = [
-          (split.source, split.start_position, split.stop_position)
-          for split in splits
-      ]
+      sources_info = [(split.source, split.start_position, split.stop_position)
+                      for split in splits]
       source_test_utils.assert_sources_equal_reference_source(
           (source, None, None), sources_info)
     else:
@@ -189,7 +191,8 @@ class AvroBase(object):
     # No extra avro parameters for AvroSource.
     expected_items = [
         DisplayDataItemMatcher('compression', 'auto'),
-        DisplayDataItemMatcher('file_pattern', file_name)]
+        DisplayDataItemMatcher('file_pattern', file_name)
+    ]
     hc.assert_that(dd.items, hc.contains_inanyorder(*expected_items))
 
   def test_read_display_data(self):
@@ -204,35 +207,30 @@ class AvroBase(object):
     # No extra avro parameters for AvroSource.
     expected_items = [
         DisplayDataItemMatcher('compression', 'auto'),
-        DisplayDataItemMatcher('file_pattern', file_name)]
+        DisplayDataItemMatcher('file_pattern', file_name)
+    ]
     hc.assert_that(dd.items, hc.contains_inanyorder(*expected_items))
 
   def test_sink_display_data(self):
     file_name = 'some_avro_sink'
-    sink = _create_avro_sink(
-        file_name,
-        self.SCHEMA,
-        'null',
-        '.end',
-        0,
-        None,
-        'application/x-avro',
-        use_fastavro=self.use_fastavro)
+    sink = _create_avro_sink(file_name,
+                             self.SCHEMA,
+                             'null',
+                             '.end',
+                             0,
+                             None,
+                             'application/x-avro',
+                             use_fastavro=self.use_fastavro)
     dd = DisplayData.create_from(sink)
 
     expected_items = [
-        DisplayDataItemMatcher(
-            'schema',
-            str(self.SCHEMA)),
+        DisplayDataItemMatcher('schema', str(self.SCHEMA)),
         DisplayDataItemMatcher(
             'file_pattern',
             'some_avro_sink-%(shard_num)05d-of-%(num_shards)05d.end'),
-        DisplayDataItemMatcher(
-            'codec',
-            'null'),
-        DisplayDataItemMatcher(
-            'compression',
-            'uncompressed')]
+        DisplayDataItemMatcher('codec', 'null'),
+        DisplayDataItemMatcher('compression', 'uncompressed')
+    ]
 
     hc.assert_that(dd.items, hc.contains_inanyorder(*expected_items))
 
@@ -243,18 +241,13 @@ class AvroBase(object):
                                use_fastavro=self.use_fastavro)
     dd = DisplayData.create_from(write)
     expected_items = [
-        DisplayDataItemMatcher(
-            'schema',
-            str(self.SCHEMA)),
+        DisplayDataItemMatcher('schema', str(self.SCHEMA)),
         DisplayDataItemMatcher(
             'file_pattern',
             'some_avro_sink-%(shard_num)05d-of-%(num_shards)05d'),
-        DisplayDataItemMatcher(
-            'codec',
-            'deflate'),
-        DisplayDataItemMatcher(
-            'compression',
-            'uncompressed')]
+        DisplayDataItemMatcher('codec', 'deflate'),
+        DisplayDataItemMatcher('compression', 'uncompressed')
+    ]
     hc.assert_that(dd.items, hc.contains_inanyorder(*expected_items))
 
   def test_read_reentrant_without_splitting(self):
@@ -265,8 +258,7 @@ class AvroBase(object):
   def test_read_reantrant_with_splitting(self):
     file_name = self._write_data()
     source = _create_avro_source(file_name, use_fastavro=self.use_fastavro)
-    splits = [
-        split for split in source.split(desired_bundle_size=100000)]
+    splits = [split for split in source.split(desired_bundle_size=100000)]
     assert len(splits) == 1
     source_test_utils.assert_reentrant_reads_succeed(
         (splits[0].source, splits[0].start_position, splits[0].stop_position))
@@ -284,18 +276,14 @@ class AvroBase(object):
   def test_split_points(self):
     num_records = 12000
     sync_interval = 16000
-    file_name = self._write_data(count=num_records,
-                                 sync_interval=sync_interval)
+    file_name = self._write_data(count=num_records, sync_interval=sync_interval)
 
     source = _create_avro_source(file_name, use_fastavro=self.use_fastavro)
 
-    splits = [
-        split
-        for split in source.split(desired_bundle_size=float('inf'))
-    ]
+    splits = [split for split in source.split(desired_bundle_size=float('inf'))]
     assert len(splits) == 1
-    range_tracker = splits[0].source.get_range_tracker(
-        splits[0].start_position, splits[0].stop_position)
+    range_tracker = splits[0].source.get_range_tracker(splits[0].start_position,
+                                                       splits[0].stop_position)
 
     split_points_report = []
 
@@ -304,14 +292,12 @@ class AvroBase(object):
     # There will be a total of num_blocks in the generated test file,
     # proportional to number of records in the file divided by syncronization
     # interval used by avro during write. Each block has more than 10 records.
-    num_blocks = int(math.ceil(14.5 * num_records /
-                               sync_interval))
+    num_blocks = int(math.ceil(14.5 * num_records / sync_interval))
     assert num_blocks > 1
     # When reading records of the first block, range_tracker.split_points()
     # should return (0, iobase.RangeTracker.SPLIT_POINTS_UNKNOWN)
-    self.assertEqual(
-        split_points_report[:10],
-        [(0, iobase.RangeTracker.SPLIT_POINTS_UNKNOWN)] * 10)
+    self.assertEqual(split_points_report[:10],
+                     [(0, iobase.RangeTracker.SPLIT_POINTS_UNKNOWN)] * 10)
 
     # When reading records of last block, range_tracker.split_points() should
     # return (num_blocks - 1, 1)
@@ -350,11 +336,12 @@ class AvroBase(object):
     self._run_avro_test(pattern, 100, True, expected_result)
 
   def test_dynamic_work_rebalancing_exhaustive(self):
+
     def compare_split_points(file_name):
-      source = _create_avro_source(file_name,
-                                   use_fastavro=self.use_fastavro)
-      splits = [split
-                for split in source.split(desired_bundle_size=float('inf'))]
+      source = _create_avro_source(file_name, use_fastavro=self.use_fastavro)
+      splits = [
+          split for split in source.split(desired_bundle_size=float('inf'))
+      ]
       assert len(splits) == 1
       source_test_utils.assert_split_at_fraction_exhaustive(splits[0].source)
 
@@ -374,22 +361,21 @@ class AvroBase(object):
     # https://avro.apache.org/docs/current/spec.html#Object+Container+Files
     corrupted_data = bytearray(data)
     corrupted_data[-1] = (corrupted_data[-1] + 1) % 256
-    with tempfile.NamedTemporaryFile(
-        delete=False, prefix=tempfile.template) as f:
+    with tempfile.NamedTemporaryFile(delete=False,
+                                     prefix=tempfile.template) as f:
       f.write(corrupted_data)
       corrupted_file_name = f.name
 
-    source = _create_avro_source(
-        corrupted_file_name, use_fastavro=self.use_fastavro)
+    source = _create_avro_source(corrupted_file_name,
+                                 use_fastavro=self.use_fastavro)
     with self.assertRaisesRegex(ValueError, r'expected sync marker'):
       source_test_utils.read_from_source(source, None, None)
 
   def test_read_from_avro(self):
     path = self._write_data()
     with TestPipeline() as p:
-      assert_that(
-          p | avroio.ReadFromAvro(path, use_fastavro=self.use_fastavro),
-          equal_to(self.RECORDS))
+      assert_that(p | avroio.ReadFromAvro(path, use_fastavro=self.use_fastavro),
+                  equal_to(self.RECORDS))
 
   def test_read_all_from_avro_single_file(self):
     path = self._write_data()
@@ -474,6 +460,7 @@ class AvroBase(object):
                  'This test still needs to be fixed on Python 3. '
                  'TODO: BEAM-6522.')
 class TestAvro(AvroBase, unittest.TestCase):
+
   def __init__(self, methodName='runTest'):
     super(TestAvro, self).__init__(methodName)
     self.use_fastavro = False
@@ -503,6 +490,7 @@ class TestAvro(AvroBase, unittest.TestCase):
 
 
 class TestFastAvro(AvroBase, unittest.TestCase):
+
   def __init__(self, methodName='runTest'):
     super(TestFastAvro, self).__init__(methodName)
     self.use_fastavro = True
@@ -520,8 +508,7 @@ class TestFastAvro(AvroBase, unittest.TestCase):
                                      dir=directory,
                                      prefix=prefix,
                                      mode='w+b') as f:
-      writer(f, self.SCHEMA, all_records,
-             codec=codec, **kwargs)
+      writer(f, self.SCHEMA, all_records, codec=codec, **kwargs)
       self._temp_files.append(f.name)
     return f.name
 

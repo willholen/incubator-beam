@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Module of Interactive Beam features that can be used in notebook.
 
 The purpose of the module is to reduce the learning curve of Interactive Beam

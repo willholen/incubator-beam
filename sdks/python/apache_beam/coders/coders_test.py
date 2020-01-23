@@ -37,9 +37,8 @@ class PickleCoderTest(unittest.TestCase):
     self.assertEqual(v, pickler.decode(pickler.encode(v)))
     pickler = coders.Base64PickleCoder()
     self.assertEqual(v, pickler.decode(pickler.encode(v)))
-    self.assertEqual(
-        coders.Base64PickleCoder().encode(v),
-        base64.b64encode(coders.PickleCoder().encode(v)))
+    self.assertEqual(coders.Base64PickleCoder().encode(v),
+                     base64.b64encode(coders.PickleCoder().encode(v)))
 
   def test_equality(self):
     self.assertEqual(coders.PickleCoder(), coders.PickleCoder())
@@ -53,8 +52,7 @@ class CodersTest(unittest.TestCase):
   def test_str_utf8_coder(self):
     real_coder = coders_registry.get_coder(bytes)
     expected_coder = coders.BytesCoder()
-    self.assertEqual(
-        real_coder.encode(b'abc'), expected_coder.encode(b'abc'))
+    self.assertEqual(real_coder.encode(b'abc'), expected_coder.encode(b'abc'))
     self.assertEqual(b'abc', real_coder.decode(real_coder.encode(b'abc')))
 
 
@@ -95,8 +93,8 @@ class DeterministicProtoCoderTest(unittest.TestCase):
     mb.field1 = True
     ma.field1 = u'hello world'
     expected_coder = coders.DeterministicProtoCoder(ma.__class__)
-    real_coder = (coders_registry.get_coder(ma.__class__)
-                  .as_deterministic_coder(step_label='unused'))
+    real_coder = (coders_registry.get_coder(
+        ma.__class__).as_deterministic_coder(step_label='unused'))
     self.assertTrue(real_coder.is_deterministic())
     self.assertEqual(expected_coder, real_coder)
     self.assertEqual(real_coder.encode(ma), expected_coder.encode(ma))
@@ -144,21 +142,30 @@ class AvroCoderTest(unittest.TestCase):
     expected_coder = AvroTestCoder()
     self.assertEqual(
         real_coder.encode(
-            AvroTestRecord({"name": "Daenerys targaryen", "age": 23})),
+            AvroTestRecord({
+                "name": "Daenerys targaryen",
+                "age": 23
+            })),
         expected_coder.encode(
-            AvroTestRecord({"name": "Daenerys targaryen", "age": 23}))
-    )
+            AvroTestRecord({
+                "name": "Daenerys targaryen",
+                "age": 23
+            })))
     self.assertEqual(
-        AvroTestRecord({"name": "Jon Snow", "age": 23}),
+        AvroTestRecord({
+            "name": "Jon Snow",
+            "age": 23
+        }),
         real_coder.decode(
-            real_coder.encode(
-                AvroTestRecord({"name": "Jon Snow", "age": 23}))
-        )
-    )
+            real_coder.encode(AvroTestRecord({
+                "name": "Jon Snow",
+                "age": 23
+            }))))
 
 
 class DummyClass(object):
   """A class with no registered coder."""
+
   def __init__(self):
     pass
 

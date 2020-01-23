@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the windowed_value."""
 
 # pytype: skip-file
@@ -35,33 +34,29 @@ class WindowedValueTest(unittest.TestCase):
     wv = windowed_value.WindowedValue(None, 3, ())
     self.assertEqual(wv.timestamp, Timestamp.of(3))
     self.assertTrue(wv.timestamp is wv.timestamp)
-    self.assertEqual(windowed_value.WindowedValue(None, -2.5, ()).timestamp,
-                     Timestamp.of(-2.5))
+    self.assertEqual(
+        windowed_value.WindowedValue(None, -2.5, ()).timestamp,
+        Timestamp.of(-2.5))
 
   def test_with_value(self):
-    pane_info = windowed_value.PaneInfo(
-        True, True, windowed_value.PaneInfoTiming.ON_TIME, 0, 0)
+    pane_info = windowed_value.PaneInfo(True, True,
+                                        windowed_value.PaneInfoTiming.ON_TIME,
+                                        0, 0)
     wv = windowed_value.WindowedValue(1, 3, (), pane_info)
     self.assertEqual(wv.with_value(10),
                      windowed_value.WindowedValue(10, 3, (), pane_info))
 
   def test_equality(self):
-    self.assertEqual(
-        windowed_value.WindowedValue(1, 3, ()),
-        windowed_value.WindowedValue(1, 3, ()))
-    self.assertNotEqual(
-        windowed_value.WindowedValue(1, 3, ()),
-        windowed_value.WindowedValue(100, 3, ()))
-    self.assertNotEqual(
-        windowed_value.WindowedValue(1, 3, ()),
-        windowed_value.WindowedValue(1, 300, ()))
-    self.assertNotEqual(
-        windowed_value.WindowedValue(1, 3, ()),
-        windowed_value.WindowedValue(1, 300, ((),)))
+    self.assertEqual(windowed_value.WindowedValue(1, 3, ()),
+                     windowed_value.WindowedValue(1, 3, ()))
+    self.assertNotEqual(windowed_value.WindowedValue(1, 3, ()),
+                        windowed_value.WindowedValue(100, 3, ()))
+    self.assertNotEqual(windowed_value.WindowedValue(1, 3, ()),
+                        windowed_value.WindowedValue(1, 300, ()))
+    self.assertNotEqual(windowed_value.WindowedValue(1, 3, ()),
+                        windowed_value.WindowedValue(1, 300, ((),)))
 
-    self.assertNotEqual(
-        windowed_value.WindowedValue(1, 3, ()),
-        object())
+    self.assertNotEqual(windowed_value.WindowedValue(1, 3, ()), object())
 
   def test_hash(self):
     wv = windowed_value.WindowedValue(1, 3, ())
@@ -70,8 +65,9 @@ class WindowedValueTest(unittest.TestCase):
     self.assertEqual({wv: 100}.get(wv_copy), 100)
 
   def test_pickle(self):
-    pane_info = windowed_value.PaneInfo(
-        True, True, windowed_value.PaneInfoTiming.ON_TIME, 0, 0)
+    pane_info = windowed_value.PaneInfo(True, True,
+                                        windowed_value.PaneInfoTiming.ON_TIME,
+                                        0, 0)
     wv = windowed_value.WindowedValue(1, 3, (), pane_info)
     self.assertTrue(pickle.loads(pickle.dumps(wv)) == wv)
 

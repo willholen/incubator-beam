@@ -73,6 +73,7 @@ def check_percentages_per_season(actual):
     'apache_beam.examples.snippets.transforms.aggregation.combinevalues.print',
     str)
 class CombineValuesTest(unittest.TestCase):
+
   def test_combinevalues_function(self):
     combinevalues.combinevalues_function(check_saturated_total)
 

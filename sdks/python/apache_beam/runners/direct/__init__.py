@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Inprocess runner executes pipelines locally in a single process.
 
 Anything in this package not imported here is an internal implementation detail

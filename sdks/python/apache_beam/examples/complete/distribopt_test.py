@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Test for the distrib_optimization example."""
 
 # pytype: skip-file
@@ -65,17 +64,15 @@ class DistribOptimizationTest(unittest.TestCase):
     scipy_mock = MagicMock()
     result_mock = MagicMock(x=np.ones(3))
     scipy_mock.optimize.minimize = MagicMock(return_value=result_mock)
-    modules = {
-        'scipy': scipy_mock,
-        'scipy.optimize': scipy_mock.optimize
-    }
+    modules = {'scipy': scipy_mock, 'scipy.optimize': scipy_mock.optimize}
 
     with patch.dict('sys.modules', modules):
       from apache_beam.examples.complete import distribopt
-      distribopt.run(
-          ['--input=%s/input.txt' % temp_folder,
-           '--output', os.path.join(temp_folder, 'result')],
-          save_main_session=False)
+      distribopt.run([
+          '--input=%s/input.txt' % temp_folder, '--output',
+          os.path.join(temp_folder, 'result')
+      ],
+                     save_main_session=False)
 
     # Load result file and compare.
     with open_shards(os.path.join(temp_folder, 'result-*-of-*')) as result_file:

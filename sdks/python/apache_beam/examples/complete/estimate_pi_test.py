@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Test for the estimate_pi example."""
 
 # pytype: skip-file
@@ -31,11 +30,13 @@ from apache_beam.testing.util import assert_that
 
 
 def in_between(lower, upper):
+
   def _in_between(actual):
     _, _, estimate = actual[0]
     if estimate < lower or estimate > upper:
-      raise BeamAssertException(
-          'Failed assert: %f not in [%f, %f]' % (estimate, lower, upper))
+      raise BeamAssertException('Failed assert: %f not in [%f, %f]' %
+                                (estimate, lower, upper))
+
   return _in_between
 
 

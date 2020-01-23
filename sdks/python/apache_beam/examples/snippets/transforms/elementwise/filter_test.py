@@ -51,9 +51,10 @@ def check_valid_plants(actual):
 
 
 @mock.patch('apache_beam.Pipeline', TestPipeline)
-@mock.patch(
-    'apache_beam.examples.snippets.transforms.elementwise.filter.print', str)
+@mock.patch('apache_beam.examples.snippets.transforms.elementwise.filter.print',
+            str)
 class FilterTest(unittest.TestCase):
+
   def test_filter_function(self):
     filter.filter_function(check_perennials)
 

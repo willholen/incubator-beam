@@ -117,8 +117,8 @@ class SourceTestUtilsTest(unittest.TestCase):
     source = self._create_source(data)
 
     stats = source_test_utils.SplitFractionStatistics([], [])
-    source_test_utils.assert_split_at_fraction_binary(
-        source, data, 10, 0.5, None, 0.8, None, stats)
+    source_test_utils.assert_split_at_fraction_binary(source, data, 10, 0.5,
+                                                      None, 0.8, None, stats)
 
     # These lists should not be empty now.
     self.assertTrue(stats.successful_fractions)

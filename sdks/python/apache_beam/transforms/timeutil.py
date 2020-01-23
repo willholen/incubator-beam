@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Timestamp utilities."""
 
 # pytype: skip-file
@@ -31,7 +30,7 @@ from apache_beam.portability.api import beam_runner_api_pb2
 
 __all__ = [
     'TimeDomain',
-    ]
+]
 
 
 class TimeDomain(object):
@@ -42,16 +41,17 @@ class TimeDomain(object):
   DEPENDENT_REAL_TIME = 'DEPENDENT_REAL_TIME'
 
   _RUNNER_API_MAPPING = {
-      WATERMARK: beam_runner_api_pb2.TimeDomain.EVENT_TIME,
-      REAL_TIME: beam_runner_api_pb2.TimeDomain.PROCESSING_TIME,
+      WATERMARK:
+          beam_runner_api_pb2.TimeDomain.EVENT_TIME,
+      REAL_TIME:
+          beam_runner_api_pb2.TimeDomain.PROCESSING_TIME,
       DEPENDENT_REAL_TIME:
-      beam_runner_api_pb2.TimeDomain.SYNCHRONIZED_PROCESSING_TIME,
+          beam_runner_api_pb2.TimeDomain.SYNCHRONIZED_PROCESSING_TIME,
   }
 
   @staticmethod
   def from_string(domain):
-    if domain in (TimeDomain.WATERMARK,
-                  TimeDomain.REAL_TIME,
+    if domain in (TimeDomain.WATERMARK, TimeDomain.REAL_TIME,
                   TimeDomain.DEPENDENT_REAL_TIME):
       return domain
     raise ValueError('Unknown time domain: %s' % domain)
@@ -61,7 +61,8 @@ class TimeDomain(object):
     return TimeDomain._RUNNER_API_MAPPING[domain]
 
 
-class TimestampCombinerImpl(with_metaclass(ABCMeta, object)):  # type: ignore[misc]
+class TimestampCombinerImpl(with_metaclass(ABCMeta,
+                                           object)):  # type: ignore[misc]
   """Implementation of TimestampCombiner."""
 
   @abstractmethod
@@ -79,8 +80,7 @@ class TimestampCombinerImpl(with_metaclass(ABCMeta, object)):  # type: ignore[mi
       if combined_output_time is None:
         combined_output_time = output_time
       elif output_time is not None:
-        combined_output_time = self.combine(
-            combined_output_time, output_time)
+        combined_output_time = self.combine(combined_output_time, output_time)
     return combined_output_time
 
   def merge(self, unused_result_window, merging_timestamps):
@@ -88,7 +88,8 @@ class TimestampCombinerImpl(with_metaclass(ABCMeta, object)):  # type: ignore[mi
     return self.combine_all(merging_timestamps)
 
 
-class DependsOnlyOnWindow(with_metaclass(ABCMeta, TimestampCombinerImpl)):  # type: ignore[misc]
+class DependsOnlyOnWindow(with_metaclass(ABCMeta, TimestampCombinerImpl)
+                         ):  # type: ignore[misc]
   """TimestampCombinerImpl that only depends on the window."""
 
   def merge(self, result_window, unused_merging_timestamps):

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the util module."""
 # pytype: skip-file
 
@@ -30,15 +29,19 @@ from apache_beam.internal.util import remove_objects_from_args
 class UtilTest(unittest.TestCase):
 
   def test_remove_objects_from_args(self):
-    args, kwargs, objs = remove_objects_from_args(
-        [1, 'a'], {'x': 1, 'y': 3.14}, (str, float))
+    args, kwargs, objs = remove_objects_from_args([1, 'a'], {
+        'x': 1,
+        'y': 3.14
+    }, (str, float))
     self.assertEqual([1, ArgumentPlaceholder()], args)
     self.assertEqual({'x': 1, 'y': ArgumentPlaceholder()}, kwargs)
     self.assertEqual(['a', 3.14], objs)
 
   def test_remove_objects_from_args_nothing_to_remove(self):
-    args, kwargs, objs = remove_objects_from_args(
-        [1, 2], {'x': 1, 'y': 2}, (str, float))
+    args, kwargs, objs = remove_objects_from_args([1, 2], {
+        'x': 1,
+        'y': 2
+    }, (str, float))
     self.assertEqual([1, 2], args)
     self.assertEqual({'x': 1, 'y': 2}, kwargs)
     self.assertEqual([], objs)

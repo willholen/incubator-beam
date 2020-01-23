@@ -43,14 +43,12 @@ class TestMatchers(unittest.TestCase):
     metric_name.name = 'metric1'
     metric_name.origin = 'origin2'
 
-    matcher = message_matchers.MetricStructuredNameMatcher(
-        name='metric1',
-        origin='origin2')
+    matcher = message_matchers.MetricStructuredNameMatcher(name='metric1',
+                                                           origin='origin2')
     hc.assert_that(metric_name, hc.is_(matcher))
     with self.assertRaises(AssertionError):
-      matcher = message_matchers.MetricStructuredNameMatcher(
-          name='metric1',
-          origin='origin1')
+      matcher = message_matchers.MetricStructuredNameMatcher(name='metric1',
+                                                             origin='origin1')
       hc.assert_that(metric_name, hc.is_(matcher))
 
   def test_metric_update_basic(self):
@@ -64,12 +62,10 @@ class TestMatchers(unittest.TestCase):
     metric_update.scalar = to_json_value(1, with_type=True)
 
     name_matcher = message_matchers.MetricStructuredNameMatcher(
-        name='metric1',
-        origin='origin1')
-    matcher = message_matchers.MetricUpdateMatcher(
-        name=name_matcher,
-        kind='sum',
-        scalar=1)
+        name='metric1', origin='origin1')
+    matcher = message_matchers.MetricUpdateMatcher(name=name_matcher,
+                                                   kind='sum',
+                                                   scalar=1)
 
     hc.assert_that(metric_update, hc.is_(matcher))
 

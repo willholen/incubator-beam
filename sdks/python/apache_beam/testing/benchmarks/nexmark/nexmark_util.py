@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Utilities for the Nexmark suite.
 
 The Nexmark suite is a series of queries (streaming pipelines) performed
@@ -47,18 +46,20 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Command(object):
+
   def __init__(self, cmd, args):
     self.cmd = cmd
     self.args = args
 
   def run(self, timeout):
+
     def thread_target():
-      logging.debug('Starting thread for %d seconds: %s',
-                    timeout, self.cmd.__name__)
+      logging.debug('Starting thread for %d seconds: %s', timeout,
+                    self.cmd.__name__)
 
       self.cmd(*self.args)
-      _LOGGER.info('%d seconds elapsed. Thread (%s) finished.',
-                   timeout, self.cmd.__name__)
+      _LOGGER.info('%d seconds elapsed. Thread (%s) finished.', timeout,
+                   self.cmd.__name__)
 
     thread = threading.Thread(target=thread_target, name='Thread-timeout')
     thread.daemon = True

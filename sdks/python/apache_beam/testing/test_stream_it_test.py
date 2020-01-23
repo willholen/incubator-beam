@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Integration tests for the test_stream module."""
 
 # pytype: skip-file
@@ -46,6 +45,7 @@ def supported(runners):
     runners = [runners]
 
   def inner(fn):
+
     @wraps(fn)
     def wrapped(self):
       if self.runner_name not in runners:
@@ -53,7 +53,9 @@ def supported(runners):
                       'Supported runners: {}'.format(self.runner_name, runners))
       else:
         return fn(self)
+
     return wrapped
+
   return inner
 
 
@@ -69,21 +71,19 @@ class TestStreamIntegrationTests(unittest.TestCase):
   @supported(['DirectRunner', 'SwitchingDirectRunner'])
   @attr('IT')
   def test_basic_execution(self):
-    test_stream = (TestStream()
-                   .advance_watermark_to(10)
-                   .add_elements(['a', 'b', 'c'])
-                   .advance_watermark_to(20)
-                   .add_elements(['d'])
-                   .add_elements(['e'])
-                   .advance_processing_time(10)
-                   .advance_watermark_to(300)
-                   .add_elements([TimestampedValue('late', 12)])
-                   .add_elements([TimestampedValue('last', 310)])
-                   .advance_watermark_to_infinity())
+    test_stream = (TestStream().advance_watermark_to(10).add_elements([
+        'a', 'b', 'c'
+    ]).advance_watermark_to(20).add_elements(['d']).add_elements([
+        'e'
+    ]).advance_processing_time(10).advance_watermark_to(300).add_elements([
+        TimestampedValue('late', 12)
+    ]).add_elements([TimestampedValue('last',
+                                      310)]).advance_watermark_to_infinity())
 
     class RecordFn(beam.DoFn):
 
-      def process(self, element=beam.DoFn.ElementParam,
+      def process(self,
+                  element=beam.DoFn.ElementParam,
                   timestamp=beam.DoFn.TimestampParam):
         yield (element, timestamp)
 
@@ -91,14 +91,17 @@ class TestStreamIntegrationTests(unittest.TestCase):
       my_record_fn = RecordFn()
       records = p | test_stream | beam.ParDo(my_record_fn)
 
-      assert_that(records, equal_to([
-          ('a', timestamp.Timestamp(10)),
-          ('b', timestamp.Timestamp(10)),
-          ('c', timestamp.Timestamp(10)),
-          ('d', timestamp.Timestamp(20)),
-          ('e', timestamp.Timestamp(20)),
-          ('late', timestamp.Timestamp(12)),
-          ('last', timestamp.Timestamp(310)),]))
+      assert_that(
+          records,
+          equal_to([
+              ('a', timestamp.Timestamp(10)),
+              ('b', timestamp.Timestamp(10)),
+              ('c', timestamp.Timestamp(10)),
+              ('d', timestamp.Timestamp(20)),
+              ('e', timestamp.Timestamp(20)),
+              ('late', timestamp.Timestamp(12)),
+              ('last', timestamp.Timestamp(310)),
+          ]))
 
   @supported(['DirectRunner', 'SwitchingDirectRunner'])
   @attr('IT')
@@ -114,14 +117,16 @@ class TestStreamIntegrationTests(unittest.TestCase):
         TimestampedValue('2', 12),
         TimestampedValue('3', 13),
     ]
-    test_stream = (TestStream()
-                   .advance_watermark_to(5, tag='letters')
-                   .add_elements(letters_elements, tag='letters')
-                   .advance_watermark_to(10, tag='numbers')
-                   .add_elements(numbers_elements, tag='numbers'))
+    test_stream = (TestStream().advance_watermark_to(
+        5, tag='letters').add_elements(
+            letters_elements, tag='letters').advance_watermark_to(
+                10, tag='numbers').add_elements(numbers_elements,
+                                                tag='numbers'))
 
     class RecordFn(beam.DoFn):
-      def process(self, element=beam.DoFn.ElementParam,
+
+      def process(self,
+                  element=beam.DoFn.ElementParam,
                   timestamp=beam.DoFn.TimestampParam):
         yield (element, timestamp)
 
@@ -132,15 +137,15 @@ class TestStreamIntegrationTests(unittest.TestCase):
     letters = main['letters'] | 'record letters' >> beam.ParDo(RecordFn())
     numbers = main['numbers'] | 'record numbers' >> beam.ParDo(RecordFn())
 
-    assert_that(letters, equal_to([
-        ('a', Timestamp(6)),
-        ('b', Timestamp(7)),
-        ('c', Timestamp(8))]), label='assert letters')
+    assert_that(letters,
+                equal_to([('a', Timestamp(6)), ('b', Timestamp(7)),
+                          ('c', Timestamp(8))]),
+                label='assert letters')
 
-    assert_that(numbers, equal_to([
-        ('1', Timestamp(11)),
-        ('2', Timestamp(12)),
-        ('3', Timestamp(13))]), label='assert numbers')
+    assert_that(numbers,
+                equal_to([('1', Timestamp(11)), ('2', Timestamp(12)),
+                          ('3', Timestamp(13))]),
+                label='assert numbers')
 
     p.run()
 
@@ -168,15 +173,16 @@ class TestStreamIntegrationTests(unittest.TestCase):
         TimestampedValue('2', 22),
         TimestampedValue('3', 23),
     ]
-    test_stream = (TestStream()
-                   .advance_watermark_to(0, tag='letters')
-                   .advance_watermark_to(0, tag='numbers')
-                   .advance_watermark_to(20, tag='numbers')
-                   .advance_watermark_to(5, tag='letters')
-                   .add_elements(letters_elements, tag='letters')
-                   .advance_watermark_to(10, tag='letters')
-                   .add_elements(numbers_elements, tag='numbers')
-                   .advance_watermark_to(30, tag='numbers'))
+    test_stream = (TestStream().advance_watermark_to(
+        0, tag='letters').advance_watermark_to(
+            0, tag='numbers').advance_watermark_to(
+                20, tag='numbers').advance_watermark_to(
+                    5, tag='letters').add_elements(
+                        letters_elements, tag='letters').advance_watermark_to(
+                            10, tag='letters').add_elements(
+                                numbers_elements,
+                                tag='numbers').advance_watermark_to(
+                                    30, tag='numbers'))
 
     options = StandardOptions(streaming=True)
     p = TestPipeline(is_integration_test=True, options=options)
@@ -186,21 +192,19 @@ class TestStreamIntegrationTests(unittest.TestCase):
     # Use an AfterWatermark trigger with an early firing to test that the
     # watermark is advancing properly and that the element is being emitted in
     # the correct window.
-    letters = (main['letters']
-               | 'letter windows' >> beam.WindowInto(
-                   FixedWindows(15),
-                   trigger=trigger.AfterWatermark(early=trigger.AfterCount(1)),
-                   accumulation_mode=trigger.AccumulationMode.DISCARDING)
-               | 'letter with key' >> beam.Map(lambda x: ('k', x))
-               | 'letter gbk' >> beam.GroupByKey())
+    letters = (main['letters'] | 'letter windows' >> beam.WindowInto(
+        FixedWindows(15),
+        trigger=trigger.AfterWatermark(early=trigger.AfterCount(1)),
+        accumulation_mode=trigger.AccumulationMode.DISCARDING) |
+               'letter with key' >> beam.Map(lambda x: ('k', x)) |
+               'letter gbk' >> beam.GroupByKey())
 
-    numbers = (main['numbers']
-               | 'number windows' >> beam.WindowInto(
-                   FixedWindows(15),
-                   trigger=trigger.AfterWatermark(early=trigger.AfterCount(1)),
-                   accumulation_mode=trigger.AccumulationMode.DISCARDING)
-               | 'number with key' >> beam.Map(lambda x: ('k', x))
-               | 'number gbk' >> beam.GroupByKey())
+    numbers = (main['numbers'] | 'number windows' >> beam.WindowInto(
+        FixedWindows(15),
+        trigger=trigger.AfterWatermark(early=trigger.AfterCount(1)),
+        accumulation_mode=trigger.AccumulationMode.DISCARDING) |
+               'number with key' >> beam.Map(lambda x: ('k', x)) |
+               'number gbk' >> beam.GroupByKey())
 
     # The letters were emitted when the watermark was at 5, thus we expect to
     # see the elements in the [0, 15) window. We used an early trigger to make
@@ -223,14 +227,12 @@ class TestStreamIntegrationTests(unittest.TestCase):
             ('k', []),
         ],
     }
-    assert_that(
-        letters,
-        equal_to_per_window(expected_letters),
-        label='letters assert per window')
-    assert_that(
-        numbers,
-        equal_to_per_window(expected_numbers),
-        label='numbers assert per window')
+    assert_that(letters,
+                equal_to_per_window(expected_letters),
+                label='letters assert per window')
+    assert_that(numbers,
+                equal_to_per_window(expected_numbers),
+                label='numbers assert per window')
 
     p.run()
 

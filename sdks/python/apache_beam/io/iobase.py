@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Sources and sinks.
 
 A Source manages record-oriented data input from a particular kind of source
@@ -69,12 +68,12 @@ if TYPE_CHECKING:
   from apache_beam.runners.pipeline_context import PipelineContext
   from apache_beam.utils.timestamp import Timestamp
 
-__all__ = ['BoundedSource', 'RangeTracker', 'Read', 'RestrictionTracker',
-           'Sink', 'Write', 'Writer']
-
+__all__ = [
+    'BoundedSource', 'RangeTracker', 'Read', 'RestrictionTracker', 'Sink',
+    'Write', 'Writer'
+]
 
 _LOGGER = logging.getLogger(__name__)
-
 
 # Encapsulates information about a bundle of a source generated when method
 # BoundedSource.split() is invoked.
@@ -92,9 +91,8 @@ _LOGGER = logging.getLogger(__name__)
 #
 # Type for start and stop positions are specific to the bounded source and must
 # be consistent throughout.
-SourceBundle = namedtuple(
-    'SourceBundle',
-    'weight source start_position stop_position')
+SourceBundle = namedtuple('SourceBundle',
+                          'weight source start_position stop_position')
 
 
 class SourceBase(HasDisplayData, urns.RunnerApiFn):
@@ -157,11 +155,12 @@ class BoundedSource(SourceBase):
     """
     raise NotImplementedError
 
-  def split(self,
-            desired_bundle_size,  # type: int
-            start_position=None,  # type: Optional[Any]
-            stop_position=None,  # type: Optional[Any]
-           ):
+  def split(
+      self,
+      desired_bundle_size,  # type: int
+      start_position=None,  # type: Optional[Any]
+      stop_position=None,  # type: Optional[Any]
+  ):
     # type: (...) -> Iterator[SourceBundle]
     """Splits the source into a set of bundles.
 
@@ -179,10 +178,11 @@ class BoundedSource(SourceBase):
     """
     raise NotImplementedError
 
-  def get_range_tracker(self,
-                        start_position,  # type: Optional[Any]
-                        stop_position,  # type: Optional[Any]
-                       ):
+  def get_range_tracker(
+      self,
+      start_position,  # type: Optional[Any]
+      stop_position,  # type: Optional[Any]
+  ):
     # type: (...) -> RangeTracker
     """Returns a RangeTracker for a given position range.
 
@@ -796,8 +796,7 @@ class Sink(HasDisplayData):
     """
     raise NotImplementedError
 
-  def finalize_write(self, init_result, writer_results,
-                     pre_finalize_result):
+  def finalize_write(self, init_result, writer_results, pre_finalize_result):
     """Finalizes the sink after all data is written to it.
 
     Given the result of initialization and an iterable of results from bundle
@@ -908,9 +907,10 @@ class Read(ptransform.PTransform):
       return None
 
   def display_data(self):
-    return {'source': DisplayDataItem(self.source.__class__,
-                                      label='Read Source'),
-            'source_dd': self.source}
+    return {
+        'source': DisplayDataItem(self.source.__class__, label='Read Source'),
+        'source_dd': self.source
+    }
 
   def to_runner_api_parameter(self, context):
     # type: (PipelineContext) -> Tuple[str, beam_runner_api_pb2.ReadPayload]
@@ -918,8 +918,8 @@ class Read(ptransform.PTransform):
             beam_runner_api_pb2.ReadPayload(
                 source=self.source.to_runner_api(context),
                 is_bounded=beam_runner_api_pb2.IsBounded.BOUNDED
-                if self.source.is_bounded()
-                else beam_runner_api_pb2.IsBounded.UNBOUNDED))
+                if self.source.is_bounded() else
+                beam_runner_api_pb2.IsBounded.UNBOUNDED))
 
   @staticmethod
   def from_runner_api_parameter(parameter, context):
@@ -927,10 +927,9 @@ class Read(ptransform.PTransform):
     return Read(SourceBase.from_runner_api(parameter.source, context))
 
 
-ptransform.PTransform.register_urn(
-    common_urns.deprecated_primitives.READ.urn,
-    beam_runner_api_pb2.ReadPayload,
-    Read.from_runner_api_parameter)
+ptransform.PTransform.register_urn(common_urns.deprecated_primitives.READ.urn,
+                                   beam_runner_api_pb2.ReadPayload,
+                                   Read.from_runner_api_parameter)
 
 
 class Write(ptransform.PTransform):
@@ -971,8 +970,7 @@ class Write(ptransform.PTransform):
     self.sink = sink
 
   def display_data(self):
-    return {'sink': self.sink.__class__,
-            'sink_dd': self.sink}
+    return {'sink': self.sink.__class__, 'sink_dd': self.sink}
 
   def expand(self, pcoll):
     from apache_beam.runners.dataflow.native_io import iobase as dataflow_io
@@ -1008,36 +1006,26 @@ class WriteImpl(ptransform.PTransform):
         keyed_pcoll = pcoll | core.Map(lambda x: (None, x))
       else:
         keyed_pcoll = pcoll | core.ParDo(_RoundRobinKeyFn(min_shards))
-      write_result_coll = (keyed_pcoll
-                           | core.WindowInto(window.GlobalWindows())
-                           | core.GroupByKey()
-                           | 'WriteBundles' >> core.ParDo(
-                               _WriteKeyedBundleDoFn(self.sink),
-                               AsSingleton(init_result_coll)))
+      write_result_coll = (
+          keyed_pcoll | core.WindowInto(window.GlobalWindows()) |
+          core.GroupByKey() | 'WriteBundles' >> core.ParDo(
+              _WriteKeyedBundleDoFn(self.sink), AsSingleton(init_result_coll)))
     else:
       min_shards = 1
-      write_result_coll = (pcoll
-                           | 'WriteBundles' >>
-                           core.ParDo(_WriteBundleDoFn(self.sink),
-                                      AsSingleton(init_result_coll))
-                           | 'Pair' >> core.Map(lambda x: (None, x))
-                           | core.WindowInto(window.GlobalWindows())
-                           | core.GroupByKey()
-                           | 'Extract' >> core.FlatMap(lambda x: x[1]))
+      write_result_coll = (pcoll | 'WriteBundles' >> core.ParDo(
+          _WriteBundleDoFn(self.sink), AsSingleton(init_result_coll)) |
+                           'Pair' >> core.Map(lambda x: (None, x)) |
+                           core.WindowInto(window.GlobalWindows()) |
+                           core.GroupByKey() |
+                           'Extract' >> core.FlatMap(lambda x: x[1]))
     # PreFinalize should run before FinalizeWrite, and the two should not be
     # fused.
     pre_finalize_coll = do_once | 'PreFinalize' >> core.FlatMap(
-        _pre_finalize,
-        self.sink,
-        AsSingleton(init_result_coll),
+        _pre_finalize, self.sink, AsSingleton(init_result_coll),
         AsIter(write_result_coll))
     return do_once | 'FinalizeWrite' >> core.FlatMap(
-        _finalize_write,
-        self.sink,
-        AsSingleton(init_result_coll),
-        AsIter(write_result_coll),
-        min_shards,
-        AsSingleton(pre_finalize_coll))
+        _finalize_write, self.sink, AsSingleton(init_result_coll),
+        AsIter(write_result_coll), min_shards, AsSingleton(pre_finalize_coll))
 
 
 class _WriteBundleDoFn(core.DoFn):
@@ -1092,8 +1080,8 @@ def _finalize_write(unused_element, sink, init_result, write_results,
   write_results = list(write_results)
   extra_shards = []
   if len(write_results) < min_shards:
-    _LOGGER.debug(
-        'Creating %s empty shard(s).', min_shards - len(write_results))
+    _LOGGER.debug('Creating %s empty shard(s).',
+                  min_shards - len(write_results))
     for _ in range(min_shards - len(write_results)):
       writer = sink.open_writer(init_result, str(uuid.uuid4()))
       extra_shards.append(writer.close())
@@ -1251,9 +1239,8 @@ class ThreadsafeRestrictionTracker(object):
   def __init__(self, restriction_tracker):
     # type: (RestrictionTracker) -> None
     if not isinstance(restriction_tracker, RestrictionTracker):
-      raise ValueError(
-          'Initialize ThreadsafeRestrictionTracker requires'
-          'RestrictionTracker.')
+      raise ValueError('Initialize ThreadsafeRestrictionTracker requires'
+                       'RestrictionTracker.')
     self._restriction_tracker = restriction_tracker
     # Records an absolute timestamp when defer_remainder is called.
     self._deferred_timestamp = None
@@ -1288,8 +1275,7 @@ class ThreadsafeRestrictionTracker(object):
 
     # Record current time for calculating deferred_time later.
     self._deferred_timestamp = timestamp.Timestamp.now()
-    if (deferred_time and
-        not isinstance(deferred_time, timestamp.Duration) and
+    if (deferred_time and not isinstance(deferred_time, timestamp.Duration) and
         not isinstance(deferred_time, timestamp.Timestamp)):
       raise ValueError('The timestamp of deter_remainder() should be a '
                        'Duration or a Timestamp, or None.')
@@ -1370,6 +1356,7 @@ class RestrictionProgress(object):
 
   Experimental; no backwards-compatibility guarantees.
   """
+
   def __init__(self, **kwargs):
     # Only accept keyword arguments.
     self._fraction = kwargs.pop('fraction', None)
@@ -1419,8 +1406,9 @@ class RestrictionProgress(object):
       return float(self._remaining) / self.total_work
 
   def with_completed(self, completed):
-    return RestrictionProgress(
-        fraction=self._fraction, remaining=self._remaining, completed=completed)
+    return RestrictionProgress(fraction=self._fraction,
+                               remaining=self._remaining,
+                               completed=completed)
 
 
 class _SDFBoundedSourceWrapper(ptransform.PTransform):
@@ -1431,13 +1419,14 @@ class _SDFBoundedSourceWrapper(ptransform.PTransform):
 
   class _SDFBoundedSourceRestriction(object):
     """ A restriction wraps SourceBundle and RangeTracker. """
+
     def __init__(self, source_bundle, range_tracker=None):
       self._source_bundle = source_bundle
       self._range_tracker = range_tracker
 
     def __reduce__(self):
       # The instance of RangeTracker shouldn't be serialized.
-      return (self.__class__, (self._source_bundle, ))
+      return (self.__class__, (self._source_bundle,))
 
     def range_tracker(self):
       if not self._range_tracker:
@@ -1471,12 +1460,10 @@ class _SDFBoundedSourceWrapper(ptransform.PTransform):
                                            self._source_bundle.source,
                                            self._source_bundle.start_position,
                                            split_pos)
-        return (self, _SDFBoundedSourceWrapper._SDFBoundedSourceRestriction(
-            SourceBundle(residual_weight,
-                         self._source_bundle.source,
-                         split_pos,
-                         stop_pos)))
-
+        return (self,
+                _SDFBoundedSourceWrapper._SDFBoundedSourceRestriction(
+                    SourceBundle(residual_weight, self._source_bundle.source,
+                                 split_pos, stop_pos)))
 
   class _SDFBoundedSourceRestrictionTracker(RestrictionTracker):
     """An `iobase.RestrictionTracker` implementations for wrapping BoundedSource
@@ -1485,6 +1472,7 @@ class _SDFBoundedSourceWrapper(ptransform.PTransform):
 
     Delegated RangeTracker guarantees synchronization safety.
     """
+
     def __init__(self, restriction):
       if not isinstance(restriction,
                         _SDFBoundedSourceWrapper._SDFBoundedSourceRestriction):
@@ -1516,7 +1504,6 @@ class _SDFBoundedSourceWrapper(ptransform.PTransform):
     def check_done(self):
       return self.restriction.range_tracker().fraction_consumed() >= 1.0
 
-
   class _SDFBoundedSourceRestrictionProvider(core.RestrictionProvider):
     """A `RestrictionProvider` that is used by SDF for `BoundedSource`."""
 
@@ -1528,9 +1515,7 @@ class _SDFBoundedSourceWrapper(ptransform.PTransform):
       # Get initial range_tracker from source
       range_tracker = self._source.get_range_tracker(None, None)
       return _SDFBoundedSourceWrapper._SDFBoundedSourceRestriction(
-          SourceBundle(None,
-                       self._source,
-                       range_tracker.start_position(),
+          SourceBundle(None, self._source, range_tracker.start_position(),
                        range_tracker.stop_position()))
 
     def create_tracker(self, restriction):
@@ -1565,6 +1550,7 @@ class _SDFBoundedSourceWrapper(ptransform.PTransform):
     chunk_size = Read.get_desired_chunk_size(estimated_size)
 
     class SDFBoundedSourceDoFn(core.DoFn):
+
       def __init__(self, read_source):
         self.source = read_source
 
@@ -1583,9 +1569,8 @@ class _SDFBoundedSourceWrapper(ptransform.PTransform):
     return SDFBoundedSourceDoFn(self.source)
 
   def expand(self, pbegin):
-    return (pbegin
-            | core.Impulse()
-            | core.ParDo(self._create_sdf_bounded_source_dofn()))
+    return (pbegin | core.Impulse() |
+            core.ParDo(self._create_sdf_bounded_source_dofn()))
 
   def get_windowing(self, unused_inputs):
     return core.Windowing(window.GlobalWindows())
@@ -1594,6 +1579,7 @@ class _SDFBoundedSourceWrapper(ptransform.PTransform):
     return self.source.default_output_coder()
 
   def display_data(self):
-    return {'source': DisplayDataItem(self.source.__class__,
-                                      label='Read Source'),
-            'source_dd': self.source}
+    return {
+        'source': DisplayDataItem(self.source.__class__, label='Read Source'),
+        'source_dd': self.source
+    }

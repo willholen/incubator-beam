@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Test for the game_stats example."""
 
 # pytype: skip-file
@@ -54,12 +53,11 @@ class GameStatsTest(unittest.TestCase):
 
   def test_spammy_users(self):
     with TestPipeline() as p:
-      result = (
-          self.create_data(p)
-          | beam.Map(lambda elem: (elem['user'], elem['score']))
-          | game_stats.CalculateSpammyUsers())
-      assert_that(result, equal_to([
-          ('robot1_team1', 9000), ('robot2_team2', 9001)]))
+      result = (self.create_data(p) |
+                beam.Map(lambda elem: (elem['user'], elem['score'])) |
+                game_stats.CalculateSpammyUsers())
+      assert_that(result,
+                  equal_to([('robot1_team1', 9000), ('robot2_team2', 9001)]))
 
   def test_game_stats_sessions(self):
     session_gap = 5 * 60

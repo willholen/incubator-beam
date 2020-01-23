@@ -57,8 +57,7 @@ class Client(object):
       code = e.response['ResponseMetadata']['HTTPStatusCode']
       raise messages.S3ClientError(message, code)
 
-    item = messages.Item(boto_response['ETag'],
-                         request.object,
+    item = messages.Item(boto_response['ETag'], request.object,
                          boto_response['LastModified'],
                          boto_response['ContentLength'],
                          boto_response['ContentType'])
@@ -77,14 +76,13 @@ class Client(object):
       boto_response = self.client.get_object(Bucket=request.bucket,
                                              Key=request.object,
                                              Range='bytes={}-{}'.format(
-                                                 start,
-                                                 end - 1))
+                                                 start, end - 1))
     except Exception as e:
       message = e.response['Error']['Message']
       code = e.response['ResponseMetadata']['HTTPStatusCode']
       raise messages.S3ClientError(message, code)
 
-    return boto_response['Body'].read() # A bytes object
+    return boto_response['Body'].read()  # A bytes object
 
   def list(self, request):
     r"""Retrieves a list of objects matching the criteria.
@@ -94,8 +92,7 @@ class Client(object):
     Returns:
       (ListResponse) The response message.
     """
-    kwargs = {'Bucket': request.bucket,
-              'Prefix': request.prefix}
+    kwargs = {'Bucket': request.bucket, 'Prefix': request.prefix}
 
     if request.continuation_token is not None:
       kwargs['ContinuationToken'] = request.continuation_token
@@ -112,11 +109,13 @@ class Client(object):
           request.bucket, request.prefix)
       raise messages.S3ClientError(message, 404)
 
-    items = [messages.Item(etag=content['ETag'],
-                           key=content['Key'],
-                           last_modified=content['LastModified'],
-                           size=content['Size'])
-             for content in boto_response['Contents']]
+    items = [
+        messages.Item(etag=content['ETag'],
+                      key=content['Key'],
+                      last_modified=content['LastModified'],
+                      size=content['Size'])
+        for content in boto_response['Contents']
+    ]
 
     try:
       next_token = boto_response['NextContinuationToken']
@@ -138,8 +137,7 @@ class Client(object):
       boto_response = self.client.create_multipart_upload(
           Bucket=request.bucket,
           Key=request.object,
-          ContentType=request.mime_type
-      )
+          ContentType=request.mime_type)
       response = messages.UploadResponse(boto_response['UploadId'])
     except Exception as e:
       message = e.response['Error']['Message']
@@ -196,8 +194,7 @@ class Client(object):
         (void) Void, otherwise will raise if an error occurs
     """
     try:
-      self.client.delete_object(Bucket=request.bucket,
-                                Key=request.object)
+      self.client.delete_object(Bucket=request.bucket, Key=request.object)
 
     except Exception as e:
       message = e.response['Error']['Message']
@@ -209,7 +206,9 @@ class Client(object):
     aws_request = {
         'Bucket': request.bucket,
         'Delete': {
-            'Objects': [{'Key': object} for object in request.objects]
+            'Objects': [{
+                'Key': object
+            } for object in request.objects]
         }
     }
 
@@ -224,17 +223,16 @@ class Client(object):
 
     failed = [obj['Key'] for obj in aws_response.get('Errors', [])]
 
-    errors = [messages.S3ClientError(obj['Message'], obj['Code'])
-              for obj in aws_response.get('Errors', [])]
+    errors = [
+        messages.S3ClientError(obj['Message'], obj['Code'])
+        for obj in aws_response.get('Errors', [])
+    ]
 
     return messages.DeleteBatchResponse(deleted, failed, errors)
 
   def copy(self, request):
     try:
-      copy_src = {
-          'Bucket': request.src_bucket,
-          'Key': request.src_key
-      }
+      copy_src = {'Bucket': request.src_bucket, 'Key': request.src_key}
       self.client.copy(copy_src, request.dest_bucket, request.dest_key)
     except Exception as e:
       message = e.response['Error']['Message']

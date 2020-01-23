@@ -33,15 +33,12 @@ from apache_beam.testing.util import equal_to
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class GenerateDocs(beam.DoFn):
 
   def process(self, num_docs, *args, **kwargs):
     for i in range(num_docs):
-      yield {
-          'number': i,
-          'number_mod_2': i % 2,
-          'number_mod_3': i % 3
-      }
+      yield {'number': i, 'number_mod_2': i % 2, 'number_mod_3': i % 3}
 
 
 def run(argv=None):
@@ -73,12 +70,10 @@ def run(argv=None):
     start_time = time.time()
     _LOGGER.info('Writing %d documents to mongodb' % known_args.num_documents)
 
-    _ = (p | beam.Create([known_args.num_documents])
-         | 'Create documents' >> beam.ParDo(GenerateDocs())
-         | 'WriteToMongoDB' >> beam.io.WriteToMongoDB(known_args.mongo_uri,
-                                                      known_args.mongo_db,
-                                                      known_args.mongo_coll,
-                                                      known_args.batch_size))
+    _ = (p | beam.Create([known_args.num_documents]) |
+         'Create documents' >> beam.ParDo(GenerateDocs()) | 'WriteToMongoDB' >>
+         beam.io.WriteToMongoDB(known_args.mongo_uri, known_args.mongo_db,
+                                known_args.mongo_coll, known_args.batch_size))
   elapsed = time.time() - start_time
   _LOGGER.info('Writing %d documents to mongodb finished in %.3f seconds' %
                (known_args.num_documents, elapsed))
@@ -88,14 +83,14 @@ def run(argv=None):
     start_time = time.time()
     _LOGGER.info('Reading from mongodb %s:%s' %
                  (known_args.mongo_db, known_args.mongo_coll))
-    r = (p | 'ReadFromMongoDB' >> beam.io.ReadFromMongoDB(known_args.mongo_uri,
-                                                          known_args.mongo_db,
-                                                          known_args.mongo_coll,
-                                                          projection=['number'])
-         | 'Map' >> beam.Map(lambda doc: doc['number'])
-         | 'Combine' >> beam.CombineGlobally(sum))
-    assert_that(
-        r, equal_to([sum(range(known_args.num_documents))]))
+    r = (p |
+         'ReadFromMongoDB' >> beam.io.ReadFromMongoDB(known_args.mongo_uri,
+                                                      known_args.mongo_db,
+                                                      known_args.mongo_coll,
+                                                      projection=['number']) |
+         'Map' >> beam.Map(lambda doc: doc['number']) |
+         'Combine' >> beam.CombineGlobally(sum))
+    assert_that(r, equal_to([sum(range(known_args.num_documents))]))
 
   elapsed = time.time() - start_time
   _LOGGER.info('Read %d documents from mongodb finished in %.3f seconds' %

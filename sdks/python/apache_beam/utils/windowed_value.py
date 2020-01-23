@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Core windowing data structures.
 
 This module is experimental. No backwards-compatibility guarantees.
@@ -134,17 +133,16 @@ class PaneInfo(object):
 
   def __repr__(self):
     return ('PaneInfo(first: %r, last: %r, timing: %s, index: %d, '
-            'nonspeculative_index: %d)') % (
-                self.is_first, self.is_last,
-                PaneInfoTiming.to_string(self.timing),
-                self.index, self.nonspeculative_index)
+            'nonspeculative_index: %d)') % (self.is_first, self.is_last,
+                                            PaneInfoTiming.to_string(
+                                                self.timing), self.index,
+                                            self.nonspeculative_index)
 
   def __eq__(self, other):
     if self is other:
       return True
     return (self.is_first == other.is_first and
-            self.is_last == other.is_last and
-            self.timing == other.timing and
+            self.is_last == other.is_last and self.timing == other.timing and
             self.index == other.index and
             self.nonspeculative_index == other.nonspeculative_index)
 
@@ -179,7 +177,6 @@ def _construct_well_known_pane_infos():
 # Cache of well-known PaneInfo objects.
 _BYTE_TO_PANE_INFO = _construct_well_known_pane_infos()
 
-
 # Default PaneInfo descriptor for when a value is not the output of triggering.
 PANE_INFO_UNKNOWN = _BYTE_TO_PANE_INFO[0xF]
 
@@ -197,12 +194,12 @@ class WindowedValue(object):
       PANE_INFO_UNKNOWN.
   """
 
-  def __init__(self,
-               value,
-               timestamp,  # type: TimestampTypes
-               windows,  # type: Tuple[BoundedWindow, ...]
-               pane_info=PANE_INFO_UNKNOWN
-              ):
+  def __init__(
+      self,
+      value,
+      timestamp,  # type: TimestampTypes
+      windows,  # type: Tuple[BoundedWindow, ...]
+      pane_info=PANE_INFO_UNKNOWN):
     # type: (...) -> None
     # For performance reasons, only timestamp_micros is stored by default
     # (as a C int). The Timestamp object is created on demand below.
@@ -227,29 +224,25 @@ class WindowedValue(object):
 
   def __repr__(self):
     return '(%s, %s, %s, %s)' % (
-        repr(self.value),
-        'MIN_TIMESTAMP' if self.timestamp == MIN_TIMESTAMP else
-        'MAX_TIMESTAMP' if self.timestamp == MAX_TIMESTAMP else
-        float(self.timestamp),
-        self.windows,
-        self.pane_info)
+        repr(self.value), 'MIN_TIMESTAMP' if self.timestamp == MIN_TIMESTAMP
+        else 'MAX_TIMESTAMP' if self.timestamp == MAX_TIMESTAMP else float(
+            self.timestamp), self.windows, self.pane_info)
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self.timestamp_micros == other.timestamp_micros
-            and self.value == other.value
-            and self.windows == other.windows
-            and self.pane_info == other.pane_info)
+    return (type(self) == type(other) and
+            self.timestamp_micros == other.timestamp_micros and
+            self.value == other.value and self.windows == other.windows and
+            self.pane_info == other.pane_info)
 
   def __ne__(self, other):
     # TODO(BEAM-5949): Needed for Python 2 compatibility.
     return not self == other
 
   def __hash__(self):
-    return ((hash(self.value) & 0xFFFFFFFFFFFFFFF) +
-            3 * (self.timestamp_micros & 0xFFFFFFFFFFFFFF) +
-            7 * (hash(self.windows) & 0xFFFFFFFFFFFFF) +
-            11 * (hash(self.pane_info) & 0xFFFFFFFFFFFFF))
+    return ((hash(self.value) & 0xFFFFFFFFFFFFFFF) + 3 *
+            (self.timestamp_micros & 0xFFFFFFFFFFFFFF) + 7 *
+            (hash(self.windows) & 0xFFFFFFFFFFFFF) + 11 *
+            (hash(self.pane_info) & 0xFFFFFFFFFFFFF))
 
   def with_value(self, new_value):
     # type: (Any) -> WindowedValue
@@ -295,9 +288,9 @@ class _IntervalWindowBase(object):
       try:
         self._start_micros = self._start_object.micros
       except OverflowError:
-        self._start_micros = (
-            MIN_TIMESTAMP.micros if self._start_object.micros < 0
-            else MAX_TIMESTAMP.micros)
+        self._start_micros = (MIN_TIMESTAMP.micros
+                              if self._start_object.micros < 0 else
+                              MAX_TIMESTAMP.micros)
     else:
       # Micros must be populated elsewhere.
       self._start_object = None
@@ -307,9 +300,8 @@ class _IntervalWindowBase(object):
       try:
         self._end_micros = self._end_object.micros
       except OverflowError:
-        self._end_micros = (
-            MIN_TIMESTAMP.micros if self._end_object.micros < 0
-            else MAX_TIMESTAMP.micros)
+        self._end_micros = (MIN_TIMESTAMP.micros if self._end_object.micros < 0
+                            else MAX_TIMESTAMP.micros)
     else:
       # Micros must be populated elsewhere.
       self._end_object = None
@@ -332,9 +324,9 @@ class _IntervalWindowBase(object):
     return hash((self._start_micros, self._end_micros))
 
   def __eq__(self, other):
-    return (type(self) == type(other)
-            and self._start_micros == other._start_micros
-            and self._end_micros == other._end_micros)
+    return (type(self) == type(other) and
+            self._start_micros == other._start_micros and
+            self._end_micros == other._end_micros)
 
   def __ne__(self, other):
     return not self == other

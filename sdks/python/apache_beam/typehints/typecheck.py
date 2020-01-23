@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Runtime type checking support.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -98,12 +97,10 @@ class OutputCheckWrapperDoFn(AbstractDoFnWrapper):
       object_type = type(output).__name__
       raise TypeCheckError('Returning a %s from a ParDo or FlatMap is '
                            'discouraged. Please use list("%s") if you really '
-                           'want this behavior.' %
-                           (object_type, output))
+                           'want this behavior.' % (object_type, output))
     elif not isinstance(output, collections.Iterable):
       raise TypeCheckError('FlatMap and ParDo must return an '
-                           'iterable. %s was returned instead.'
-                           % type(output))
+                           'iterable. %s was returned instead.' % type(output))
     return output
 
 
@@ -116,8 +113,8 @@ class TypeCheckWrapperDoFn(AbstractDoFnWrapper):
     self._process_fn = self.dofn._process_argspec_fn()
     if type_hints.input_types:
       input_args, input_kwargs = type_hints.input_types
-      self._input_hints = getcallargs_forhints(
-          self._process_fn, *input_args, **input_kwargs)
+      self._input_hints = getcallargs_forhints(self._process_fn, *input_args,
+                                               **input_kwargs)
     else:
       self._input_hints = None
     # TODO(robertwb): Multi-output.
@@ -179,8 +176,8 @@ class TypeCheckWrapperDoFn(AbstractDoFnWrapper):
       raise_with_traceback(TypeCheckError(e.args[0]))
     except SimpleTypeHintError:
       error_msg = ("According to type-hint expected %s should be of type %s. "
-                   "Instead, received '%s', an instance of type %s."
-                   % (datum_type, type_constraint, datum, type(datum)))
+                   "Instead, received '%s', an instance of type %s." %
+                   (datum_type, type_constraint, datum, type(datum)))
       raise_with_traceback(TypeCheckError(error_msg))
 
 
@@ -200,9 +197,8 @@ class TypeCheckCombineFn(core.CombineFn):
   def add_input(self, accumulator, element, *args, **kwargs):
     if self._input_type_hint:
       try:
-        _check_instance_type(
-            self._input_type_hint[0][0].tuple_types[1], element, 'element',
-            True)
+        _check_instance_type(self._input_type_hint[0][0].tuple_types[1],
+                             element, 'element', True)
       except TypeCheckError as e:
         error_msg = ('Runtime type violation detected within %s: '
                      '%s' % (self._label, e))
@@ -219,8 +215,8 @@ class TypeCheckCombineFn(core.CombineFn):
     result = self._combinefn.extract_output(accumulator, *args, **kwargs)
     if self._output_type_hint:
       try:
-        _check_instance_type(
-            self._output_type_hint.tuple_types[1], result, None, True)
+        _check_instance_type(self._output_type_hint.tuple_types[1], result,
+                             None, True)
       except TypeCheckError as e:
         error_msg = ('Runtime type violation detected within %s: '
                      '%s' % (self._label, e))
@@ -252,8 +248,6 @@ class TypeCheckVisitor(pipeline.PipelineVisitor):
           transform.fn.combinefn = self._wrapped_fn
       else:
         transform.fn = transform.dofn = OutputCheckWrapperDoFn(
-            TypeCheckWrapperDoFn(
-                transform.fn,
-                transform.get_type_hints(),
-                applied_transform.full_label),
+            TypeCheckWrapperDoFn(transform.fn, transform.get_type_hints(),
+                                 applied_transform.full_label),
             applied_transform.full_label)

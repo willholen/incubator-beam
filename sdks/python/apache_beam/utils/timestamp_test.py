@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for time utilities."""
 
 # pytype: skip-file
@@ -52,12 +51,12 @@ class TimestampTest(unittest.TestCase):
     self.assertEqual(Timestamp(10000000) % Duration(0.000005), 0)
 
   def test_utc_timestamp(self):
-    self.assertEqual(Timestamp(10000000).to_rfc3339(),
-                     '1970-04-26T17:46:40Z')
-    self.assertEqual(Timestamp(10000000.000001).to_rfc3339(),
-                     '1970-04-26T17:46:40.000001Z')
-    self.assertEqual(Timestamp(1458343379.123456).to_rfc3339(),
-                     '2016-03-18T23:22:59.123456Z')
+    self.assertEqual(Timestamp(10000000).to_rfc3339(), '1970-04-26T17:46:40Z')
+    self.assertEqual(
+        Timestamp(10000000.000001).to_rfc3339(), '1970-04-26T17:46:40.000001Z')
+    self.assertEqual(
+        Timestamp(1458343379.123456).to_rfc3339(),
+        '2016-03-18T23:22:59.123456Z')
 
   def test_from_rfc3339(self):
     test_cases = [
@@ -88,9 +87,8 @@ class TimestampTest(unittest.TestCase):
 
   def test_from_utc_datetime(self):
     self.assertEqual(
-        Timestamp.from_utc_datetime(datetime.datetime(1970, 1, 1,
-                                                      tzinfo=pytz.utc)),
-        Timestamp(0))
+        Timestamp.from_utc_datetime(
+            datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)), Timestamp(0))
     with self.assertRaisesRegex(ValueError, r'UTC'):
       Timestamp.from_utc_datetime(datetime.datetime(1970, 1, 1))
 
@@ -146,24 +144,22 @@ class TimestampTest(unittest.TestCase):
       self.assertEqual(Duration(1230) % Timestamp(456), 318)
 
   def test_sort_order(self):
-    self.assertEqual(
-        [-63, Timestamp(-3), 2, 9, Timestamp(292.3), 500],
-        sorted([9, 2, Timestamp(-3), Timestamp(292.3), -63, 500]))
+    self.assertEqual([-63, Timestamp(-3), 2, 9,
+                      Timestamp(292.3), 500],
+                     sorted([9, 2,
+                             Timestamp(-3),
+                             Timestamp(292.3), -63, 500]))
     self.assertEqual(
         [4, 5, Timestamp(6), Timestamp(7), 8, 9],
         sorted([9, 8, Timestamp(7), Timestamp(6), 5, 4]))
 
   def test_str(self):
-    self.assertEqual('Timestamp(1.234567)',
-                     str(Timestamp(1.234567)))
-    self.assertEqual('Timestamp(-1.234567)',
-                     str(Timestamp(-1.234567)))
+    self.assertEqual('Timestamp(1.234567)', str(Timestamp(1.234567)))
+    self.assertEqual('Timestamp(-1.234567)', str(Timestamp(-1.234567)))
     self.assertEqual('Timestamp(-999999999.900000)',
                      str(Timestamp(-999999999.9)))
-    self.assertEqual('Timestamp(999999999)',
-                     str(Timestamp(999999999)))
-    self.assertEqual('Timestamp(-999999999)',
-                     str(Timestamp(-999999999)))
+    self.assertEqual('Timestamp(999999999)', str(Timestamp(999999999)))
+    self.assertEqual('Timestamp(-999999999)', str(Timestamp(-999999999)))
 
   def test_now(self):
     now = Timestamp.now()
@@ -221,22 +217,18 @@ class DurationTest(unittest.TestCase):
   def test_sort_order(self):
     self.assertEqual(
         [-63, Duration(-3), 2, 9, Duration(292.3), 500],
-        sorted([9, 2, Duration(-3), Duration(292.3), -63, 500]))
-    self.assertEqual(
-        [4, 5, Duration(6), Duration(7), 8, 9],
-        sorted([9, 8, Duration(7), Duration(6), 5, 4]))
+        sorted([9, 2, Duration(-3),
+                Duration(292.3), -63, 500]))
+    self.assertEqual([4, 5, Duration(6), Duration(7), 8, 9],
+                     sorted([9, 8, Duration(7),
+                             Duration(6), 5, 4]))
 
   def test_str(self):
-    self.assertEqual('Duration(1.234567)',
-                     str(Duration(1.234567)))
-    self.assertEqual('Duration(-1.234567)',
-                     str(Duration(-1.234567)))
-    self.assertEqual('Duration(-999999999.900000)',
-                     str(Duration(-999999999.9)))
-    self.assertEqual('Duration(999999999)',
-                     str(Duration(999999999)))
-    self.assertEqual('Duration(-999999999)',
-                     str(Duration(-999999999)))
+    self.assertEqual('Duration(1.234567)', str(Duration(1.234567)))
+    self.assertEqual('Duration(-1.234567)', str(Duration(-1.234567)))
+    self.assertEqual('Duration(-999999999.900000)', str(Duration(-999999999.9)))
+    self.assertEqual('Duration(999999999)', str(Duration(999999999)))
+    self.assertEqual('Duration(-999999999)', str(Duration(-999999999)))
 
   def test_from_proto(self):
     dur_proto = duration_pb2.Duration(seconds=1234, nanos=56000)

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 DirectRunner implementation of MetricResults. It is in charge not only of
 responding to queries of current metrics, but also of keeping the common
@@ -37,13 +36,12 @@ from apache_beam.metrics.metric import MetricResults
 
 
 class DirectMetrics(MetricResults):
+
   def __init__(self):
-    self._counters = defaultdict(
-        lambda: DirectMetric(CounterAggregator()))
+    self._counters = defaultdict(lambda: DirectMetric(CounterAggregator()))
     self._distributions = defaultdict(
         lambda: DirectMetric(DistributionAggregator()))
-    self._gauges = defaultdict(
-        lambda: DirectMetric(GaugeAggregator()))
+    self._gauges = defaultdict(lambda: DirectMetric(GaugeAggregator()))
 
   def _apply_operation(self, bundle, updates, op):
     for k, v in updates.counters.items():
@@ -68,25 +66,30 @@ class DirectMetrics(MetricResults):
     self._apply_operation(bundle, updates, op)
 
   def query(self, filter=None):
-    counters = [MetricResult(MetricKey(k.step, k.metric),
-                             v.extract_committed(),
-                             v.extract_latest_attempted())
-                for k, v in self._counters.items()
-                if self.matches(filter, k)]
-    distributions = [MetricResult(MetricKey(k.step, k.metric),
-                                  v.extract_committed(),
-                                  v.extract_latest_attempted())
-                     for k, v in self._distributions.items()
-                     if self.matches(filter, k)]
-    gauges = [MetricResult(MetricKey(k.step, k.metric),
-                           v.extract_committed(),
-                           v.extract_latest_attempted())
-              for k, v in self._gauges.items()
-              if self.matches(filter, k)]
+    counters = [
+        MetricResult(MetricKey(k.step, k.metric), v.extract_committed(),
+                     v.extract_latest_attempted())
+        for k, v in self._counters.items()
+        if self.matches(filter, k)
+    ]
+    distributions = [
+        MetricResult(MetricKey(k.step, k.metric), v.extract_committed(),
+                     v.extract_latest_attempted())
+        for k, v in self._distributions.items()
+        if self.matches(filter, k)
+    ]
+    gauges = [
+        MetricResult(MetricKey(k.step, k.metric), v.extract_committed(),
+                     v.extract_latest_attempted())
+        for k, v in self._gauges.items()
+        if self.matches(filter, k)
+    ]
 
-    return {self.COUNTERS: counters,
-            self.DISTRIBUTIONS: distributions,
-            self.GAUGES: gauges}
+    return {
+        self.COUNTERS: counters,
+        self.DISTRIBUTIONS: distributions,
+        self.GAUGES: gauges
+    }
 
 
 class DirectMetric(object):
@@ -95,6 +98,7 @@ class DirectMetric(object):
   It keeps track of the metric's physical and logical updates.
   It's thread safe.
   """
+
   def __init__(self, aggregator):
     self.aggregator = aggregator
     self._attempted_lock = threading.Lock()

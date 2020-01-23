@@ -53,8 +53,8 @@ class RowCoderTest(unittest.TestCase):
     real_coder = coders_registry.get_coder(Person)
 
     for test_case in self.TEST_CASES:
-      self.assertEqual(
-          expected_coder.encode(test_case), real_coder.encode(test_case))
+      self.assertEqual(expected_coder.encode(test_case),
+                       real_coder.encode(test_case))
 
       self.assertEqual(test_case,
                        real_coder.decode(real_coder.encode(test_case)))
@@ -65,22 +65,18 @@ class RowCoderTest(unittest.TestCase):
         fields=[
             schema_pb2.Field(
                 name="name",
-                type=schema_pb2.FieldType(
-                    atomic_type=schema_pb2.STRING)),
+                type=schema_pb2.FieldType(atomic_type=schema_pb2.STRING)),
             schema_pb2.Field(
                 name="age",
-                type=schema_pb2.FieldType(
-                    atomic_type=schema_pb2.INT32)),
-            schema_pb2.Field(
-                name="address",
-                type=schema_pb2.FieldType(
-                    atomic_type=schema_pb2.STRING, nullable=True)),
+                type=schema_pb2.FieldType(atomic_type=schema_pb2.INT32)),
+            schema_pb2.Field(name="address",
+                             type=schema_pb2.FieldType(
+                                 atomic_type=schema_pb2.STRING, nullable=True)),
             schema_pb2.Field(
                 name="aliases",
-                type=schema_pb2.FieldType(
-                    array_type=schema_pb2.ArrayType(
-                        element_type=schema_pb2.FieldType(
-                            atomic_type=schema_pb2.STRING)))),
+                type=schema_pb2.FieldType(array_type=schema_pb2.ArrayType(
+                    element_type=schema_pb2.FieldType(
+                        atomic_type=schema_pb2.STRING)))),
         ])
     coder = RowCoder(schema)
 
@@ -88,23 +84,24 @@ class RowCoderTest(unittest.TestCase):
       self.assertEqual(test_case, coder.decode(coder.encode(test_case)))
 
   @unittest.skip(
-      "BEAM-8030 - Overflow behavior in VarIntCoder is currently inconsistent"
-  )
+      "BEAM-8030 - Overflow behavior in VarIntCoder is currently inconsistent")
   def test_overflows(self):
-    IntTester = typing.NamedTuple('IntTester', [
-        # TODO(BEAM-7996): Test int8 and int16 here as well when those types are
-        # supported
-        # ('i8', typing.Optional[np.int8]),
-        # ('i16', typing.Optional[np.int16]),
-        ('i32', typing.Optional[np.int32]),
-        ('i64', typing.Optional[np.int64]),
-    ])
+    IntTester = typing.NamedTuple(
+        'IntTester',
+        [
+            # TODO(BEAM-7996): Test int8 and int16 here as well when those types are
+            # supported
+            # ('i8', typing.Optional[np.int8]),
+            # ('i16', typing.Optional[np.int16]),
+            ('i32', typing.Optional[np.int32]),
+            ('i64', typing.Optional[np.int64]),
+        ])
 
     c = RowCoder.from_type_hint(IntTester, None)
 
     no_overflow = chain(
-        (IntTester(i32=i, i64=None) for i in (-2**31, 2**31-1)),
-        (IntTester(i32=None, i64=i) for i in (-2**63, 2**63-1)),
+        (IntTester(i32=i, i64=None) for i in (-2**31, 2**31 - 1)),
+        (IntTester(i32=None, i64=i) for i in (-2**63, 2**63 - 1)),
     )
 
     # Encode max/min ints to make sure they don't throw any error
@@ -112,8 +109,8 @@ class RowCoderTest(unittest.TestCase):
       c.encode(case)
 
     overflow = chain(
-        (IntTester(i32=i, i64=None) for i in (-2**31-1, 2**31)),
-        (IntTester(i32=None, i64=i) for i in (-2**63-1, 2**63)),
+        (IntTester(i32=i, i64=None) for i in (-2**31 - 1, 2**31)),
+        (IntTester(i32=None, i64=i) for i in (-2**63 - 1, 2**63)),
     )
 
     # Encode max+1/min-1 ints to make sure they DO throw an error
@@ -135,8 +132,8 @@ class RowCoderTest(unittest.TestCase):
     old_coder = RowCoder.from_type_hint(Old, None)
     new_coder = RowCoder.from_type_hint(New, None)
 
-    self.assertEqual(
-        New("foo"), new_coder.decode(old_coder.encode(Old("foo", "bar"))))
+    self.assertEqual(New("foo"),
+                     new_coder.decode(old_coder.encode(Old("foo", "bar"))))
 
   def test_schema_add_column(self):
     fields = [("field1", unicode), ("field2", typing.Optional[unicode])]
@@ -147,8 +144,8 @@ class RowCoderTest(unittest.TestCase):
     old_coder = RowCoder.from_type_hint(Old, None)
     new_coder = RowCoder.from_type_hint(New, None)
 
-    self.assertEqual(
-        New("bar", None), new_coder.decode(old_coder.encode(Old("bar"))))
+    self.assertEqual(New("bar", None),
+                     new_coder.decode(old_coder.encode(Old("bar"))))
 
   def test_schema_add_column_with_null_value(self):
     fields = [("field1", typing.Optional[unicode]), ("field2", unicode),
@@ -160,9 +157,8 @@ class RowCoderTest(unittest.TestCase):
     old_coder = RowCoder.from_type_hint(Old, None)
     new_coder = RowCoder.from_type_hint(New, None)
 
-    self.assertEqual(
-        New(None, "baz", None),
-        new_coder.decode(old_coder.encode(Old(None, "baz"))))
+    self.assertEqual(New(None, "baz", None),
+                     new_coder.decode(old_coder.encode(Old(None, "baz"))))
 
 
 if __name__ == "__main__":

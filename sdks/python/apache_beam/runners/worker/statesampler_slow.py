@@ -31,9 +31,9 @@ from apache_beam.utils import counters
 class StateSampler(object):
 
   def __init__(self, sampling_period_ms):
-    self._state_stack = [ScopedState(self,
-                                     counters.CounterName('unknown'),
-                                     None)]
+    self._state_stack = [
+        ScopedState(self, counters.CounterName('unknown'), None)
+    ]
     self.state_transition_count = 0
     self.time_since_transition = 0
 
@@ -45,15 +45,16 @@ class StateSampler(object):
     execution thread."""
     return self._state_stack[-1]
 
-  def _scoped_state(self,
-                    counter_name,  # type: counters.CounterName
-                    name_context,  # type: common.NameContext
-                    output_counter,
-                    metrics_container=None):
+  def _scoped_state(
+      self,
+      counter_name,  # type: counters.CounterName
+      name_context,  # type: common.NameContext
+      output_counter,
+      metrics_container=None):
     # type: (...) -> ScopedState
     assert isinstance(name_context, common.NameContext)
-    return ScopedState(
-        self, counter_name, name_context, output_counter, metrics_container)
+    return ScopedState(self, counter_name, name_context, output_counter,
+                       metrics_container)
 
   def update_metric(self, typed_metric_name, value):
     self.current_state().metrics_container.get_metric_cell(
@@ -85,12 +86,13 @@ class StateSampler(object):
 
 class ScopedState(object):
 
-  def __init__(self,
-               sampler,  # type: StateSampler
-               name,  # type: counters.CounterName
-               step_name_context,  # type: Optional[common.NameContext]
-               counter=None,
-               metrics_container=None):
+  def __init__(
+      self,
+      sampler,  # type: StateSampler
+      name,  # type: counters.CounterName
+      step_name_context,  # type: Optional[common.NameContext]
+      counter=None,
+      metrics_container=None):
     self.state_sampler = sampler
     self.name = name
     self.name_context = step_name_context

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Type hinting decorators allowing static or runtime type-checking for the SDK.
 
 This module defines decorators which utilize the type-hints defined in
@@ -114,7 +113,6 @@ try:
 except ImportError:
   funcsigs = None
 
-
 __all__ = [
     'with_input_types',
     'with_output_types',
@@ -164,12 +162,11 @@ def getfullargspec(func):
         # Arguments with the %unknown% prefix will be ignored in the type
         # checking code.
         if _use_full_argspec:
-          return inspect.FullArgSpec(
-              ['_'], '__unknown__varargs', '__unknown__keywords', (),
-              [], {}, {})
+          return inspect.FullArgSpec(['_'], '__unknown__varargs',
+                                     '__unknown__keywords', (), [], {}, {})
         else:  # Python 2
-          return inspect.ArgSpec(
-              ['_'], '__unknown__varargs', '__unknown__keywords', ())
+          return inspect.ArgSpec(['_'], '__unknown__varargs',
+                                 '__unknown__keywords', ())
     else:
       raise
 
@@ -197,7 +194,8 @@ def get_signature(func):
         inspect_.Parameter('__unknown__varargs',
                            inspect_.Parameter.VAR_POSITIONAL),
         inspect_.Parameter('__unknown__keywords',
-                           inspect_.Parameter.VAR_KEYWORD)]
+                           inspect_.Parameter.VAR_KEYWORD)
+    ]
 
     signature = inspect_.Signature(params)
 
@@ -231,10 +229,11 @@ class IOTypeHints(object):
   """
   __slots__ = ('input_types', 'output_types')
 
-  def __init__(self,
-               input_types=None,  # type: Optional[Tuple[Tuple[Any, ...], Dict[str, Any]]]
-               output_types=None  # type: Optional[Tuple[Tuple[Any, ...], Dict[str, Any]]]
-              ):
+  def __init__(
+      self,
+      input_types=None,  # type: Optional[Tuple[Tuple[Any, ...], Dict[str, Any]]]
+      output_types=None  # type: Optional[Tuple[Tuple[Any, ...], Dict[str, Any]]]
+  ):
     self.input_types = input_types
     self.output_types = output_types
 
@@ -252,8 +251,8 @@ class IOTypeHints(object):
       return None
     signature = get_signature(fn)
     if (all(param.annotation == param.empty
-            for param in signature.parameters.values())
-        and signature.return_annotation == signature.empty):
+            for param in signature.parameters.values()) and
+        signature.return_annotation == signature.empty):
       return None
     input_args = []
     input_kwargs = {}
@@ -295,9 +294,8 @@ class IOTypeHints(object):
     if self.output_types:
       args, kwargs = self.output_types
       if len(args) != 1 or kwargs:
-        raise TypeError(
-            'Expected single output type hint for %s but got: %s' % (
-                context, self.output_types))
+        raise TypeError('Expected single output type hint for %s but got: %s' %
+                        (context, self.output_types))
       return args[0]
 
   def has_simple_output_type(self):
@@ -354,18 +352,19 @@ class IOTypeHints(object):
     return self._has_input_types() or self._has_output_types()
 
   def __repr__(self):
-    return 'IOTypeHints[inputs=%s, outputs=%s]' % (
-        self.input_types, self.output_types)
+    return 'IOTypeHints[inputs=%s, outputs=%s]' % (self.input_types,
+                                                   self.output_types)
 
   def __eq__(self, other):
+
     def same(a, b):
       if a is None or not any(a):
         return b is None or not any(b)
       else:
         return a == b
-    return (
-        same(self.input_types, other.input_types)
-        and same(self.output_types, other.output_types))
+
+    return (same(self.input_types, other.input_types) and
+            same(self.output_types, other.output_types))
 
   def __ne__(self, other):
     return not self == other
@@ -399,9 +398,9 @@ class WithTypeHints(object):
     - Using self.default_type_hints().
     - Using self.__class__ type hints.
     """
-    return (self._get_or_create_type_hints()
-            .with_defaults(self.default_type_hints())
-            .with_defaults(get_type_hints(self.__class__)))
+    return (self._get_or_create_type_hints().with_defaults(
+        self.default_type_hints()).with_defaults(get_type_hints(
+            self.__class__)))
 
   def default_type_hints(self):
     return None
@@ -451,8 +450,9 @@ def _unpack_positional_arg_hints(arg, hint):
       raise TypeCheckError('Bad tuple arguments for %s: expected %s, got %s' %
                            (arg, tuple_constraint, hint))
     if isinstance(hint, typehints.TupleConstraint):
-      return tuple(_unpack_positional_arg_hints(a, t)
-                   for a, t in zip(arg, hint.tuple_types))
+      return tuple(
+          _unpack_positional_arg_hints(a, t)
+          for a, t in zip(arg, hint.tuple_types))
     return (typehints.Any,) * len(arg)
   return hint
 
@@ -474,8 +474,10 @@ def getcallargs_forhints(func, *typeargs, **typekwargs):
 def getcallargs_forhints_impl_py2(func, typeargs, typekwargs):
   argspec = getfullargspec(func)
   # Turn Tuple[x, y] into (x, y) so getcallargs can do the proper unpacking.
-  packed_typeargs = [_unpack_positional_arg_hints(arg, hint)
-                     for (arg, hint) in zip(argspec.args, typeargs)]
+  packed_typeargs = [
+      _unpack_positional_arg_hints(arg, hint)
+      for (arg, hint) in zip(argspec.args, typeargs)
+  ]
   packed_typeargs += list(typeargs[len(packed_typeargs):])
 
   # Monkeypatch inspect.getfullargspec to allow passing non-function objects.
@@ -495,14 +497,14 @@ def getcallargs_forhints_impl_py2(func, typeargs, typekwargs):
     for k, var in enumerate(reversed(argspec.args)):
       if k >= len(argspec.defaults):
         break
-      if callargs.get(var, None) is argspec.defaults[-k-1]:
+      if callargs.get(var, None) is argspec.defaults[-k - 1]:
         callargs[var] = typehints.Any
   # Patch up varargs and keywords
   if argspec.varargs:
     # TODO(BEAM-8122): This will always assign _ANY_VAR_POSITIONAL. Should be
     #   "callargs.get(...) or _ANY_VAR_POSITIONAL".
-    callargs[argspec.varargs] = typekwargs.get(
-        argspec.varargs, _ANY_VAR_POSITIONAL)
+    callargs[argspec.varargs] = typekwargs.get(argspec.varargs,
+                                               _ANY_VAR_POSITIONAL)
 
   varkw = argspec.keywords
   if varkw:
@@ -551,8 +553,7 @@ def _normalize_var_keyword_hint(hint, arg_name):
     raise TypeCheckError('Unexpected VAR_KEYWORD value: %s' % hint)
   keys = list(hint.keys())
   values = list(hint.values())
-  if (len(values) == 1 and
-      keys[0] == arg_name and
+  if (len(values) == 1 and keys[0] == arg_name and
       isinstance(values[0], typehints.DictConstraint)):
     # Example: dict(kwargs=Dict[str, Any]) -> Dict[str, Any]
     return values[0]
@@ -712,6 +713,7 @@ def with_input_types(*positional_hints, **keyword_hints):
     get_type_hints(f).set_input_types(*converted_positional_hints,
                                       **converted_keyword_hints)
     return f
+
   return annotate
 
 
@@ -787,10 +789,8 @@ def with_output_types(*return_type_hint, **kwargs):
   return_type_hint = native_type_compatibility.convert_to_beam_type(
       return_type_hint[0])
 
-  validate_composite_type_param(
-      return_type_hint,
-      error_msg_prefix='All type hint arguments'
-  )
+  validate_composite_type_param(return_type_hint,
+                                error_msg_prefix='All type hint arguments')
 
   def annotate(f):
     get_type_hints(f).set_output_types(return_type_hint)
@@ -799,8 +799,10 @@ def with_output_types(*return_type_hint, **kwargs):
   return annotate
 
 
-def _check_instance_type(
-    type_constraint, instance, var_name=None, verbose=False):
+def _check_instance_type(type_constraint,
+                         instance,
+                         var_name=None,
+                         verbose=False):
   """A helper function to report type-hint constraint violations.
 
   Args:
@@ -815,8 +817,8 @@ def _check_instance_type(
     TypeCheckError: If 'instance' fails to meet the type-constraint of
       'type_constraint'.
   """
-  hint_type = (
-      "argument: '%s'" % var_name if var_name is not None else 'return type')
+  hint_type = ("argument: '%s'" %
+               var_name if var_name is not None else 'return type')
 
   try:
     check_constraint(type_constraint, instance)
@@ -825,10 +827,10 @@ def _check_instance_type(
       verbose_instance = '%s, ' % instance
     else:
       verbose_instance = ''
-    raise TypeCheckError('Type-hint for %s violated. Expected an '
-                         'instance of %s, instead found %san instance of %s.'
-                         % (hint_type, type_constraint,
-                            verbose_instance, type(instance)))
+    raise TypeCheckError(
+        'Type-hint for %s violated. Expected an '
+        'instance of %s, instead found %san instance of %s.' %
+        (hint_type, type_constraint, verbose_instance, type(instance)))
   except CompositeTypeHintError as e:
     raise TypeCheckError('Type-hint for %s violated: %s' % (hint_type, e))
 
@@ -862,13 +864,13 @@ def _interleave_type_check(type_constraint, var_name=None):
     iteration. If the generator received is already wrapped, then it is simply
     returned to avoid nested wrapping.
   """
+
   def wrapper(gen):
     if isinstance(gen, GeneratorWrapper):
       return gen
     return GeneratorWrapper(
-        gen,
-        lambda x: _check_instance_type(type_constraint, x, var_name)
-    )
+        gen, lambda x: _check_instance_type(type_constraint, x, var_name))
+
   return wrapper
 
 

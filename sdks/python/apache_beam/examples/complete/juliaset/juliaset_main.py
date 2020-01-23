@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A Julia set computing workflow: https://en.wikipedia.org/wiki/Julia_set.
 
 This example has in the juliaset/ folder all the code needed to execute the

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the windowing classes."""
 
 # pytype: skip-file
@@ -39,8 +38,8 @@ class PipelineContextTest(unittest.TestCase):
     context = pipeline_context.PipelineContext()
     bytes_coder_proto = coders.BytesCoder().to_runner_api(None)
     bytes_coder_ref = context.coders.get_by_proto(bytes_coder_proto)
-    bytes_coder_ref2 = context.coders.get_by_proto(
-        bytes_coder_proto, deduplicate=True)
+    bytes_coder_ref2 = context.coders.get_by_proto(bytes_coder_proto,
+                                                   deduplicate=True)
     self.assertEqual(bytes_coder_ref, bytes_coder_ref2)
 
   def test_serialization(self):
@@ -49,12 +48,10 @@ class PipelineContextTest(unittest.TestCase):
     bytes_coder_ref = context.coders.get_id(coders.BytesCoder())
     proto = context.to_runner_api()
     context2 = pipeline_context.PipelineContext.from_runner_api(proto)
-    self.assertEqual(
-        coders.FloatCoder(),
-        context2.coders.get_by_id(float_coder_ref))
-    self.assertEqual(
-        coders.BytesCoder(),
-        context2.coders.get_by_id(bytes_coder_ref))
+    self.assertEqual(coders.FloatCoder(),
+                     context2.coders.get_by_id(float_coder_ref))
+    self.assertEqual(coders.BytesCoder(),
+                     context2.coders.get_by_id(bytes_coder_ref))
 
 
 if __name__ == '__main__':

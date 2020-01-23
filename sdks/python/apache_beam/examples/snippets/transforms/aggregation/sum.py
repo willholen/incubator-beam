@@ -25,12 +25,8 @@ def sum_globally(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    total = (
-        pipeline
-        | 'Create numbers' >> beam.Create([3, 4, 1, 2])
-        | 'Sum values' >> beam.CombineGlobally(sum)
-        | beam.Map(print)
-    )
+    total = (pipeline | 'Create numbers' >> beam.Create([3, 4, 1, 2]) |
+             'Sum values' >> beam.CombineGlobally(sum) | beam.Map(print))
     # [END sum_globally]
     if test:
       test(total)
@@ -41,19 +37,14 @@ def sum_per_key(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    totals_per_key = (
-        pipeline
-        | 'Create produce' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Sum values per key' >> beam.CombinePerKey(sum)
-        | beam.Map(print)
-    )
+    totals_per_key = (pipeline | 'Create produce' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Sum values per key' >> beam.CombinePerKey(sum) | beam.Map(print))
     # [END sum_per_key]
     if test:
       test(totals_per_key)

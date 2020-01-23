@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Common interactive utility module.
 
 For experimental usage only; no backwards-compatibility guarantees.
@@ -80,8 +79,8 @@ def alter_label_if_ipython(transform, pvalueish):
     if not pipeline:
       _LOGGER.warning('Failed to alter the label of a transform with the '
                       'ipython prompt metadata. Cannot figure out the pipeline '
-                      'that the given pvalueish %s belongs to. Thus noop.'
-                      % pvalueish)
+                      'that the given pvalueish %s belongs to. Thus noop.' %
+                      pvalueish)
     if (pipeline
         # We only alter for transforms to be applied to user-defined pipelines
         # at pipeline construction time.

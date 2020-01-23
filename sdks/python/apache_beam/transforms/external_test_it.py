@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Integration tests for cross-language transform expansion."""
 
 # pytype: skip-file
@@ -38,8 +37,10 @@ class ExternalTransformIT(unittest.TestCase):
 
   @attr('IT')
   def test_job_python_from_python_it(self):
+
     @ptransform.PTransform.register_urn('simple', None)
     class SimpleTransform(ptransform.PTransform):
+
       def expand(self, pcoll):
         return pcoll | beam.Map(lambda x: 'Simple(%s)' % x)
 
@@ -52,19 +53,14 @@ class ExternalTransformIT(unittest.TestCase):
 
     pipeline = TestPipeline(is_integration_test=True)
 
-    res = (
-        pipeline
-        | beam.Create(['a', 'b'])
-        | beam.ExternalTransform(
-            'simple',
-            None,
-            expansion_service.ExpansionServiceServicer()))
+    res = (pipeline | beam.Create(['a', 'b']) | beam.ExternalTransform(
+        'simple', None, expansion_service.ExpansionServiceServicer()))
     assert_that(res, equal_to(['Simple(a)', 'Simple(b)']))
 
-    proto_pipeline, _ = pipeline.to_runner_api(
-        return_context=True)
-    pipeline_from_proto = Pipeline.from_runner_api(
-        proto_pipeline, pipeline.runner, pipeline._options)
+    proto_pipeline, _ = pipeline.to_runner_api(return_context=True)
+    pipeline_from_proto = Pipeline.from_runner_api(proto_pipeline,
+                                                   pipeline.runner,
+                                                   pipeline._options)
     pipeline_from_proto.run().wait_until_finish()
 
 

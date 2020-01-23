@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for GCS File System."""
 
 # pytype: skip-file
@@ -71,12 +70,9 @@ class GCSFileSystemTest(unittest.TestCase):
       self.fs.join('/bucket/path/', '/to/file')
 
   def test_split(self):
-    self.assertEqual(('gs://foo/bar', 'baz'),
-                     self.fs.split('gs://foo/bar/baz'))
-    self.assertEqual(('gs://foo', ''),
-                     self.fs.split('gs://foo/'))
-    self.assertEqual(('gs://foo', ''),
-                     self.fs.split('gs://foo'))
+    self.assertEqual(('gs://foo/bar', 'baz'), self.fs.split('gs://foo/bar/baz'))
+    self.assertEqual(('gs://foo', ''), self.fs.split('gs://foo/'))
+    self.assertEqual(('gs://foo', ''), self.fs.split('gs://foo'))
 
     with self.assertRaises(ValueError):
       self.fs.split('/no/gcs/prefix')
@@ -95,9 +91,7 @@ class GCSFileSystemTest(unittest.TestCase):
         FileMetadata('gs://bucket/file2', 2)
     ])
     match_result = self.fs.match(['gs://bucket/'])[0]
-    self.assertEqual(
-        set(match_result.metadata_list),
-        expected_results)
+    self.assertEqual(set(match_result.metadata_list), expected_results)
     gcsio_mock.list_prefix.assert_called_once_with('gs://bucket/')
 
   @mock.patch('apache_beam.io.gcp.gcsfilesystem.gcsio')
@@ -106,19 +100,11 @@ class GCSFileSystemTest(unittest.TestCase):
     gcsio_mock = mock.MagicMock()
     limit = 1
     gcsfilesystem.gcsio.GcsIO = lambda: gcsio_mock
-    gcsio_mock.list_prefix.return_value = {
-        'gs://bucket/file1': 1
-    }
-    expected_results = set([
-        FileMetadata('gs://bucket/file1', 1)
-    ])
+    gcsio_mock.list_prefix.return_value = {'gs://bucket/file1': 1}
+    expected_results = set([FileMetadata('gs://bucket/file1', 1)])
     match_result = self.fs.match(['gs://bucket/'], [limit])[0]
-    self.assertEqual(
-        set(match_result.metadata_list),
-        expected_results)
-    self.assertEqual(
-        len(match_result.metadata_list),
-        limit)
+    self.assertEqual(set(match_result.metadata_list), expected_results)
+    self.assertEqual(len(match_result.metadata_list), limit)
     gcsio_mock.list_prefix.assert_called_once_with('gs://bucket/')
 
   @mock.patch('apache_beam.io.gcp.gcsfilesystem.gcsio')
@@ -142,17 +128,17 @@ class GCSFileSystemTest(unittest.TestCase):
     gcsio_mock = mock.MagicMock()
     gcsfilesystem.gcsio.GcsIO = lambda: gcsio_mock
     gcsio_mock.list_prefix.side_effect = [
-        {'gs://bucket/file1': 1},
-        {'gs://bucket/file2': 2},
+        {
+            'gs://bucket/file1': 1
+        },
+        {
+            'gs://bucket/file2': 2
+        },
     ]
-    expected_results = [
-        [FileMetadata('gs://bucket/file1', 1)],
-        [FileMetadata('gs://bucket/file2', 2)]
-    ]
+    expected_results = [[FileMetadata('gs://bucket/file1', 1)],
+                        [FileMetadata('gs://bucket/file2', 2)]]
     result = self.fs.match(['gs://bucket/file1*', 'gs://bucket/file2*'])
-    self.assertEqual(
-        [mr.metadata_list for mr in result],
-        expected_results)
+    self.assertEqual([mr.metadata_list for mr in result], expected_results)
 
   @mock.patch('apache_beam.io.gcp.gcsfilesystem.gcsio')
   def test_create(self, mock_gcsio):
@@ -187,8 +173,8 @@ class GCSFileSystemTest(unittest.TestCase):
     # Issue file copy
     self.fs.copy(sources, destinations)
 
-    gcsio_mock.copy.assert_called_once_with(
-        'gs://bucket/from1', 'gs://bucket/to1')
+    gcsio_mock.copy.assert_called_once_with('gs://bucket/from1',
+                                            'gs://bucket/to1')
 
   @mock.patch('apache_beam.io.gcp.gcsfilesystem.gcsio')
   def test_copy_file_error(self, mock_gcsio):
@@ -202,7 +188,9 @@ class GCSFileSystemTest(unittest.TestCase):
     gcsio_mock.copy.side_effect = exception
 
     # Issue batch rename.
-    expected_results = {(s, d):exception for s, d in zip(sources, destinations)}
+    expected_results = {
+        (s, d): exception for s, d in zip(sources, destinations)
+    }
 
     # Issue batch copy.
     with self.assertRaisesRegex(BeamIOError,
@@ -210,8 +198,8 @@ class GCSFileSystemTest(unittest.TestCase):
       self.fs.copy(sources, destinations)
     self.assertEqual(error.exception.exception_details, expected_results)
 
-    gcsio_mock.copy.assert_called_once_with(
-        'gs://bucket/from1', 'gs://bucket/to1')
+    gcsio_mock.copy.assert_called_once_with('gs://bucket/from1',
+                                            'gs://bucket/to1')
 
   @mock.patch('apache_beam.io.gcp.gcsfilesystem.gcsio')
   def test_copy_tree(self, mock_gcsio):
@@ -224,8 +212,8 @@ class GCSFileSystemTest(unittest.TestCase):
     # Issue directory copy
     self.fs.copy(sources, destinations)
 
-    gcsio_mock.copytree.assert_called_once_with(
-        'gs://bucket1/', 'gs://bucket2/')
+    gcsio_mock.copytree.assert_called_once_with('gs://bucket1/',
+                                                'gs://bucket2/')
 
   @mock.patch('apache_beam.io.gcp.gcsfilesystem.gcsio')
   def test_rename(self, mock_gcsio):
@@ -291,7 +279,9 @@ class GCSFileSystemTest(unittest.TestCase):
     ]]
 
     # Issue batch rename.
-    expected_results = {(s, d):exception for s, d in zip(sources, destinations)}
+    expected_results = {
+        (s, d): exception for s, d in zip(sources, destinations)
+    }
 
     # Issue batch rename.
     with self.assertRaisesRegex(BeamIOError,
@@ -339,7 +329,7 @@ class GCSFileSystemTest(unittest.TestCase):
         'gs://bucket/from2',
         'gs://bucket/from3',
     ]
-    expected_results = {f:exception for f in files}
+    expected_results = {f: exception for f in files}
 
     # Issue batch delete.
     with self.assertRaisesRegex(BeamIOError,

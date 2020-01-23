@@ -164,6 +164,6 @@ class CopyRequest():
 
 class S3ClientError(Exception):
 
-  def __init__(self, message = None, code = None):
+  def __init__(self, message=None, code=None):
     self.message = message
     self.code = code

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for the Observable mixin class."""
 # pytype: skip-file
 
@@ -39,6 +38,7 @@ class ObservableMixinTest(unittest.TestCase):
     self.observed_keys.append(key)
 
   def test_observable(self):
+
     class Watched(observable.ObservableMixin):
 
       def __iter__(self):

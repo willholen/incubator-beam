@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A module for caching state reads/writes in Beam applications."""
 # pytype: skip-file
 
@@ -50,8 +49,9 @@ class Metrics(object):
     """Needs to be called once per thread to initialize the local metrics cache.
     """
     if hasattr(self._context, 'metrics'):
-      return # Already initialized
-    self._context.metrics = collections.defaultdict(int)  # type: DefaultDict[Hashable, int]
+      return  # Already initialized
+    self._context.metrics = collections.defaultdict(
+        int)  # type: DefaultDict[Hashable, int]
 
   def count(self, name):
     # type: (str) -> None
@@ -73,16 +73,19 @@ class Metrics(object):
       if key not in metrics:
         metrics[key] = 0
     # Gauges which reflect the state since last queried
-    gauges = [monitoring_infos.int64_gauge(self.PREFIX + name, val)
-              for name, val in metrics.items()]
+    gauges = [
+        monitoring_infos.int64_gauge(self.PREFIX + name, val)
+        for name, val in metrics.items()
+    ]
     gauges.append(monitoring_infos.int64_gauge(self.PREFIX + 'size',
                                                cache_size))
-    gauges.append(monitoring_infos.int64_gauge(self.PREFIX + 'capacity',
-                                               cache_capacity))
+    gauges.append(
+        monitoring_infos.int64_gauge(self.PREFIX + 'capacity', cache_capacity))
     # Counters for the summary across all metrics
-    counters = [monitoring_infos.int64_counter(self.PREFIX + name + '_total',
-                                               val)
-                for name, val in metrics.items()]
+    counters = [
+        monitoring_infos.int64_counter(self.PREFIX + name + '_total', val)
+        for name, val in metrics.items()
+    ]
     # Reinitialize metrics for this thread/bundle
     metrics.clear()
     return gauges + counters

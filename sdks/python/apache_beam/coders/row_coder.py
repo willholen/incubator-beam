@@ -90,8 +90,7 @@ class RowCoder(FastCoder):
   def coder_from_type(field_type):
     type_info = field_type.WhichOneof("type_info")
     if type_info == "atomic_type":
-      if field_type.atomic_type in (schema_pb2.INT32,
-                                    schema_pb2.INT64):
+      if field_type.atomic_type in (schema_pb2.INT32, schema_pb2.INT64):
         return VarIntCoder()
       elif field_type.atomic_type == schema_pb2.DOUBLE:
         return FloatCoder()
@@ -129,9 +128,9 @@ class RowCoderImpl(StreamCoderImpl):
     if self.has_nullable_fields:
       nulls = list(attr is None for attr in attrs)
       if any(nulls):
-        words = array('B', itertools.repeat(0, (nvals+7)//8))
+        words = array('B', itertools.repeat(0, (nvals + 7) // 8))
         for i, is_null in enumerate(nulls):
-          words[i//8] |= is_null << (i % 8)
+          words[i // 8] |= is_null << (i % 8)
 
     self.NULL_MARKER_CODER.encode_to_stream(words.tostring(), out, True)
 
@@ -158,8 +157,8 @@ class RowCoderImpl(StreamCoderImpl):
     # the schema must have changed. Populate the unencoded fields with nulls.
     if len(self.components) > nvals:
       nulls = itertools.chain(
-          nulls,
-          itertools.repeat(True, len(self.components) - nvals))
+          nulls, itertools.repeat(True,
+                                  len(self.components) - nvals))
 
     # Note that if this coder's schema has *fewer* attributes than the encoded
     # value, we just need to ignore the additional values, which will occur

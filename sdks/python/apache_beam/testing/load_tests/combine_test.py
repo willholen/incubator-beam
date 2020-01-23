@@ -137,6 +137,7 @@ if os.environ.get('LOAD_TEST_ENABLED') == 'true':
 
 @unittest.skipIf(not load_test_enabled, 'Enabled only for phrase triggering.')
 class CombineTest(LoadTest):
+
   def setUp(self):
     super(CombineTest, self).setUp()
     self.fanout = self.pipeline.get_option('fanout')
@@ -151,26 +152,23 @@ class CombineTest(LoadTest):
       self.fail('You should set \"--top_count\" option to use TOP combiners')
 
   class _GetElement(beam.DoFn):
+
     def process(self, element):
       yield element
 
   def testCombineGlobally(self):
-    input = (self.pipeline
-             | beam.io.Read(synthetic_pipeline.SyntheticSource(
-                 self.parseTestPipelineOptions()))
-             | 'Measure time: Start' >> beam.ParDo(
-                 MeasureTime(self.metrics_namespace))
-            )
+    input = (self.pipeline | beam.io.Read(
+        synthetic_pipeline.SyntheticSource(self.parseTestPipelineOptions())) |
+             'Measure time: Start' >> beam.ParDo(
+                 MeasureTime(self.metrics_namespace)))
 
     for branch in range(self.fanout):
       # pylint: disable=expression-not-assigned
-      (input
-       | 'Combine with Top %i' % branch >> beam.CombineGlobally(
-           beam.combiners.TopCombineFn(self.top_count))
-       | 'Consume %i' % branch >> beam.ParDo(self._GetElement())
-       | 'Measure time: End %i' % branch >> beam.ParDo(
-           MeasureTime(self.metrics_namespace))
-      )
+      (input | 'Combine with Top %i' % branch >> beam.CombineGlobally(
+          beam.combiners.TopCombineFn(self.top_count)) |
+       'Consume %i' % branch >> beam.ParDo(self._GetElement()) |
+       'Measure time: End %i' % branch >> beam.ParDo(
+           MeasureTime(self.metrics_namespace)))
 
 
 if __name__ == '__main__':

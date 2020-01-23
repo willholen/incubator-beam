@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Various implementations of a Count custom PTransform.
 
 These example show the different ways you can write custom PTransforms.
@@ -40,36 +39,30 @@ class Count1(beam.PTransform):
   """Count as a subclass of PTransform, with an apply method."""
 
   def expand(self, pcoll):
-    return (
-        pcoll
-        | 'ParWithOne' >> beam.Map(lambda v: (v, 1))
-        | beam.CombinePerKey(sum))
+    return (pcoll | 'ParWithOne' >> beam.Map(lambda v: (v, 1)) |
+            beam.CombinePerKey(sum))
 
 
 def run_count1(known_args, options):
   """Runs the first example pipeline."""
   logging.info('Running first pipeline')
   with beam.Pipeline(options=options) as p:
-    (p | beam.io.ReadFromText(known_args.input)
-     | Count1()
-     | beam.io.WriteToText(known_args.output))
+    (p | beam.io.ReadFromText(known_args.input) | Count1() |
+     beam.io.WriteToText(known_args.output))
 
 
 @beam.ptransform_fn
 def Count2(pcoll):  # pylint: disable=invalid-name
   """Count as a decorated function."""
-  return (
-      pcoll
-      | 'PairWithOne' >> beam.Map(lambda v: (v, 1))
-      | beam.CombinePerKey(sum))
+  return (pcoll | 'PairWithOne' >> beam.Map(lambda v: (v, 1)) |
+          beam.CombinePerKey(sum))
 
 
 def run_count2(known_args, options):
   """Runs the second example pipeline."""
   logging.info('Running second pipeline')
   with beam.Pipeline(options=options) as p:
-    (p | ReadFromText(known_args.input)
-     | Count2()  # pylint: disable=no-value-for-parameter
+    (p | ReadFromText(known_args.input) | Count2()  # pylint: disable=no-value-for-parameter
      | WriteToText(known_args.output))
 
 
@@ -84,18 +77,15 @@ def Count3(pcoll, factor=1):  # pylint: disable=invalid-name
   Returns:
     A PCollection counting the number of times each unique element occurs.
   """
-  return (
-      pcoll
-      | 'PairWithOne' >> beam.Map(lambda v: (v, factor))
-      | beam.CombinePerKey(sum))
+  return (pcoll | 'PairWithOne' >> beam.Map(lambda v: (v, factor)) |
+          beam.CombinePerKey(sum))
 
 
 def run_count3(known_args, options):
   """Runs the third example pipeline."""
   logging.info('Running third pipeline')
   with beam.Pipeline(options=options) as p:
-    (p | ReadFromText(known_args.input)
-     | Count3(2)  # pylint: disable=no-value-for-parameter
+    (p | ReadFromText(known_args.input) | Count3(2)  # pylint: disable=no-value-for-parameter
      | WriteToText(known_args.output))
 
 
@@ -110,9 +100,7 @@ def get_args(argv):
   """
 
   parser = argparse.ArgumentParser()
-  parser.add_argument('--input',
-                      required=True,
-                      help='Input file to process.')
+  parser.add_argument('--input', required=True, help='Input file to process.')
   parser.add_argument('--output',
                       required=True,
                       help='Output file to write results to.')

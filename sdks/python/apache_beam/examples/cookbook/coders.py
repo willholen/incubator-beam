@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A workflow using custom JSON-based coders for text sources and sinks.
 
 The input file contains a JSON string on each line describing a match
@@ -77,9 +76,7 @@ def run(argv=None):
   """Runs the workflow computing total points from a collection of matches."""
 
   parser = argparse.ArgumentParser()
-  parser.add_argument('--input',
-                      required=True,
-                      help='Input file to process.')
+  parser.add_argument('--input', required=True, help='Input file to process.')
   parser.add_argument('--output',
                       required=True,
                       help='Output file to write results to.')
@@ -91,10 +88,9 @@ def run(argv=None):
 
   with beam.Pipeline(options=pipeline_options) as p:
     (p  # pylint: disable=expression-not-assigned
-     | 'read' >> ReadFromText(known_args.input, coder=JsonCoder())
-     | 'points' >> beam.FlatMap(compute_points)
-     | beam.CombinePerKey(sum)
-     | 'write' >> WriteToText(known_args.output, coder=JsonCoder()))
+     | 'read' >> ReadFromText(known_args.input, coder=JsonCoder()) |
+     'points' >> beam.FlatMap(compute_points) | beam.CombinePerKey(sum) |
+     'write' >> WriteToText(known_args.output, coder=JsonCoder()))
 
 
 if __name__ == '__main__':

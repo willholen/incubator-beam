@@ -71,7 +71,7 @@ class S3IO(object):
   def open(self,
            filename,
            mode='r',
-           read_buffer_size=16*1024*1024,
+           read_buffer_size=16 * 1024 * 1024,
            mime_type='application/octet-stream'):
     """Open an S3 file path for reading or writing.
 
@@ -88,7 +88,8 @@ class S3IO(object):
       ~exceptions.ValueError: Invalid open file mode.
     """
     if mode == 'r' or mode == 'rb':
-      downloader = S3Downloader(self.client, filename,
+      downloader = S3Downloader(self.client,
+                                filename,
                                 buffer_size=read_buffer_size)
       return io.BufferedReader(DownloaderStream(downloader, mode=mode),
                                buffer_size=read_buffer_size)
@@ -143,8 +144,8 @@ class S3IO(object):
       else:
         break
 
-    logging.info("Finished listing %s files in %s seconds.",
-                 counter, time.time() - start_time)
+    logging.info("Finished listing %s files in %s seconds.", counter,
+                 time.time() - start_time)
 
     return file_sizes
 
@@ -192,7 +193,8 @@ class S3IO(object):
             src_dest_pairs argument, where exception is None if the operation
             succeeded or the relevant exception if the operation failed.
     """
-    if not src_dest_pairs: return []
+    if not src_dest_pairs:
+      return []
 
     results = []
 
@@ -209,9 +211,7 @@ class S3IO(object):
       elif not src_path.endswith('/') and not dest_path.endswith('/'):
         src_bucket, src_key = parse_s3_path(src_path)
         dest_bucket, dest_key = parse_s3_path(dest_path)
-        request = messages.CopyRequest(src_bucket,
-                                       src_key,
-                                       dest_bucket,
+        request = messages.CopyRequest(src_bucket, src_key, dest_bucket,
                                        dest_key)
 
         try:
@@ -224,8 +224,7 @@ class S3IO(object):
       else:
         err = messages.S3ClientError(
             "Can't copy mismatched paths (one directory, one non-directory):" +
-            ' %s, %s' % (src_path, dest_path),
-            400)
+            ' %s, %s' % (src_path, dest_path), 400)
         results.append((src_path, dest_path, err))
 
     return results
@@ -280,10 +279,9 @@ class S3IO(object):
       self.client.delete(request)
     except messages.S3ClientError as e:
       if e.code == 404:
-        return # Same behavior as GCS - don't surface a 404 error
+        return  # Same behavior as GCS - don't surface a 404 error
       else:
-        logging.error('HTTP error while deleting file %s: %s', path,
-                      3)
+        logging.error('HTTP error while deleting file %s: %s', path, 3)
         raise e
 
   # We intentionally do not decorate this method with a retry, since the
@@ -304,8 +302,10 @@ class S3IO(object):
     """
     directories, not_directories = [], []
     for path in paths:
-      if path.endswith('/'): directories.append(path)
-      else: not_directories.append(path)
+      if path.endswith('/'):
+        directories.append(path)
+      else:
+        not_directories.append(path)
 
     results = {}
 
@@ -333,18 +333,20 @@ class S3IO(object):
              argument, where exception is None if the operation succeeded or
              the relevant exception if the operation failed.
     """
-    if not paths: return []
+    if not paths:
+      return []
 
     # Sort paths into bucket: [keys]
     buckets, keys = zip(*[parse_s3_path(path) for path in paths])
     grouped_keys = {bucket: [] for bucket in buckets}
-    for bucket, key in zip(buckets, keys): grouped_keys[bucket].append(key)
+    for bucket, key in zip(buckets, keys):
+      grouped_keys[bucket].append(key)
 
     # For each bucket, delete minibatches of keys
     results = {}
     for bucket, keys in grouped_keys.items():
       for i in range(0, len(keys), max_batch_size):
-        minibatch_keys = keys[i : i + max_batch_size]
+        minibatch_keys = keys[i:i + max_batch_size]
         results.update(self._delete_minibatch(bucket, minibatch_keys))
 
     # Organize final results
@@ -441,8 +443,8 @@ class S3IO(object):
     bucket, object = parse_s3_path(path)
     request = messages.GetRequest(bucket, object)
     datetime = self.client.get_object_metadata(request).last_modified
-    return (time.mktime(datetime.timetuple()) - time.timezone
-            + datetime.microsecond / 1000000.0)
+    return (time.mktime(datetime.timetuple()) - time.timezone +
+            datetime.microsecond / 1000000.0)
 
   def exists(self, path):
     """Returns whether the given S3 object exists.
@@ -473,7 +475,8 @@ class S3IO(object):
             src_dest_pairs argument, where exception is None if the operation
             succeeded or the relevant exception if the operation failed.
     """
-    if not src_dest_pairs: return []
+    if not src_dest_pairs:
+      return []
 
     # TODO: Throw value error if path has directory
     for src, dest in src_dest_pairs:
@@ -487,15 +490,18 @@ class S3IO(object):
     delete_results_dict = {src: err for (src, err) in delete_results}
     rename_results = []
     for src, dest, err in copy_results:
-      if err is not None: rename_results.append((src, dest, err))
+      if err is not None:
+        rename_results.append((src, dest, err))
       elif delete_results_dict[src] is not None:
         rename_results.append(src, dest, delete_results_dict[src])
-      else: rename_results.append((src, dest, None))
+      else:
+        rename_results.append((src, dest, None))
 
     return rename_results
 
 
 class S3Downloader(Downloader):
+
   def __init__(self, client, path, buffer_size):
     self._client = client
     self._path = path
@@ -503,9 +509,8 @@ class S3Downloader(Downloader):
     self._buffer_size = buffer_size
 
     # Get object state.
-    self._get_request = (messages.GetRequest(
-        bucket=self._bucket,
-        object=self._name))
+    self._get_request = (messages.GetRequest(bucket=self._bucket,
+                                             object=self._name))
 
     try:
       metadata = self._get_object_metadata(self._get_request)
@@ -514,8 +519,7 @@ class S3Downloader(Downloader):
       if e.code == 404:
         raise IOError(errno.ENOENT, 'Not found: %s' % self._path)
       else:
-        logging.error('HTTP error while requesting file %s: %s', self._path,
-                      3)
+        logging.error('HTTP error while requesting file %s: %s', self._path, 3)
         raise
 
     self._size = metadata.size
@@ -534,6 +538,7 @@ class S3Downloader(Downloader):
 
 
 class S3Uploader(Uploader):
+
   def __init__(self, client, path, mime_type='application/octet-stream'):
     self._client = client
     self._path = path
@@ -558,8 +563,7 @@ class S3Uploader(Uploader):
     # The uploader by default transfers data in chunks of 1024 * 1024 bytes at
     # a time, buffering writes until that size is reached.
     try:
-      request = messages.UploadRequest(self._bucket,
-                                       self._name,
+      request = messages.UploadRequest(self._bucket, self._name,
                                        self._mime_type)
       response = self._client.create_multipart_upload(request)
       self.upload_id = response.upload_id
@@ -587,22 +591,21 @@ class S3Uploader(Uploader):
   def _write_to_s3(self, data):
 
     try:
-      request = messages.UploadPartRequest(self._bucket,
-                                           self._name,
-                                           self.upload_id,
-                                           self.part_number,
+      request = messages.UploadPartRequest(self._bucket, self._name,
+                                           self.upload_id, self.part_number,
                                            data)
       response = self._client.upload_part(request)
-      self.parts.append({'ETag': response.etag,
-                         'PartNumber': response.part_number})
+      self.parts.append({
+          'ETag': response.etag,
+          'PartNumber': response.part_number
+      })
       self.part_number = self.part_number + 1
     except messages.S3ClientError as e:
       self.last_error = e
       if e.code == 404:
         raise IOError(errno.ENOENT, 'Not found: %s' % self._path)
       else:
-        logging.error('HTTP error while requesting file %s: %s', self._path,
-                      3)
+        logging.error('HTTP error while requesting file %s: %s', self._path, 3)
         raise
 
   def finish(self):
@@ -612,8 +615,7 @@ class S3Uploader(Uploader):
     if self.last_error is not None:
       raise self.last_error  # pylint: disable=raising-bad-type
 
-    request = messages.CompleteMultipartUploadRequest(self._bucket,
-                                                      self._name,
+    request = messages.CompleteMultipartUploadRequest(self._bucket, self._name,
                                                       self.upload_id,
                                                       self.parts)
     self._client.complete_multipart_upload(request)

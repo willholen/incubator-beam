@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Generated message classes for bigquery version v2.
 
 A data platform for customers to create, manage, share and query data.
@@ -27,7 +26,6 @@ from apitools.base.protorpclite import message_types as _message_types
 from apitools.base.protorpclite import messages as _messages
 from apitools.base.py import encoding
 from apitools.base.py import extra_types
-
 
 package = 'bigquery'
 
@@ -267,7 +265,9 @@ class BigqueryJobsListRequest(_messages.Message):
   pageToken = _messages.StringField(5)
   projectId = _messages.StringField(6, required=True)
   projection = _messages.EnumField('ProjectionValueValuesEnum', 7)
-  stateFilter = _messages.EnumField('StateFilterValueValuesEnum', 8, repeated=True)
+  stateFilter = _messages.EnumField('StateFilterValueValuesEnum',
+                                    8,
+                                    repeated=True)
 
 
 class BigqueryJobsQueryRequest(_messages.Message):
@@ -318,7 +318,8 @@ class BigqueryTabledataInsertAllRequest(_messages.Message):
 
   datasetId = _messages.StringField(1, required=True)
   projectId = _messages.StringField(2, required=True)
-  tableDataInsertAllRequest = _messages.MessageField('TableDataInsertAllRequest', 3)
+  tableDataInsertAllRequest = _messages.MessageField(
+      'TableDataInsertAllRequest', 3)
   tableId = _messages.StringField(4, required=True)
 
 
@@ -544,7 +545,9 @@ class BigtableOptions(_messages.Message):
       necessary. The default value is false.
   """
 
-  columnFamilies = _messages.MessageField('BigtableColumnFamily', 1, repeated=True)
+  columnFamilies = _messages.MessageField('BigtableColumnFamily',
+                                          1,
+                                          repeated=True)
   ignoreUnspecifiedColumnFamilies = _messages.BooleanField(2)
   readRowkeyAsString = _messages.BooleanField(3)
 
@@ -735,7 +738,9 @@ class Dataset(_messages.Message):
       key = _messages.StringField(1)
       value = _messages.StringField(2)
 
-    additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
+    additionalProperties = _messages.MessageField('AdditionalProperty',
+                                                  1,
+                                                  repeated=True)
 
   access = _messages.MessageField('AccessValueListEntry', 1, repeated=True)
   creationTime = _messages.IntegerField(2)
@@ -814,7 +819,9 @@ class DatasetList(_messages.Message):
         key = _messages.StringField(1)
         value = _messages.StringField(2)
 
-      additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
+      additionalProperties = _messages.MessageField('AdditionalProperty',
+                                                    1,
+                                                    repeated=True)
 
     datasetReference = _messages.MessageField('DatasetReference', 1)
     friendlyName = _messages.StringField(2)
@@ -1260,7 +1267,9 @@ class JobConfiguration(_messages.Message):
       key = _messages.StringField(1)
       value = _messages.StringField(2)
 
-    additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
+    additionalProperties = _messages.MessageField('AdditionalProperty',
+                                                  1,
+                                                  repeated=True)
 
   copy = _messages.MessageField('JobConfigurationTableCopy', 1)
   dryRun = _messages.BooleanField(2)
@@ -1442,9 +1451,11 @@ class JobConfigurationLoad(_messages.Message):
   autodetect = _messages.BooleanField(3)
   clustering = _messages.MessageField('Clustering', 4)
   createDisposition = _messages.StringField(5)
-  destinationEncryptionConfiguration = _messages.MessageField('EncryptionConfiguration', 6)
+  destinationEncryptionConfiguration = _messages.MessageField(
+      'EncryptionConfiguration', 6)
   destinationTable = _messages.MessageField('TableReference', 7)
-  destinationTableProperties = _messages.MessageField('DestinationTableProperties', 8)
+  destinationTableProperties = _messages.MessageField(
+      'DestinationTableProperties', 8)
   encoding = _messages.StringField(9)
   fieldDelimiter = _messages.StringField(10)
   hivePartitioningMode = _messages.StringField(11)
@@ -1593,16 +1604,21 @@ class JobConfigurationQuery(_messages.Message):
       key = _messages.StringField(1)
       value = _messages.MessageField('ExternalDataConfiguration', 2)
 
-    additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
+    additionalProperties = _messages.MessageField('AdditionalProperty',
+                                                  1,
+                                                  repeated=True)
 
   allowLargeResults = _messages.BooleanField(1, default=False)
   clustering = _messages.MessageField('Clustering', 2)
   createDisposition = _messages.StringField(3)
   defaultDataset = _messages.MessageField('DatasetReference', 4)
-  destinationEncryptionConfiguration = _messages.MessageField('EncryptionConfiguration', 5)
+  destinationEncryptionConfiguration = _messages.MessageField(
+      'EncryptionConfiguration', 5)
   destinationTable = _messages.MessageField('TableReference', 6)
   flattenResults = _messages.BooleanField(7, default=True)
-  maximumBillingTier = _messages.IntegerField(8, variant=_messages.Variant.INT32, default=1)
+  maximumBillingTier = _messages.IntegerField(8,
+                                              variant=_messages.Variant.INT32,
+                                              default=1)
   maximumBytesBilled = _messages.IntegerField(9)
   parameterMode = _messages.StringField(10)
   preserveNulls = _messages.BooleanField(11)
@@ -1615,7 +1631,8 @@ class JobConfigurationQuery(_messages.Message):
   timePartitioning = _messages.MessageField('TimePartitioning', 18)
   useLegacySql = _messages.BooleanField(19, default=True)
   useQueryCache = _messages.BooleanField(20, default=True)
-  userDefinedFunctionResources = _messages.MessageField('UserDefinedFunctionResource', 21, repeated=True)
+  userDefinedFunctionResources = _messages.MessageField(
+      'UserDefinedFunctionResource', 21, repeated=True)
   writeDisposition = _messages.StringField(22)
 
 
@@ -1647,7 +1664,8 @@ class JobConfigurationTableCopy(_messages.Message):
   """
 
   createDisposition = _messages.StringField(1)
-  destinationEncryptionConfiguration = _messages.MessageField('EncryptionConfiguration', 2)
+  destinationEncryptionConfiguration = _messages.MessageField(
+      'EncryptionConfiguration', 2)
   destinationTable = _messages.MessageField('TableReference', 3)
   sourceTable = _messages.MessageField('TableReference', 4)
   sourceTables = _messages.MessageField('TableReference', 5, repeated=True)
@@ -1767,7 +1785,9 @@ class JobStatistics(_messages.Message):
   load = _messages.MessageField('JobStatistics3', 5)
   query = _messages.MessageField('JobStatistics2', 6)
   quotaDeferments = _messages.StringField(7, repeated=True)
-  reservationUsage = _messages.MessageField('ReservationUsageValueListEntry', 8, repeated=True)
+  reservationUsage = _messages.MessageField('ReservationUsageValueListEntry',
+                                            8,
+                                            repeated=True)
   startTime = _messages.IntegerField(9)
   totalBytesProcessed = _messages.IntegerField(10)
   totalSlotMs = _messages.IntegerField(11)
@@ -1858,12 +1878,15 @@ class JobStatistics2(_messages.Message):
   ddlTargetTable = _messages.MessageField('TableReference', 4)
   estimatedBytesProcessed = _messages.IntegerField(5)
   modelTraining = _messages.MessageField('BigQueryModelTraining', 6)
-  modelTrainingCurrentIteration = _messages.IntegerField(7, variant=_messages.Variant.INT32)
+  modelTrainingCurrentIteration = _messages.IntegerField(
+      7, variant=_messages.Variant.INT32)
   modelTrainingExpectedTotalIteration = _messages.IntegerField(8)
   numDmlAffectedRows = _messages.IntegerField(9)
   queryPlan = _messages.MessageField('ExplainQueryStage', 10, repeated=True)
   referencedTables = _messages.MessageField('TableReference', 11, repeated=True)
-  reservationUsage = _messages.MessageField('ReservationUsageValueListEntry', 12, repeated=True)
+  reservationUsage = _messages.MessageField('ReservationUsageValueListEntry',
+                                            12,
+                                            repeated=True)
   schema = _messages.MessageField('TableSchema', 13)
   statementType = _messages.StringField(14)
   timeline = _messages.MessageField('QueryTimelineSample', 15, repeated=True)
@@ -1872,7 +1895,9 @@ class JobStatistics2(_messages.Message):
   totalBytesProcessedAccuracy = _messages.StringField(18)
   totalPartitionsProcessed = _messages.IntegerField(19)
   totalSlotMs = _messages.IntegerField(20)
-  undeclaredQueryParameters = _messages.MessageField('QueryParameter', 21, repeated=True)
+  undeclaredQueryParameters = _messages.MessageField('QueryParameter',
+                                                     21,
+                                                     repeated=True)
 
 
 class JobStatistics3(_messages.Message):
@@ -1952,7 +1977,9 @@ class JsonObject(_messages.Message):
     key = _messages.StringField(1)
     value = _messages.MessageField('JsonValue', 2)
 
-  additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
+  additionalProperties = _messages.MessageField('AdditionalProperty',
+                                                1,
+                                                repeated=True)
 
 
 JsonValue = extra_types.JsonValue
@@ -2102,7 +2129,9 @@ class QueryParameterType(_messages.Message):
     type = _messages.MessageField('QueryParameterType', 3)
 
   arrayType = _messages.MessageField('QueryParameterType', 1)
-  structTypes = _messages.MessageField('StructTypesValueListEntry', 2, repeated=True)
+  structTypes = _messages.MessageField('StructTypesValueListEntry',
+                                       2,
+                                       repeated=True)
   type = _messages.StringField(3)
 
 
@@ -2144,7 +2173,9 @@ class QueryParameterValue(_messages.Message):
       key = _messages.StringField(1)
       value = _messages.MessageField('QueryParameterValue', 2)
 
-    additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
+    additionalProperties = _messages.MessageField('AdditionalProperty',
+                                                  1,
+                                                  repeated=True)
 
   arrayValues = _messages.MessageField('QueryParameterValue', 1, repeated=True)
   structValues = _messages.MessageField('StructValuesValue', 2)
@@ -2485,7 +2516,9 @@ class Table(_messages.Message):
       key = _messages.StringField(1)
       value = _messages.StringField(2)
 
-    additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
+    additionalProperties = _messages.MessageField('AdditionalProperty',
+                                                  1,
+                                                  repeated=True)
 
   clustering = _messages.MessageField('Clustering', 1)
   creationTime = _messages.IntegerField(2)
@@ -2493,12 +2526,14 @@ class Table(_messages.Message):
   encryptionConfiguration = _messages.MessageField('EncryptionConfiguration', 4)
   etag = _messages.StringField(5)
   expirationTime = _messages.IntegerField(6)
-  externalDataConfiguration = _messages.MessageField('ExternalDataConfiguration', 7)
+  externalDataConfiguration = _messages.MessageField(
+      'ExternalDataConfiguration', 7)
   friendlyName = _messages.StringField(8)
   id = _messages.StringField(9)
   kind = _messages.StringField(10, default=u'bigquery#table')
   labels = _messages.MessageField('LabelsValue', 11)
-  lastModifiedTime = _messages.IntegerField(12, variant=_messages.Variant.UINT64)
+  lastModifiedTime = _messages.IntegerField(12,
+                                            variant=_messages.Variant.UINT64)
   location = _messages.StringField(13)
   materializedView = _messages.MessageField('MaterializedViewDefinition', 14)
   model = _messages.MessageField('ModelDefinition', 15)
@@ -2593,8 +2628,11 @@ class TableDataInsertAllResponse(_messages.Message):
     errors = _messages.MessageField('ErrorProto', 1, repeated=True)
     index = _messages.IntegerField(2, variant=_messages.Variant.UINT32)
 
-  insertErrors = _messages.MessageField('InsertErrorsValueListEntry', 1, repeated=True)
-  kind = _messages.StringField(2, default=u'bigquery#tableDataInsertAllResponse')
+  insertErrors = _messages.MessageField('InsertErrorsValueListEntry',
+                                        1,
+                                        repeated=True)
+  kind = _messages.StringField(2,
+                               default=u'bigquery#tableDataInsertAllResponse')
 
 
 class TableDataList(_messages.Message):
@@ -2729,7 +2767,9 @@ class TableList(_messages.Message):
         key = _messages.StringField(1)
         value = _messages.StringField(2)
 
-      additionalProperties = _messages.MessageField('AdditionalProperty', 1, repeated=True)
+      additionalProperties = _messages.MessageField('AdditionalProperty',
+                                                    1,
+                                                    repeated=True)
 
     class ViewValue(_messages.Message):
       r"""Additional details for a view.
@@ -2915,6 +2955,5 @@ class ViewDefinition(_messages.Message):
 
   query = _messages.StringField(1)
   useLegacySql = _messages.BooleanField(2)
-  userDefinedFunctionResources = _messages.MessageField('UserDefinedFunctionResource', 3, repeated=True)
-
-
+  userDefinedFunctionResources = _messages.MessageField(
+      'UserDefinedFunctionResource', 3, repeated=True)

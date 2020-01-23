@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Test Pipeline, a wrapper of Pipeline for test purpose"""
 
 # pytype: skip-file
@@ -32,7 +31,7 @@ from apache_beam.runners.runner import PipelineState
 
 __all__ = [
     'TestPipeline',
-    ]
+]
 
 
 class TestPipeline(Pipeline):
@@ -99,17 +98,16 @@ class TestPipeline(Pipeline):
     self.is_integration_test = is_integration_test
     self.not_use_test_runner_api = False
     additional_pipeline_args = additional_pipeline_args or []
-    self.options_list = (
-        self._parse_test_option_args(argv) + additional_pipeline_args)
+    self.options_list = (self._parse_test_option_args(argv) +
+                         additional_pipeline_args)
     self.blocking = blocking
     if options is None:
       options = PipelineOptions(self.options_list)
     super(TestPipeline, self).__init__(runner, options)
 
   def run(self, test_runner_api=True):
-    result = super(TestPipeline, self).run(
-        test_runner_api=(False if self.not_use_test_runner_api
-                         else test_runner_api))
+    result = super(TestPipeline, self).run(test_runner_api=(
+        False if self.not_use_test_runner_api else test_runner_api))
     if self.blocking:
       state = result.wait_until_finish()
       assert state in (PipelineState.DONE, PipelineState.CANCELLED), \
@@ -186,8 +184,6 @@ class TestPipeline(Pipeline):
     parser = argparse.ArgumentParser()
     opt_name = opt_name[:2] if opt_name[:2] == '--' else opt_name
     # Option name should start with '--' when it's used for parsing.
-    parser.add_argument('--' + opt_name,
-                        type=str,
-                        action='store')
+    parser.add_argument('--' + opt_name, type=str, action='store')
     known, _ = parser.parse_known_args(self.options_list)
     return getattr(known, opt_name) if hasattr(known, opt_name) else None

@@ -169,8 +169,9 @@ def make_sql(table_name, max_rows=None, for_eval=False):
   FROM `{table_name}`
   {where_clause}
   {limit_clause}
-""".format(
-    table_name=table_name, where_clause=where_clause, limit_clause=limit_clause)
+""".format(table_name=table_name,
+           where_clause=where_clause,
+           limit_clause=limit_clause)
 
 
 def read_schema(path):

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for consumer_tracking_pipeline_visitor."""
 # pytype: skip-file
 
@@ -46,7 +45,7 @@ class ConsumerTrackingPipelineVisitorTest(unittest.TestCase):
   def setUp(self):
     self.pipeline = Pipeline(DirectRunner())
     self.visitor = ConsumerTrackingPipelineVisitor()
-    try:                    # Python 2
+    try:  # Python 2
       self.assertCountEqual = self.assertItemsEqual
     except AttributeError:  # Python 3
       pass
@@ -66,8 +65,9 @@ class ConsumerTrackingPipelineVisitorTest(unittest.TestCase):
 
     self.assertCountEqual(root_transforms, [root_read, root_flatten])
 
-    pbegin_consumers = [c.transform
-                        for c in self.visitor.value_to_consumers[pbegin]]
+    pbegin_consumers = [
+        c.transform for c in self.visitor.value_to_consumers[pbegin]
+    ]
     self.assertCountEqual(pbegin_consumers, [root_read])
     self.assertEqual(len(self.visitor.step_names), 3)
 
@@ -88,10 +88,8 @@ class ConsumerTrackingPipelineVisitorTest(unittest.TestCase):
 
     root_read = beam.Impulse()
 
-    result = (self.pipeline
-              | 'read' >> root_read
-              | ParDo(SplitNumbersFn()).with_outputs('tag_negative',
-                                                     main='positive'))
+    result = (self.pipeline | 'read' >> root_read | ParDo(
+        SplitNumbersFn()).with_outputs('tag_negative', main='positive'))
     positive, negative = result
     positive | ParDo(ProcessNumbersFn(), AsList(negative))
 
@@ -101,8 +99,7 @@ class ConsumerTrackingPipelineVisitorTest(unittest.TestCase):
     self.assertEqual(root_transforms, [root_read])
     self.assertEqual(len(self.visitor.step_names), 3)
     self.assertEqual(len(self.visitor.views), 1)
-    self.assertTrue(isinstance(self.visitor.views[0],
-                               pvalue.AsList))
+    self.assertTrue(isinstance(self.visitor.views[0], pvalue.AsList))
 
   def test_co_group_by_key(self):
     emails = self.pipeline | 'email' >> Create([('joe', 'joe@example.com')])
@@ -113,8 +110,8 @@ class ConsumerTrackingPipelineVisitorTest(unittest.TestCase):
 
     root_transforms = [t.transform for t in self.visitor.root_transforms]
     self.assertEqual(len(root_transforms), 2)
-    self.assertGreater(
-        len(self.visitor.step_names), 3)  # 2 creates + expanded CoGBK
+    self.assertGreater(len(self.visitor.step_names),
+                       3)  # 2 creates + expanded CoGBK
     self.assertEqual(len(self.visitor.views), 0)
 
 

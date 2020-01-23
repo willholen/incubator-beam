@@ -133,6 +133,7 @@ if os.environ.get('LOAD_TEST_ENABLED') == 'true':
 
 @unittest.skipIf(not load_test_enabled, 'Enabled only for phrase triggering.')
 class SideInputTest(LoadTest):
+
   def _getSideInput(self):
     side_input = self.parseTestPipelineOptions()
     side_input['numRecords'] = side_input['numRecords']
@@ -149,37 +150,28 @@ class SideInputTest(LoadTest):
     self.iterations = int(self.iterations)
 
   def testSideInput(self):
+
     def join_fn(element, side_input, iterations):
       list = []
       for i in range(iterations):
         for key, value in side_input:
           if i == iterations - 1:
-            list.append({key: element[1]+value})
+            list.append({key: element[1] + value})
       yield list
 
-    main_input = (self.pipeline
-                  | "Read pcoll 1" >> beam.io.Read(
-                      synthetic_pipeline.SyntheticSource(
-                          self.parseTestPipelineOptions()))
-                  | 'Measure time: Start pcoll 1' >> beam.ParDo(
-                      MeasureTime(self.metrics_namespace))
-                 )
+    main_input = (self.pipeline | "Read pcoll 1" >> beam.io.Read(
+        synthetic_pipeline.SyntheticSource(self.parseTestPipelineOptions())) |
+                  'Measure time: Start pcoll 1' >> beam.ParDo(
+                      MeasureTime(self.metrics_namespace)))
 
-    side_input = (self.pipeline
-                  | "Read pcoll 2" >> beam.io.Read(
-                      synthetic_pipeline.SyntheticSource(
-                          self._getSideInput()))
-                  | 'Measure time: Start pcoll 2' >> beam.ParDo(
-                      MeasureTime(self.metrics_namespace))
-                 )
+    side_input = (self.pipeline | "Read pcoll 2" >> beam.io.Read(
+        synthetic_pipeline.SyntheticSource(self._getSideInput())) |
+                  'Measure time: Start pcoll 2' >> beam.ParDo(
+                      MeasureTime(self.metrics_namespace)))
     # pylint: disable=expression-not-assigned
-    (main_input
-     | "Merge" >> beam.ParDo(
-         join_fn,
-         AsIter(side_input),
-         self.iterations)
-     | 'Measure time' >> beam.ParDo(MeasureTime(self.metrics_namespace))
-    )
+    (main_input |
+     "Merge" >> beam.ParDo(join_fn, AsIter(side_input), self.iterations) |
+     'Measure time' >> beam.ParDo(MeasureTime(self.metrics_namespace)))
 
 
 if __name__ == '__main__':

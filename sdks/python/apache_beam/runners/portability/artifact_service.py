@@ -84,13 +84,13 @@ class AbstractArtifactService(
   def _get_manifest_proxy(self, retrieval_token):
     # type: (str) -> beam_artifact_api_pb2.ProxyManifest
     with self._open(self._manifest_path(retrieval_token), 'r') as fin:
-      return json_format.Parse(
-          fin.read().decode('utf-8'), beam_artifact_api_pb2.ProxyManifest())
+      return json_format.Parse(fin.read().decode('utf-8'),
+                               beam_artifact_api_pb2.ProxyManifest())
 
   def retrieval_token(self, staging_session_token):
     # type: (str) -> str
-    return self._join(
-        self._root, self._sha256(staging_session_token), 'MANIFEST')
+    return self._join(self._root, self._sha256(staging_session_token),
+                      'MANIFEST')
 
   def PutArtifact(self, request_iterator, context=None):
     # type: (...) -> beam_artifact_api_pb2.PutArtifactResponse
@@ -112,14 +112,15 @@ class AbstractArtifactService(
     data_hash = hasher.hexdigest()
     if metadata.sha256 and metadata.sha256 != data_hash:
       self._delete(temp_path)
-      raise ValueError('Bad metadata hash: %s vs %s' % (
-          metadata.sha256, data_hash))
+      raise ValueError('Bad metadata hash: %s vs %s' %
+                       (metadata.sha256, data_hash))
     self._rename(temp_path, artifact_path)
     return beam_artifact_api_pb2.PutArtifactResponse()
 
-  def CommitManifest(self,
-                     request,  # type: beam_artifact_api_pb2.CommitManifestRequest
-                     context=None):
+  def CommitManifest(
+      self,
+      request,  # type: beam_artifact_api_pb2.CommitManifestRequest
+      context=None):
     # type: (...) -> beam_artifact_api_pb2.CommitManifestResponse
     retrieval_token = self.retrieval_token(request.staging_session_token)
     proxy_manifest = beam_artifact_api_pb2.ProxyManifest(
@@ -128,22 +129,25 @@ class AbstractArtifactService(
             beam_artifact_api_pb2.ProxyManifest.Location(
                 name=metadata.name,
                 uri=self._artifact_path(retrieval_token, metadata.name))
-            for metadata in request.manifest.artifact])
+            for metadata in request.manifest.artifact
+        ])
     with self._open(self._manifest_path(retrieval_token), 'w') as fout:
       fout.write(json_format.MessageToJson(proxy_manifest).encode('utf-8'))
     return beam_artifact_api_pb2.CommitManifestResponse(
         retrieval_token=retrieval_token)
 
-  def GetManifest(self,
-                  request,  # type: beam_artifact_api_pb2.GetManifestRequest
-                  context=None):
+  def GetManifest(
+      self,
+      request,  # type: beam_artifact_api_pb2.GetManifestRequest
+      context=None):
     # type: (...) -> beam_artifact_api_pb2.GetManifestResponse
     return beam_artifact_api_pb2.GetManifestResponse(
         manifest=self._get_manifest_proxy(request.retrieval_token).manifest)
 
-  def GetArtifact(self,
-                  request,  # type: beam_artifact_api_pb2.GetArtifactRequest
-                  context=None):
+  def GetArtifact(
+      self,
+      request,  # type: beam_artifact_api_pb2.GetArtifactRequest
+      context=None):
     # type: (...) -> Iterator[beam_artifact_api_pb2.ArtifactChunk]
     for artifact in self._get_manifest_proxy(request.retrieval_token).location:
       if artifact.name == request.name:
@@ -170,9 +174,8 @@ class ZipFileArtifactService(AbstractArtifactService):
 
   def __init__(self, path, internal_root, chunk_size=None):
     if sys.version_info < (3, 6):
-      raise RuntimeError(
-          'Writing to zip files requires Python 3.6+, '
-          'but current version is %s' % sys.version)
+      raise RuntimeError('Writing to zip files requires Python 3.6+, '
+                         'but current version is %s' % sys.version)
     super(ZipFileArtifactService, self).__init__(internal_root, chunk_size)
     self._zipfile = zipfile.ZipFile(path, 'a')
     self._lock = threading.Lock()
@@ -200,22 +203,21 @@ class ZipFileArtifactService(AbstractArtifactService):
 
   def _open(self, path, mode):
     if path.startswith('/'):
-      raise ValueError(
-          'ZIP file entry %s invalid: '
-          'path must not contain a leading slash.' % path)
+      raise ValueError('ZIP file entry %s invalid: '
+                       'path must not contain a leading slash.' % path)
     return self._zipfile.open(path, mode, force_zip64=True)
 
   def PutArtifact(self, request_iterator, context=None):
     # ZipFile only supports one writable channel at a time.
     with self._lock:
-      return super(
-          ZipFileArtifactService, self).PutArtifact(request_iterator, context)
+      return super(ZipFileArtifactService,
+                   self).PutArtifact(request_iterator, context)
 
   def CommitManifest(self, request, context=None):
     # ZipFile only supports one writable channel at a time.
     with self._lock:
-      return super(
-          ZipFileArtifactService, self).CommitManifest(request, context)
+      return super(ZipFileArtifactService,
+                   self).CommitManifest(request, context)
 
   def GetManifest(self, request, context=None):
     # ZipFile appears to not be threadsafe on some platforms.
@@ -225,8 +227,8 @@ class ZipFileArtifactService(AbstractArtifactService):
   def GetArtifact(self, request, context=None):
     # ZipFile appears to not be threadsafe on some platforms.
     with self._lock:
-      for chunk in super(ZipFileArtifactService, self).GetArtifact(
-          request, context):
+      for chunk in super(ZipFileArtifactService,
+                         self).GetArtifact(request, context):
         yield chunk
 
   def close(self):

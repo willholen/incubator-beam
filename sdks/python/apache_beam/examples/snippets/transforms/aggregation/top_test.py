@@ -80,9 +80,10 @@ def check_shortest_elements_per_key(actual):
 
 
 @mock.patch('apache_beam.Pipeline', TestPipeline)
-@mock.patch(
-    'apache_beam.examples.snippets.transforms.aggregation.top.print', str)
+@mock.patch('apache_beam.examples.snippets.transforms.aggregation.top.print',
+            str)
 class TopTest(unittest.TestCase):
+
   def test_top_largest(self):
     top.top_largest(check_largest_elements)
 

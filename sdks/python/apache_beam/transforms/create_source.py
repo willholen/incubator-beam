@@ -46,8 +46,8 @@ class _CreateSource(iobase.BoundedSource):
       if current_position >= stop_position:
         return 0
       return stop_position - current_position - 1
-    range_tracker.set_split_points_unclaimed_callback(
-        split_points_unclaimed)
+
+    range_tracker.set_split_points_unclaimed_callback(split_points_unclaimed)
     element_iter = iter(self._serialized_values[start_position:])
     for i in range(start_position, range_tracker.stop_position()):
       if not range_tracker.try_claim(i):
@@ -55,20 +55,20 @@ class _CreateSource(iobase.BoundedSource):
       current_position = i
       yield self._coder.decode(next(element_iter))
 
-  def split(self, desired_bundle_size, start_position=None,
-            stop_position=None):
+  def split(self, desired_bundle_size, start_position=None, stop_position=None):
     if len(self._serialized_values) < 2:
-      yield iobase.SourceBundle(
-          weight=0, source=self, start_position=0,
-          stop_position=len(self._serialized_values))
+      yield iobase.SourceBundle(weight=0,
+                                source=self,
+                                start_position=0,
+                                stop_position=len(self._serialized_values))
     else:
       if start_position is None:
         start_position = 0
       if stop_position is None:
         stop_position = len(self._serialized_values)
       avg_size_per_value = self._total_size // len(self._serialized_values)
-      num_values_per_split = max(
-          int(desired_bundle_size // avg_size_per_value), 1)
+      num_values_per_split = max(int(desired_bundle_size // avg_size_per_value),
+                                 1)
       start = start_position
       while start < stop_position:
         end = min(start + num_values_per_split, stop_position)
@@ -76,8 +76,8 @@ class _CreateSource(iobase.BoundedSource):
         # Avoid having a too small bundle at the end.
         if remaining < (num_values_per_split // 4):
           end = stop_position
-        sub_source = Create._create_source(
-            self._serialized_values[start:end], self._coder)
+        sub_source = Create._create_source(self._serialized_values[start:end],
+                                           self._coder)
         yield iobase.SourceBundle(weight=(end - start),
                                   source=sub_source,
                                   start_position=0,

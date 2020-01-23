@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Dataflow credentials and authentication."""
 
 # pytype: skip-file
@@ -42,11 +41,10 @@ is_running_in_gce = False
 # information.
 executing_project = None
 
-
 _LOGGER = logging.getLogger(__name__)
 
-
 if GceAssertionCredentials is not None:
+
   class _GceAssertionCredentials(GceAssertionCredentials):
     """GceAssertionCredentials with retry wrapper.
 
@@ -56,8 +54,8 @@ if GceAssertionCredentials is not None:
     @retry.with_exponential_backoff(
         retry_filter=retry.retry_on_server_errors_and_timeout_filter)
     def _do_refresh_request(self, http_request):
-      return super(_GceAssertionCredentials, self)._do_refresh_request(
-          http_request)
+      return super(_GceAssertionCredentials,
+                   self)._do_refresh_request(http_request)
 
 
 def set_running_in_gce(worker_executing_project):
@@ -109,8 +107,8 @@ class _Credentials(object):
       if not socket.getdefaulttimeout():
         _LOGGER.info("Setting socket default timeout to 60 seconds.")
         socket.setdefaulttimeout(60)
-      _LOGGER.info(
-          "socket default timeout is %s seconds.", socket.getdefaulttimeout())
+      _LOGGER.info("socket default timeout is %s seconds.",
+                   socket.getdefaulttimeout())
 
       cls._credentials = cls._get_service_credentials()
       cls._credentials_init = True

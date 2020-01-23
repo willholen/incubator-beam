@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests corresponding to Dataflow's iobase module."""
 
 # pytype: skip-file
@@ -53,14 +52,8 @@ class TestHelperFunctions(unittest.TestCase):
     skip_fields = [
         'key_echo',
     ]
-    self.assertEqual(
-        sorted(_dict_printable_fields(dict_object, skip_fields)),
-        [
-            "key_alpha='1'",
-            'key_delta=2.0',
-            'key_fox=0'
-        ]
-    )
+    self.assertEqual(sorted(_dict_printable_fields(dict_object, skip_fields)),
+                     ["key_alpha='1'", 'key_delta=2.0', 'key_fox=0'])
 
 
 class TestNativeSource(unittest.TestCase):
@@ -70,12 +63,19 @@ class TestNativeSource(unittest.TestCase):
     self.assertRaises(NotImplementedError, native_source.reader)
 
   def test_repr_method(self):
+
     class FakeSource(NativeSource):
       """A fake source modeled after BigQuerySource, which inherits from
       NativeSource."""
 
-      def __init__(self, table=None, dataset=None, project=None, query=None,
-                   validate=False, coder=None, use_std_sql=False,
+      def __init__(self,
+                   table=None,
+                   dataset=None,
+                   project=None,
+                   query=None,
+                   validate=False,
+                   coder=None,
+                   use_std_sql=False,
                    flatten_results=True):
         self.validate = validate
 
@@ -147,19 +147,26 @@ class TestNativeSink(unittest.TestCase):
     self.assertRaises(NotImplementedError, native_sink.writer)
 
   def test_repr_method(self):
+
     class FakeSink(NativeSink):
       """A fake sink modeled after BigQuerySink, which inherits from
       NativeSink."""
 
-      def __init__(self, validate=False, dataset=None, project=None,
-                   schema=None, create_disposition='create',
-                   write_disposition=None, coder=None):
+      def __init__(self,
+                   validate=False,
+                   dataset=None,
+                   project=None,
+                   schema=None,
+                   create_disposition='create',
+                   write_disposition=None,
+                   coder=None):
         self.validate = validate
 
     fake_sink = FakeSink()
     self.assertEqual(fake_sink.__repr__(), "<FakeSink ['validate=False']>")
 
   def test_on_direct_runner(self):
+
     class FakeSink(NativeSink):
       """A fake sink outputing a number of elements."""
 

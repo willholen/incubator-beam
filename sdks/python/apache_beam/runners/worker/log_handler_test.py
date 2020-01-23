@@ -98,8 +98,8 @@ class FnApiLogRecordHandlerTest(unittest.TestCase):
     self.assertEqual(num_received_log_entries, num_log_entries)
 
   def assertContains(self, haystack, needle):
-    self.assertTrue(
-        needle in haystack, 'Expected %r to contain %r.' % (haystack, needle))
+    self.assertTrue(needle in haystack,
+                    'Expected %r to contain %r.' % (haystack, needle))
 
   def test_exc_info(self):
     try:
@@ -125,9 +125,10 @@ class FnApiLogRecordHandlerTest(unittest.TestCase):
       _LOGGER.info('message c')
 
       self.fn_log_handler.close()
-      a, b, c = sum(
-          [list(logs.log_entries)
-           for logs in self.test_logging_service.log_records_received], [])
+      a, b, c = sum([
+          list(logs.log_entries)
+          for logs in self.test_logging_service.log_records_received
+      ], [])
 
       self.assertEqual(a.instruction_id, 'A')
       self.assertEqual(b.instruction_id, 'B')
@@ -156,7 +157,6 @@ def _create_test(name, num_logs):
 
 for test_name, num_logs_entries in data.items():
   _create_test(test_name, num_logs_entries)
-
 
 if __name__ == '__main__':
   unittest.main()

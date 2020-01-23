@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Nexmark Query 0: Pass through (send and receive auction events).
 
 The Nexmark suite is a series of queries (streaming pipelines) performed
@@ -34,6 +33,4 @@ from apache_beam.testing.benchmarks.nexmark.nexmark_util import ParseEventFn
 
 
 def load(raw_events, query_args=None):
-  return (raw_events
-          | 'ParseEventFn' >> beam.ParDo(ParseEventFn())
-         )  # pylint: disable=expression-not-assigned
+  return (raw_events | 'ParseEventFn' >> beam.ParDo(ParseEventFn()))  # pylint: disable=expression-not-assigned

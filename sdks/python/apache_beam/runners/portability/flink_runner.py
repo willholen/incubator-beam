@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A runner for executing portable pipelines on Flink."""
 
 # pytype: skip-file
@@ -37,26 +36,26 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class FlinkRunner(portable_runner.PortableRunner):
+
   def run_pipeline(self, pipeline, options):
     portable_options = options.view_as(pipeline_options.PortableOptions)
     flink_options = options.view_as(pipeline_options.FlinkRunnerOptions)
-    if (flink_options.flink_master in MAGIC_HOST_NAMES
-        and not portable_options.environment_type
-        and not portable_options.output_executable_path):
+    if (flink_options.flink_master in MAGIC_HOST_NAMES and
+        not portable_options.environment_type and
+        not portable_options.output_executable_path):
       portable_options.environment_type = 'LOOPBACK'
     return super(FlinkRunner, self).run_pipeline(pipeline, options)
 
   def default_job_server(self, options):
     flink_options = options.view_as(pipeline_options.FlinkRunnerOptions)
-    flink_master = self.add_http_scheme(
-        flink_options.flink_master)
+    flink_master = self.add_http_scheme(flink_options.flink_master)
     flink_options.flink_master = flink_master
-    if (flink_options.flink_submit_uber_jar
-        and flink_master not in MAGIC_HOST_NAMES):
+    if (flink_options.flink_submit_uber_jar and
+        flink_master not in MAGIC_HOST_NAMES):
       if sys.version_info < (3, 6):
         raise ValueError(
-            'flink_submit_uber_jar requires Python 3.6+, current version %s'
-            % sys.version)
+            'flink_submit_uber_jar requires Python 3.6+, current version %s' %
+            sys.version)
       # This has to be changed [auto], otherwise we will attempt to submit a
       # the pipeline remotely on the Flink JobMaster which will _fail_.
       # DO NOT CHANGE the following line, unless you have tested this.
@@ -72,13 +71,15 @@ class FlinkRunner(portable_runner.PortableRunner):
     flink_master = flink_master.strip()
     if not flink_master in MAGIC_HOST_NAMES and \
           not re.search('^http[s]?://', flink_master):
-      _LOGGER.info('Adding HTTP protocol scheme to flink_master parameter: '
-                   'http://%s', flink_master)
+      _LOGGER.info(
+          'Adding HTTP protocol scheme to flink_master parameter: '
+          'http://%s', flink_master)
       flink_master = 'http://' + flink_master
     return flink_master
 
 
 class FlinkJarJobServer(job_server.JavaJarJobServer):
+
   def __init__(self, options):
     super(FlinkJarJobServer, self).__init__(options)
     options = options.view_as(pipeline_options.FlinkRunnerOptions)
@@ -90,15 +91,13 @@ class FlinkJarJobServer(job_server.JavaJarJobServer):
     if self._jar:
       return self._jar
     else:
-      return self.path_to_beam_jar(
-          'runners:flink:%s:job-server:shadowJar' % self._flink_version)
+      return self.path_to_beam_jar('runners:flink:%s:job-server:shadowJar' %
+                                   self._flink_version)
 
-  def java_arguments(
-      self, job_port, artifact_port, expansion_port, artifacts_dir):
+  def java_arguments(self, job_port, artifact_port, expansion_port,
+                     artifacts_dir):
     return [
-        '--flink-master', self._master_url,
-        '--artifacts-dir', artifacts_dir,
-        '--job-port', job_port,
-        '--artifact-port', artifact_port,
+        '--flink-master', self._master_url, '--artifacts-dir', artifacts_dir,
+        '--job-port', job_port, '--artifact-port', artifact_port,
         '--expansion-port', expansion_port
     ]

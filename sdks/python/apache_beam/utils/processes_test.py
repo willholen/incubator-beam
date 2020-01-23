@@ -40,34 +40,26 @@ class Exec(unittest.TestCase):
     processes.force_shell = False
 
     processes.call(['subprocess', 'call'], shell=False, other_arg=True)
-    processes.subprocess.call.assert_called_once_with(
-        ['subprocess', 'call'],
-        shell=False,
-        other_arg=True)
+    processes.subprocess.call.assert_called_once_with(['subprocess', 'call'],
+                                                      shell=False,
+                                                      other_arg=True)
 
-    processes.check_call(
-        ['subprocess', 'check_call'],
-        shell=False,
-        other_arg=True)
+    processes.check_call(['subprocess', 'check_call'],
+                         shell=False,
+                         other_arg=True)
     processes.subprocess.check_call.assert_called_once_with(
-        ['subprocess', 'check_call'],
-        shell=False,
-        other_arg=True)
+        ['subprocess', 'check_call'], shell=False, other_arg=True)
 
-    processes.check_output(
-        ['subprocess', 'check_output'],
-        shell=False,
-        other_arg=True)
+    processes.check_output(['subprocess', 'check_output'],
+                           shell=False,
+                           other_arg=True)
     processes.subprocess.check_output.assert_called_once_with(
-        ['subprocess', 'check_output'],
-        shell=False,
-        other_arg=True)
+        ['subprocess', 'check_output'], shell=False, other_arg=True)
 
     processes.Popen(['subprocess', 'Popen'], shell=False, other_arg=True)
-    processes.subprocess.Popen.assert_called_once_with(
-        ['subprocess', 'Popen'],
-        shell=False,
-        other_arg=True)
+    processes.subprocess.Popen.assert_called_once_with(['subprocess', 'Popen'],
+                                                       shell=False,
+                                                       other_arg=True)
 
   @mock.patch('apache_beam.utils.processes.subprocess')
   def test_method_forwarding_windows(self, *unused_mocks):
@@ -76,37 +68,30 @@ class Exec(unittest.TestCase):
     processes.force_shell = True
 
     processes.call(['subprocess', 'call'], shell=False, other_arg=True)
-    processes.subprocess.call.assert_called_once_with(
-        ['subprocess', 'call'],
-        shell=True,
-        other_arg=True)
+    processes.subprocess.call.assert_called_once_with(['subprocess', 'call'],
+                                                      shell=True,
+                                                      other_arg=True)
 
-    processes.check_call(
-        ['subprocess', 'check_call'],
-        shell=False,
-        other_arg=True)
+    processes.check_call(['subprocess', 'check_call'],
+                         shell=False,
+                         other_arg=True)
     processes.subprocess.check_call.assert_called_once_with(
-        ['subprocess', 'check_call'],
-        shell=True,
-        other_arg=True)
+        ['subprocess', 'check_call'], shell=True, other_arg=True)
 
-    processes.check_output(
-        ['subprocess', 'check_output'],
-        shell=False,
-        other_arg=True)
+    processes.check_output(['subprocess', 'check_output'],
+                           shell=False,
+                           other_arg=True)
     processes.subprocess.check_output.assert_called_once_with(
-        ['subprocess', 'check_output'],
-        shell=True,
-        other_arg=True)
+        ['subprocess', 'check_output'], shell=True, other_arg=True)
 
     processes.Popen(['subprocess', 'Popen'], shell=False, other_arg=True)
-    processes.subprocess.Popen.assert_called_once_with(
-        ['subprocess', 'Popen'],
-        shell=True,
-        other_arg=True)
+    processes.subprocess.Popen.assert_called_once_with(['subprocess', 'Popen'],
+                                                       shell=True,
+                                                       other_arg=True)
 
 
 class TestErrorHandlingCheckCall(unittest.TestCase):
+
   @classmethod
   def setUpClass(cls):
     cls.mock_get_patcher = mock.patch(\
@@ -154,6 +139,7 @@ class TestErrorHandlingCheckCall(unittest.TestCase):
 
 
 class TestErrorHandlingCheckOutput(unittest.TestCase):
+
   @classmethod
   def setUpClass(cls):
     cls.mock_get_patcher = mock.patch(\
@@ -190,6 +176,7 @@ class TestErrorHandlingCheckOutput(unittest.TestCase):
 
 
 class TestErrorHandlingCall(unittest.TestCase):
+
   @classmethod
   def setUpClass(cls):
     cls.mock_get_patcher = mock.patch(\

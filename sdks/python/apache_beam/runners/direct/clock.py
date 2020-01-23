@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Clock implementations for real time processing and testing.
 
 For internal use only. No backwards compatibility guarantees.
@@ -28,6 +27,7 @@ from builtins import object
 
 
 class Clock(object):
+
   def time(self):
     """Returns the number of seconds since epoch."""
     raise NotImplementedError()
@@ -38,12 +38,14 @@ class Clock(object):
 
 
 class RealClock(object):
+
   def time(self):
     return time.time()
 
 
 class TestClock(object):
   """Clock used for Testing"""
+
   def __init__(self, current_time=0):
     self._current_time = current_time
 

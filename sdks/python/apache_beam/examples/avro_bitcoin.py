@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Collect statistics on transactions in a public bitcoin dataset that was
 exported to avro
 
@@ -40,9 +39,9 @@ from apache_beam.options.pipeline_options import SetupOptions
 
 # pylint: disable=wrong-import-order, wrong-import-position
 try:
-  from avro.schema import Parse # avro-python3 library for python3
+  from avro.schema import Parse  # avro-python3 library for python3
 except ImportError:
-  from avro.schema import parse as Parse # avro library for python2
+  from avro.schema import parse as Parse  # avro library for python2
 # pylint: enable=wrong-import-order, wrong-import-position
 
 
@@ -81,17 +80,15 @@ class BitcoinTxnCountDoFn(beam.DoFn):
 
     self.txn_amts_dist.update(total)
 
-    return [
-        {
-            "transaction_id": elem["transaction_id"],
-            "timestamp": elem["timestamp"],
-            "block_id": elem["block_id"],
-            "previous_block": elem["previous_block"],
-            "num_inputs": num_inputs,
-            "num_outputs": num_outputs,
-            "sum_output": total,
-        }
-    ]
+    return [{
+        "transaction_id": elem["transaction_id"],
+        "timestamp": elem["timestamp"],
+        "block_id": elem["block_id"],
+        "previous_block": elem["previous_block"],
+        "num_inputs": num_inputs,
+        "num_outputs": num_outputs,
+        "sum_output": total,
+    }]
 
 
 SCHEMA = Parse('''
@@ -162,8 +159,8 @@ def run(argv=None):
   result.wait_until_finish()
 
   # Do not query metrics when creating a template which doesn't run
-  if (not hasattr(result, 'has_job')        # direct runner
-      or result.has_job):               # not just a template creation
+  if (not hasattr(result, 'has_job')  # direct runner
+      or result.has_job):  # not just a template creation
     metrics = result.metrics().query()
 
     for counter in metrics['counters']:

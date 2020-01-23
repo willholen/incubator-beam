@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the triggering classes."""
 
 # pytype: skip-file
@@ -115,17 +114,17 @@ class TriggerTest(unittest.TestCase):
     for group_by in groupings:
       self.run_trigger(window_fn, trigger_fn, accumulation_mode,
                        bundle_data(timestamped_data, group_by),
-                       bundle_data(late_data, group_by),
-                       expected_panes)
+                       bundle_data(late_data, group_by), expected_panes)
 
-  def run_trigger(self, window_fn, trigger_fn, accumulation_mode,
-                  bundles, late_bundles,
-                  expected_panes):
+  def run_trigger(self, window_fn, trigger_fn, accumulation_mode, bundles,
+                  late_bundles, expected_panes):
     actual_panes = collections.defaultdict(list)
-    allowed_lateness = Duration(micros=int(
-        common_urns.constants.MAX_TIMESTAMP_MILLIS.constant)*1000)
+    allowed_lateness = Duration(
+        micros=int(common_urns.constants.MAX_TIMESTAMP_MILLIS.constant) * 1000)
     driver = GeneralTriggerDriver(
-        Windowing(window_fn, trigger_fn, accumulation_mode,
+        Windowing(window_fn,
+                  trigger_fn,
+                  accumulation_mode,
                   allowed_lateness=allowed_lateness), TestClock())
     state = InMemoryUnmergedState()
 
@@ -137,10 +136,10 @@ class TriggerTest(unittest.TestCase):
         actual_panes[window].append(set(wvalue.value))
 
     while state.timers:
-      for timer_window, (name, time_domain, timestamp) in (
-          state.get_and_clear_timers()):
-        for wvalue in driver.process_timer(
-            timer_window, name, time_domain, timestamp, state, MIN_TIMESTAMP):
+      for timer_window, (name, time_domain,
+                         timestamp) in (state.get_and_clear_timers()):
+        for wvalue in driver.process_timer(timer_window, name, time_domain,
+                                           timestamp, state, MIN_TIMESTAMP):
           window, = wvalue.windows
           self.assertEqual(window.max_timestamp(), wvalue.timestamp)
           actual_panes[window].append(set(wvalue.value))
@@ -153,10 +152,10 @@ class TriggerTest(unittest.TestCase):
         actual_panes[window].append(set(wvalue.value))
 
       while state.timers:
-        for timer_window, (name, time_domain, timestamp) in (
-            state.get_and_clear_timers()):
-          for wvalue in driver.process_timer(
-              timer_window, name, time_domain, timestamp, state, MAX_TIMESTAMP):
+        for timer_window, (name, time_domain,
+                           timestamp) in (state.get_and_clear_timers()):
+          for wvalue in driver.process_timer(timer_window, name, time_domain,
+                                             timestamp, state, MAX_TIMESTAMP):
             window, = wvalue.windows
             self.assertEqual(window.max_timestamp(), wvalue.timestamp)
             actual_panes[window].append(set(wvalue.value))
@@ -169,8 +168,10 @@ class TriggerTest(unittest.TestCase):
         AfterWatermark(),
         AccumulationMode.ACCUMULATING,
         [(1, 'a'), (2, 'b'), (13, 'c')],
-        {IntervalWindow(0, 10): [set('ab')],
-         IntervalWindow(10, 20): [set('c')]},
+        {
+            IntervalWindow(0, 10): [set('ab')],
+            IntervalWindow(10, 20): [set('c')]
+        },
         1,
         2,
         3,
@@ -197,36 +198,38 @@ class TriggerTest(unittest.TestCase):
   def test_fixed_watermark_with_early_late(self):
     self.run_trigger_simple(
         FixedWindows(100),  # pyformat break
-        AfterWatermark(early=AfterCount(3),
-                       late=AfterCount(2)),
+        AfterWatermark(early=AfterCount(3), late=AfterCount(2)),
         AccumulationMode.DISCARDING,
         zip(range(9), 'abcdefghi'),
-        {IntervalWindow(0, 100): [
-            set('abcd'), set('efgh'),  # early
-            set('i'),                  # on time
-            set('vw'), set('xy')       # late
-            ]},
+        {
+            IntervalWindow(0, 100): [
+                set('abcd'),
+                set('efgh'),  # early
+                set('i'),  # on time
+                set('vw'),
+                set('xy')  # late
+            ]
+        },
         2,
         late_data=zip(range(5), 'vwxyz'))
 
   def test_sessions_watermark_with_early_late(self):
     self.run_trigger_simple(
         Sessions(10),  # pyformat break
-        AfterWatermark(early=AfterCount(2),
-                       late=AfterCount(1)),
+        AfterWatermark(early=AfterCount(2), late=AfterCount(1)),
         AccumulationMode.ACCUMULATING,
         [(1, 'a'), (15, 'b'), (7, 'c'), (30, 'd')],
         {
             IntervalWindow(1, 25): [
-                set('abc'),                # early
-                set('abc'),                # on time
-                set('abcxy')               # late
+                set('abc'),  # early
+                set('abc'),  # on time
+                set('abcxy')  # late
             ],
             IntervalWindow(30, 40): [
-                set('d'),                  # on time
+                set('d'),  # on time
             ],
             IntervalWindow(1, 40): [
-                set('abcdxyz')             # late
+                set('abcdxyz')  # late
             ],
         },
         2,
@@ -275,13 +278,16 @@ class TriggerTest(unittest.TestCase):
         Repeatedly(AfterAny(AfterCount(3), AfterWatermark())),
         AccumulationMode.ACCUMULATING,
         zip(range(7), 'abcdefg'),
-        {IntervalWindow(0, 100): [
-            set('abc'),
-            set('abcdef'),
-            set('abcdefg'),
-            set('abcdefgx'),
-            set('abcdefgxy'),
-            set('abcdefgxyz')]},
+        {
+            IntervalWindow(0, 100): [
+                set('abc'),
+                set('abcdef'),
+                set('abcdefg'),
+                set('abcdefgx'),
+                set('abcdefgxy'),
+                set('abcdefgxyz')
+            ]
+        },
         1,
         late_data=zip(range(3), 'xyz'))
 
@@ -322,8 +328,10 @@ class TriggerTest(unittest.TestCase):
         AccumulationMode.ACCUMULATING,
         [(1, 'a'), (2, 'b'), (15, 'c'), (16, 'd'), (30, 'z'), (9, 'e'),
          (10, 'f'), (30, 'y')],
-        {IntervalWindow(1, 26): [set('abcdef')],
-         IntervalWindow(30, 40): [set('yz')]},
+        {
+            IntervalWindow(1, 26): [set('abcdef')],
+            IntervalWindow(30, 40): [set('yz')]
+        },
         1,
         2,
         3,
@@ -353,9 +361,11 @@ class TriggerTest(unittest.TestCase):
         AccumulationMode.ACCUMULATING,
         [(1, 'a'), (15, 'b'), (6, 'c'), (30, 's'), (31, 't'), (50, 'z'),
          (50, 'y')],
-        {IntervalWindow(1, 25): [set('abc')],
-         IntervalWindow(30, 41): [set('st')],
-         IntervalWindow(50, 60): [set('yz')]},
+        {
+            IntervalWindow(1, 25): [set('abc')],
+            IntervalWindow(30, 41): [set('st')],
+            IntervalWindow(50, 60): [set('yz')]
+        },
         1,
         2,
         3)
@@ -384,8 +394,10 @@ class TriggerTest(unittest.TestCase):
         AfterEach(AfterCount(2), AfterCount(3)),
         AccumulationMode.ACCUMULATING,
         zip(range(10), 'abcdefghij'),
-        {IntervalWindow(0, 11): [set('ab')],
-         IntervalWindow(0, 15): [set('abcdef')]},
+        {
+            IntervalWindow(0, 11): [set('ab')],
+            IntervalWindow(0, 15): [set('abcdef')]
+        },
         2)
 
     self.run_trigger_simple(
@@ -393,34 +405,35 @@ class TriggerTest(unittest.TestCase):
         Repeatedly(AfterEach(AfterCount(2), AfterCount(3))),
         AccumulationMode.ACCUMULATING,
         zip(range(10), 'abcdefghij'),
-        {IntervalWindow(0, 11): [set('ab')],
-         IntervalWindow(0, 15): [set('abcdef')],
-         IntervalWindow(0, 17): [set('abcdefgh')]},
+        {
+            IntervalWindow(0, 11): [set('ab')],
+            IntervalWindow(0, 15): [set('abcdef')],
+            IntervalWindow(0, 17): [set('abcdefgh')]
+        },
         2)
 
   def test_picklable_output(self):
     global_window = (trigger.GlobalWindow(),)
     driver = trigger.BatchGlobalTriggerDriver()
-    unpicklable = (WindowedValue(k, 0, global_window)
-                   for k in range(10))
+    unpicklable = (WindowedValue(k, 0, global_window) for k in range(10))
     with self.assertRaises(TypeError):
       pickle.dumps(unpicklable)
     for unwindowed in driver.process_elements(None, unpicklable, None, None):
-      self.assertEqual(pickle.loads(pickle.dumps(unwindowed)).value,
-                       list(range(10)))
+      self.assertEqual(
+          pickle.loads(pickle.dumps(unwindowed)).value, list(range(10)))
 
 
 class RunnerApiTest(unittest.TestCase):
 
   def test_trigger_encoding(self):
-    for trigger_fn in (
-        DefaultTrigger(),
-        AfterAll(AfterCount(1), AfterCount(10)),
-        AfterAny(AfterCount(10), AfterCount(100)),
-        AfterWatermark(early=AfterCount(1000)),
-        AfterWatermark(early=AfterCount(1000), late=AfterCount(1)),
-        Repeatedly(AfterCount(100)),
-        trigger.OrFinally(AfterCount(3), AfterCount(10))):
+    for trigger_fn in (DefaultTrigger(), AfterAll(AfterCount(1),
+                                                  AfterCount(10)),
+                       AfterAny(AfterCount(10), AfterCount(100)),
+                       AfterWatermark(early=AfterCount(1000)),
+                       AfterWatermark(early=AfterCount(1000),
+                                      late=AfterCount(1)),
+                       Repeatedly(AfterCount(100)),
+                       trigger.OrFinally(AfterCount(3), AfterCount(10))):
       context = pipeline_context.PipelineContext()
       self.assertEqual(
           trigger_fn,
@@ -431,29 +444,29 @@ class TriggerPipelineTest(unittest.TestCase):
 
   def test_after_count(self):
     with TestPipeline() as p:
+
       def construct_timestamped(k_t):
         return TimestampedValue((k_t[0], k_t[1]), k_t[1])
 
       def format_result(k_v):
         return ('%s-%s' % (k_v[0], len(k_v[1])), set(k_v[1]))
 
-      result = (p
-                | beam.Create([1, 2, 3, 4, 5, 10, 11])
-                | beam.FlatMap(lambda t: [('A', t), ('B', t + 5)])
-                | beam.Map(construct_timestamped)
-                | beam.WindowInto(FixedWindows(10), trigger=AfterCount(3),
-                                  accumulation_mode=AccumulationMode.DISCARDING)
-                | beam.GroupByKey()
-                | beam.Map(format_result))
-      assert_that(result, equal_to(
-          list(
-              {
+      result = (p | beam.Create([1, 2, 3, 4, 5, 10, 11]) |
+                beam.FlatMap(lambda t: [('A', t), ('B', t + 5)]) |
+                beam.Map(construct_timestamped) |
+                beam.WindowInto(FixedWindows(10),
+                                trigger=AfterCount(3),
+                                accumulation_mode=AccumulationMode.DISCARDING) |
+                beam.GroupByKey() | beam.Map(format_result))
+      assert_that(
+          result,
+          equal_to(
+              list({
                   'A-5': {1, 2, 3, 4, 5},
                   # A-10, A-11 never emitted due to AfterCount(3) never firing.
                   'B-4': {6, 7, 8, 9},
                   'B-3': {10, 15, 16},
-              }.items()
-          )))
+              }.items())))
 
   def test_multiple_accumulating_firings(self):
     # PCollection will contain elements from 1 to 10.
@@ -470,17 +483,12 @@ class TriggerPipelineTest(unittest.TestCase):
     options = PipelineOptions()
     options.view_as(StandardOptions).streaming = True
     with TestPipeline(options=options) as p:
-      records = (p
-                 | ts
-                 | beam.WindowInto(
-                     FixedWindows(10),
-                     accumulation_mode=trigger.AccumulationMode.ACCUMULATING,
-                     trigger=AfterWatermark(
-                         early=AfterAll(
-                             AfterCount(1), AfterProcessingTime(5))
-                     ))
-                 | beam.GroupByKey()
-                 | beam.FlatMap(lambda x: x[1]))
+      records = (p | ts | beam.WindowInto(
+          FixedWindows(10),
+          accumulation_mode=trigger.AccumulationMode.ACCUMULATING,
+          trigger=AfterWatermark(
+              early=AfterAll(AfterCount(1), AfterProcessingTime(5)))) |
+                 beam.GroupByKey() | beam.FlatMap(lambda x: x[1]))
 
     # The trigger should fire twice. Once after 5 seconds, and once after 10.
     # The firings should accumulate the output.
@@ -515,8 +523,7 @@ class TranscriptTest(unittest.TestCase):
 
   def _run_log_test(self, spec):
     if 'error' in spec:
-      self.assertRaisesRegex(
-          Exception, spec['error'], self._run_log, spec)
+      self.assertRaisesRegex(Exception, spec['error'], self._run_log, spec)
     else:
       self._run_log(spec)
 
@@ -584,8 +591,10 @@ class TranscriptTest(unittest.TestCase):
     from apache_beam.transforms import window as window_module
     # pylint: enable=wrong-import-order, wrong-import-position
     window_fn_names = dict(window_module.__dict__)
-    window_fn_names.update({'CustomTimestampingFixedWindowsWindowFn':
-                            CustomTimestampingFixedWindowsWindowFn})
+    window_fn_names.update({
+        'CustomTimestampingFixedWindowsWindowFn':
+            CustomTimestampingFixedWindowsWindowFn
+    })
     trigger_names = {'Default': DefaultTrigger}
     trigger_names.update(trigger.__dict__)
 
@@ -593,7 +602,8 @@ class TranscriptTest(unittest.TestCase):
                          window_fn_names)
     trigger_fn = parse_fn(spec.get('trigger_fn', 'Default'), trigger_names)
     accumulation_mode = getattr(
-        AccumulationMode, spec.get('accumulation_mode', 'ACCUMULATING').upper())
+        AccumulationMode,
+        spec.get('accumulation_mode', 'ACCUMULATING').upper())
     timestamp_combiner = getattr(
         TimestampCombiner,
         spec.get('timestamp_combiner', 'OUTPUT_AT_EOW').upper())
@@ -605,9 +615,8 @@ class TranscriptTest(unittest.TestCase):
 
     transcript = [only_element(line.items()) for line in spec['transcript']]
 
-    self._execute(
-        window_fn, trigger_fn, accumulation_mode, timestamp_combiner,
-        allowed_lateness, transcript, spec)
+    self._execute(window_fn, trigger_fn, accumulation_mode, timestamp_combiner,
+                  allowed_lateness, transcript, spec)
 
 
 def _windowed_value_info(windowed_value):
@@ -619,7 +628,8 @@ def _windowed_value_info(windowed_value):
   # different sub-second resolutions.
   window, = windowed_value.windows
   return {
-      'window': [int(window.start), int(window.max_timestamp())],
+      'window': [int(window.start),
+                 int(window.max_timestamp())],
       'values': sorted(windowed_value.value),
       'timestamp': int(windowed_value.timestamp),
       'index': windowed_value.pane_info.index,
@@ -630,15 +640,14 @@ def _windowed_value_info(windowed_value):
   }
 
 
-def _windowed_value_info_map_fn(
-    k, vs,
-    window=beam.DoFn.WindowParam,
-    t=beam.DoFn.TimestampParam,
-    p=beam.DoFn.PaneInfoParam):
-  return (
-      k,
-      _windowed_value_info(WindowedValue(
-          vs, windows=[window], timestamp=t, pane_info=p)))
+def _windowed_value_info_map_fn(k,
+                                vs,
+                                window=beam.DoFn.WindowParam,
+                                t=beam.DoFn.TimestampParam,
+                                p=beam.DoFn.PaneInfoParam):
+  return (k,
+          _windowed_value_info(
+              WindowedValue(vs, windows=[window], timestamp=t, pane_info=p)))
 
 
 def _windowed_value_info_check(actual, expected, key=None):
@@ -646,17 +655,16 @@ def _windowed_value_info_check(actual, expected, key=None):
   key_string = ' for %s' % key if key else ''
 
   def format(panes):
-    return '\n[%s]\n' % '\n '.join(str(pane) for pane in sorted(
-        panes, key=lambda pane: pane.get('timestamp', None)))
+    return '\n[%s]\n' % '\n '.join(
+        str(pane)
+        for pane in sorted(panes, key=lambda pane: pane.get('timestamp', None)))
 
   if len(actual) > len(expected):
-    raise AssertionError(
-        'Unexpected output%s: expected %s but got %s' % (
-            key_string, format(expected), format(actual)))
+    raise AssertionError('Unexpected output%s: expected %s but got %s' %
+                         (key_string, format(expected), format(actual)))
   elif len(expected) > len(actual):
-    raise AssertionError(
-        'Unmatched output%s: expected %s but got %s' % (
-            key_string, format(expected), format(actual)))
+    raise AssertionError('Unmatched output%s: expected %s but got %s' %
+                         (key_string, format(expected), format(actual)))
   else:
 
     def diff(actual, expected):
@@ -669,8 +677,8 @@ def _windowed_value_info_check(actual, expected, key=None):
       diffs = [diff(output, pane) for pane in expected]
       if all(diffs):
         raise AssertionError(
-            'Unmatched output%s: %s not found in %s (diffs in %s)' % (
-                key_string, output, format(expected), diffs))
+            'Unmatched output%s: %s not found in %s (diffs in %s)' %
+            (key_string, output, format(expected), diffs))
 
 
 class _ConcatCombineFn(beam.CombineFn):
@@ -682,13 +690,12 @@ class _ConcatCombineFn(beam.CombineFn):
 
 class TriggerDriverTranscriptTest(TranscriptTest):
 
-  def _execute(
-      self, window_fn, trigger_fn, accumulation_mode, timestamp_combiner,
-      allowed_lateness, transcript, unused_spec):
+  def _execute(self, window_fn, trigger_fn, accumulation_mode,
+               timestamp_combiner, allowed_lateness, transcript, unused_spec):
 
     driver = GeneralTriggerDriver(
-        Windowing(window_fn, trigger_fn, accumulation_mode,
-                  timestamp_combiner, allowed_lateness), TestClock())
+        Windowing(window_fn, trigger_fn, accumulation_mode, timestamp_combiner,
+                  allowed_lateness), TestClock())
     state = InMemoryUnmergedState()
     output = []
     watermark = MIN_TIMESTAMP
@@ -697,8 +704,8 @@ class TriggerDriverTranscriptTest(TranscriptTest):
       to_fire = state.get_and_clear_timers(watermark)
       while to_fire:
         for timer_window, (name, time_domain, t_timestamp) in to_fire:
-          for wvalue in driver.process_timer(
-              timer_window, name, time_domain, t_timestamp, state):
+          for wvalue in driver.process_timer(timer_window, name, time_domain,
+                                             t_timestamp, state):
             output.append(_windowed_value_info(wvalue))
         to_fire = state.get_and_clear_timers(watermark)
 
@@ -706,18 +713,20 @@ class TriggerDriverTranscriptTest(TranscriptTest):
 
       if action != 'expect':
         # Fail if we have output that was not expected in the transcript.
-        self.assertEqual(
-            [], output, msg='Unexpected output: %s before %s: %s' % (
-                output, action, params))
+        self.assertEqual([],
+                         output,
+                         msg='Unexpected output: %s before %s: %s' %
+                         (output, action, params))
 
       if action == 'input':
         bundle = [
             WindowedValue(t, t, window_fn.assign(WindowFn.AssignContext(t, t)))
-            for t in params]
+            for t in params
+        ]
         output = [
-            _windowed_value_info(wv)
-            for wv in driver.process_elements(state, bundle, watermark,
-                                              watermark)]
+            _windowed_value_info(wv) for wv in driver.process_elements(
+                state, bundle, watermark, watermark)
+        ]
         fire_timers()
 
       elif action == 'watermark':
@@ -728,7 +737,8 @@ class TriggerDriverTranscriptTest(TranscriptTest):
         for expected_output in params:
           for candidate in output:
             if all(candidate[k] == expected_output[k]
-                   for k in candidate if k in expected_output):
+                   for k in candidate
+                   if k in expected_output):
               output.remove(candidate)
               break
           else:
@@ -749,24 +759,23 @@ class BaseTestStreamTranscriptTest(TranscriptTest):
   """A suite of TestStream-based tests based on trigger transcript entries.
   """
 
-  def _execute(
-      self, window_fn, trigger_fn, accumulation_mode, timestamp_combiner,
-      allowed_lateness, transcript, spec):
+  def _execute(self, window_fn, trigger_fn, accumulation_mode,
+               timestamp_combiner, allowed_lateness, transcript, spec):
 
     runner_name = TestPipeline().runner.__class__.__name__
     if runner_name in spec.get('broken_on', ()):
       self.skipTest('Known to be broken on %s' % runner_name)
 
-    is_order_agnostic = (
-        isinstance(trigger_fn, DefaultTrigger)
-        and accumulation_mode == AccumulationMode.ACCUMULATING)
+    is_order_agnostic = (isinstance(trigger_fn, DefaultTrigger) and
+                         accumulation_mode == AccumulationMode.ACCUMULATING)
 
     if is_order_agnostic:
       reshuffle_seed = random.randrange(1 << 20)
       keys = [
-          u'original', u'reversed', u'reshuffled(%s)' % reshuffle_seed,
-          u'one-element-bundles', u'one-element-bundles-reversed',
-          u'two-element-bundles']
+          u'original', u'reversed',
+          u'reshuffled(%s)' % reshuffle_seed, u'one-element-bundles',
+          u'one-element-bundles-reversed', u'two-element-bundles'
+      ]
     else:
       keys = [u'key1', u'key2']
 
@@ -780,8 +789,10 @@ class BaseTestStreamTranscriptTest(TranscriptTest):
       else:
         test_stream.add_elements([json.dumps(('expect', []))])
         if action == 'input':
+
           def keyed(key, values):
             return [json.dumps(('input', (key, v))) for v in values]
+
           if is_order_agnostic:
             # Must match keys above.
             test_stream.add_elements(keyed('original', params))
@@ -789,8 +800,8 @@ class BaseTestStreamTranscriptTest(TranscriptTest):
             r = random.Random(reshuffle_seed)
             reshuffled = list(params)
             r.shuffle(reshuffled)
-            test_stream.add_elements(keyed(
-                'reshuffled(%s)' % reshuffle_seed, reshuffled))
+            test_stream.add_elements(
+                keyed('reshuffled(%s)' % reshuffle_seed, reshuffled))
             for v in params:
               test_stream.add_elements(keyed('one-element-bundles', [v]))
             for v in reversed(params):
@@ -798,7 +809,7 @@ class BaseTestStreamTranscriptTest(TranscriptTest):
                   keyed('one-element-bundles-reversed', [v]))
             for ix in range(0, len(params), 2):
               test_stream.add_elements(
-                  keyed('two-element-bundles', params[ix:ix+2]))
+                  keyed('two-element-bundles', params[ix:ix + 2]))
           else:
             for key in keys:
               test_stream.add_elements(keyed(key, params))
@@ -826,21 +837,19 @@ class BaseTestStreamTranscriptTest(TranscriptTest):
 
       The key is ignored, but all items must be on the same key to share state.
       """
+
       def __init__(self, allow_out_of_order=True):
         # Some runners don't support cross-stage TestStream semantics.
         self.allow_out_of_order = allow_out_of_order
 
-      def process(
-          self,
-          element,
-          seen=beam.DoFn.StateParam(
-              beam.transforms.userstate.BagStateSpec(
-                  'seen',
-                  beam.coders.FastPrimitivesCoder())),
-          expected=beam.DoFn.StateParam(
-              beam.transforms.userstate.BagStateSpec(
-                  'expected',
-                  beam.coders.FastPrimitivesCoder()))):
+      def process(self,
+                  element,
+                  seen=beam.DoFn.StateParam(
+                      beam.transforms.userstate.BagStateSpec(
+                          'seen', beam.coders.FastPrimitivesCoder())),
+                  expected=beam.DoFn.StateParam(
+                      beam.transforms.userstate.BagStateSpec(
+                          'expected', beam.coders.FastPrimitivesCoder()))):
         key, (action, data) = element
 
         if self.allow_out_of_order:
@@ -875,38 +884,33 @@ class BaseTestStreamTranscriptTest(TranscriptTest):
     def CheckAggregation(inputs_and_expected, aggregation):
       # Split the test stream into a branch of to-be-processed elements, and
       # a branch of expected results.
-      inputs, expected = (
-          inputs_and_expected
-          | beam.MapTuple(
-              lambda tag, value: beam.pvalue.TaggedOutput(tag, value),
-              ).with_outputs('input', 'expect'))
+      inputs, expected = (inputs_and_expected | beam.MapTuple(
+          lambda tag, value: beam.pvalue.TaggedOutput(tag, value),
+      ).with_outputs('input', 'expect'))
 
       # Process the inputs with the given windowing to produce actual outputs.
       outputs = (
-          inputs
-          | beam.MapTuple(
-              lambda key, value: TimestampedValue((key, value), value))
-          | beam.WindowInto(
-              window_fn,
-              trigger=trigger_fn,
-              accumulation_mode=accumulation_mode,
-              timestamp_combiner=timestamp_combiner,
-              allowed_lateness=allowed_lateness)
-          | aggregation
-          | beam.MapTuple(_windowed_value_info_map_fn)
+          inputs | beam.MapTuple(lambda key, value: TimestampedValue(
+              (key, value), value)) |
+          beam.WindowInto(window_fn,
+                          trigger=trigger_fn,
+                          accumulation_mode=accumulation_mode,
+                          timestamp_combiner=timestamp_combiner,
+                          allowed_lateness=allowed_lateness) | aggregation |
+          beam.MapTuple(_windowed_value_info_map_fn)
           # Place outputs back into the global window to allow flattening
           # and share a single state in Check.
           | 'Global' >> beam.WindowInto(beam.transforms.window.GlobalWindows()))
       # Feed both the expected and actual outputs to Check() for comparison.
       tagged_expected = (
-          expected | beam.FlatMap(
-              lambda value: [(key, ('expect', value)) for key in keys]))
+          expected |
+          beam.FlatMap(lambda value: [(key, ('expect', value)) for key in keys])
+      )
       tagged_outputs = (
           outputs | beam.MapTuple(lambda key, value: (key, ('actual', value))))
       # pylint: disable=expression-not-assigned
-      ([tagged_expected, tagged_outputs]
-       | beam.Flatten()
-       | beam.ParDo(Check(self.allow_out_of_order)))
+      ([tagged_expected, tagged_outputs] | beam.Flatten() |
+       beam.ParDo(Check(self.allow_out_of_order)))
 
     with TestPipeline() as p:
       # TODO(BEAM-8601): Pass this during pipeline construction.
@@ -915,8 +919,8 @@ class BaseTestStreamTranscriptTest(TranscriptTest):
       # We can have at most one test stream per pipeline, so we share it.
       inputs_and_expected = p | read_test_stream
       _ = inputs_and_expected | CheckAggregation(beam.GroupByKey())
-      _ = inputs_and_expected | CheckAggregation(beam.CombinePerKey(
-          _ConcatCombineFn()))
+      _ = inputs_and_expected | CheckAggregation(
+          beam.CombinePerKey(_ConcatCombineFn()))
 
 
 class TestStreamTranscriptTest(BaseTestStreamTranscriptTest):
@@ -929,12 +933,11 @@ class WeakTestStreamTranscriptTest(BaseTestStreamTranscriptTest):
 
 class BatchTranscriptTest(TranscriptTest):
 
-  def _execute(
-      self, window_fn, trigger_fn, accumulation_mode, timestamp_combiner,
-      allowed_lateness, transcript, spec):
+  def _execute(self, window_fn, trigger_fn, accumulation_mode,
+               timestamp_combiner, allowed_lateness, transcript, spec):
     if timestamp_combiner == TimestampCombiner.OUTPUT_AT_EARLIEST_TRANSFORMED:
-      self.skipTest(
-          'Non-fnapi timestamp combiner: %s' % spec.get('timestamp_combiner'))
+      self.skipTest('Non-fnapi timestamp combiner: %s' %
+                    spec.get('timestamp_combiner'))
 
     if accumulation_mode != AccumulationMode.ACCUMULATING:
       self.skipTest('Batch mode only makes sense for accumulating.')
@@ -961,38 +964,37 @@ class BatchTranscriptTest(TranscriptTest):
 
     if window_fn.is_merging():
       merged_away = set()
+
       class MergeContext(WindowFn.MergeContext):
+
         def merge(_, to_be_merged, merge_result):
           for window in to_be_merged:
             if window != merge_result:
               merged_away.add(window)
+
       all_windows = [IntervalWindow(*pane['window']) for pane in final_panes]
       window_fn.merge(MergeContext(all_windows))
       final_panes = [
           pane for pane in final_panes
-          if IntervalWindow(*pane['window']) not in merged_away]
+          if IntervalWindow(*pane['window']) not in merged_away
+      ]
 
     with TestPipeline() as p:
-      input_pc = (
-          p
-          | beam.Create(inputs)
-          | beam.Map(lambda t: TimestampedValue(('key', t), t))
-          | beam.WindowInto(
-              window_fn,
-              trigger=trigger_fn,
-              accumulation_mode=accumulation_mode,
-              timestamp_combiner=timestamp_combiner,
-              allowed_lateness=allowed_lateness))
+      input_pc = (p | beam.Create(inputs) |
+                  beam.Map(lambda t: TimestampedValue(('key', t), t)) |
+                  beam.WindowInto(window_fn,
+                                  trigger=trigger_fn,
+                                  accumulation_mode=accumulation_mode,
+                                  timestamp_combiner=timestamp_combiner,
+                                  allowed_lateness=allowed_lateness))
 
-      grouped = input_pc | 'Grouped' >> (
-          beam.GroupByKey()
-          | beam.MapTuple(_windowed_value_info_map_fn)
-          | beam.MapTuple(lambda _, value: value))
+      grouped = input_pc | 'Grouped' >> (beam.GroupByKey() | beam.MapTuple(
+          _windowed_value_info_map_fn) | beam.MapTuple(lambda _, value: value))
 
       combined = input_pc | 'Combined' >> (
-          beam.CombinePerKey(_ConcatCombineFn())
-          | beam.MapTuple(_windowed_value_info_map_fn)
-          | beam.MapTuple(lambda _, value: value))
+          beam.CombinePerKey(_ConcatCombineFn()) |
+          beam.MapTuple(_windowed_value_info_map_fn) |
+          beam.MapTuple(lambda _, value: value))
 
       assert_that(
           grouped,
@@ -1005,15 +1007,13 @@ class BatchTranscriptTest(TranscriptTest):
           label='CheckCombined')
 
 
-TRANSCRIPT_TEST_FILE = os.path.join(
-    os.path.dirname(__file__), '..', 'testing', 'data',
-    'trigger_transcripts.yaml')
+TRANSCRIPT_TEST_FILE = os.path.join(os.path.dirname(__file__), '..', 'testing',
+                                    'data', 'trigger_transcripts.yaml')
 if os.path.exists(TRANSCRIPT_TEST_FILE):
   TriggerDriverTranscriptTest._create_tests(TRANSCRIPT_TEST_FILE)
   TestStreamTranscriptTest._create_tests(TRANSCRIPT_TEST_FILE)
   WeakTestStreamTranscriptTest._create_tests(TRANSCRIPT_TEST_FILE)
   BatchTranscriptTest._create_tests(TRANSCRIPT_TEST_FILE)
-
 
 if __name__ == '__main__':
   unittest.main()

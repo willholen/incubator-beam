@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for compiled implementation of coder impls."""
 # pytype: skip-file
 
@@ -22,7 +21,6 @@ from __future__ import absolute_import
 
 import logging
 import unittest
-
 
 # Run all the standard coder test cases.
 from apache_beam.coders.coders_test_common import *

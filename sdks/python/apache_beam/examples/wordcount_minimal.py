@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A minimalist word-counting workflow that counts words in Shakespeare.
 
 This is the first in a series of successively more detailed 'word count'
@@ -69,12 +68,13 @@ def run(argv=None, save_main_session=True):
                       dest='input',
                       default='gs://dataflow-samples/shakespeare/kinglear.txt',
                       help='Input file to process.')
-  parser.add_argument('--output',
-                      dest='output',
-                      # CHANGE 1/5: The Google Cloud Storage path is required
-                      # for outputting the results.
-                      default='gs://YOUR_OUTPUT_BUCKET/AND_OUTPUT_PREFIX',
-                      help='Output file to write results to.')
+  parser.add_argument(
+      '--output',
+      dest='output',
+      # CHANGE 1/5: The Google Cloud Storage path is required
+      # for outputting the results.
+      default='gs://YOUR_OUTPUT_BUCKET/AND_OUTPUT_PREFIX',
+      help='Output file to write results to.')
   known_args, pipeline_args = parser.parse_known_args(argv)
   pipeline_args.extend([
       # CHANGE 2/5: (OPTIONAL) Change this to DataflowRunner to
@@ -102,12 +102,10 @@ def run(argv=None, save_main_session=True):
     lines = p | ReadFromText(known_args.input)
 
     # Count the occurrences of each word.
-    counts = (
-        lines
-        | 'Split' >> (beam.FlatMap(lambda x: re.findall(r'[A-Za-z\']+', x))
-                      .with_output_types(unicode))
-        | 'PairWithOne' >> beam.Map(lambda x: (x, 1))
-        | 'GroupAndSum' >> beam.CombinePerKey(sum))
+    counts = (lines | 'Split' >> (beam.FlatMap(
+        lambda x: re.findall(r'[A-Za-z\']+', x)).with_output_types(unicode)) |
+              'PairWithOne' >> beam.Map(lambda x: (x, 1)) |
+              'GroupAndSum' >> beam.CombinePerKey(sum))
 
     # Format the counts into a PCollection of strings.
     def format_result(word_count):

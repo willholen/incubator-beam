@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Cloud Datastore helper functions.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -54,7 +53,6 @@ except ImportError:
 # pylint: enable=wrong-import-order, wrong-import-position
 
 # pylint: enable=ungrouped-imports
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,8 +185,12 @@ def is_key_valid(key):
   return key.path[-1].HasField('id') or key.path[-1].HasField('name')
 
 
-def write_mutations(datastore, project, mutations, throttler,
-                    rpc_stats_callback=None, throttle_delay=1):
+def write_mutations(datastore,
+                    project,
+                    mutations,
+                    throttler,
+                    rpc_stats_callback=None,
+                    throttle_delay=1):
   """A helper function to write a batch of mutations to Cloud Datastore.
 
   If a commit fails, it will be retried upto 5 times. All mutations in the
@@ -220,7 +222,7 @@ def write_mutations(datastore, project, mutations, throttler,
                                   retry_filter=retry_on_rpc_error)
   def commit(request):
     # Client-side throttling.
-    while throttler.throttle_request(time.time()*1000):
+    while throttler.throttle_request(time.time() * 1000):
       _LOGGER.info("Delaying request for %ds due to previous failures",
                    throttle_delay)
       time.sleep(throttle_delay)
@@ -232,8 +234,8 @@ def write_mutations(datastore, project, mutations, throttler,
       end_time = time.time()
 
       rpc_stats_callback(successes=1)
-      throttler.successful_request(start_time*1000)
-      commit_time_ms = int((end_time-start_time)*1000)
+      throttler.successful_request(start_time * 1000)
+      commit_time_ms = int((end_time - start_time) * 1000)
       return response, commit_time_ms
     except (RPCError, SocketError):
       if rpc_stats_callback:
@@ -267,12 +269,12 @@ def make_kind_stats_query(namespace, kind, latest_timestamp):
   else:
     kind_stat_query.kind.add().name = '__Stat_Ns_Kind__'
 
-  kind_filter = datastore_helper.set_property_filter(
-      query_pb2.Filter(), 'kind_name', PropertyFilter.EQUAL,
-      unicode(kind))
+  kind_filter = datastore_helper.set_property_filter(query_pb2.Filter(),
+                                                     'kind_name',
+                                                     PropertyFilter.EQUAL,
+                                                     unicode(kind))
   timestamp_filter = datastore_helper.set_property_filter(
-      query_pb2.Filter(), 'timestamp', PropertyFilter.EQUAL,
-      latest_timestamp)
+      query_pb2.Filter(), 'timestamp', PropertyFilter.EQUAL, latest_timestamp)
 
   datastore_helper.set_composite_filter(kind_stat_query.filter,
                                         CompositeFilter.AND, kind_filter,
@@ -326,7 +328,6 @@ class QueryIterator(object):
       # `NOT_FINISHED` or if the number of results read in the previous batch
       # is equal to `_BATCH_SIZE` (all indications that there is more data be
       # read).
-      more_results = ((self._limit > 0) and
-                      ((num_results == self._BATCH_SIZE) or
-                       (resp.batch.more_results ==
-                        query_pb2.QueryResultBatch.NOT_FINISHED)))
+      more_results = ((self._limit > 0) and (
+          (num_results == self._BATCH_SIZE) or
+          (resp.batch.more_results == query_pb2.QueryResultBatch.NOT_FINISHED)))

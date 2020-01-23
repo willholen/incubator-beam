@@ -27,18 +27,13 @@ def map_simple(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    plants = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            '   🍓Strawberry   \n',
-            '   🥕Carrot   \n',
-            '   🍆Eggplant   \n',
-            '   🍅Tomato   \n',
-            '   🥔Potato   \n',
-        ])
-        | 'Strip' >> beam.Map(str.strip)
-        | beam.Map(print)
-    )
+    plants = (pipeline | 'Gardening plants' >> beam.Create([
+        '   🍓Strawberry   \n',
+        '   🥕Carrot   \n',
+        '   🍆Eggplant   \n',
+        '   🍅Tomato   \n',
+        '   🥔Potato   \n',
+    ]) | 'Strip' >> beam.Map(str.strip) | beam.Map(print))
     # [END map_simple]
     if test:
       test(plants)
@@ -52,18 +47,13 @@ def map_function(test=None):
     return text.strip('# \n')
 
   with beam.Pipeline() as pipeline:
-    plants = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            '# 🍓Strawberry\n',
-            '# 🥕Carrot\n',
-            '# 🍆Eggplant\n',
-            '# 🍅Tomato\n',
-            '# 🥔Potato\n',
-        ])
-        | 'Strip header' >> beam.Map(strip_header_and_newline)
-        | beam.Map(print)
-    )
+    plants = (pipeline | 'Gardening plants' >> beam.Create([
+        '# 🍓Strawberry\n',
+        '# 🥕Carrot\n',
+        '# 🍆Eggplant\n',
+        '# 🍅Tomato\n',
+        '# 🥔Potato\n',
+    ]) | 'Strip header' >> beam.Map(strip_header_and_newline) | beam.Map(print))
     # [END map_function]
     if test:
       test(plants)
@@ -74,18 +64,14 @@ def map_lambda(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    plants = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            '# 🍓Strawberry\n',
-            '# 🥕Carrot\n',
-            '# 🍆Eggplant\n',
-            '# 🍅Tomato\n',
-            '# 🥔Potato\n',
-        ])
-        | 'Strip header' >> beam.Map(lambda text: text.strip('# \n'))
-        | beam.Map(print)
-    )
+    plants = (pipeline | 'Gardening plants' >> beam.Create([
+        '# 🍓Strawberry\n',
+        '# 🥕Carrot\n',
+        '# 🍆Eggplant\n',
+        '# 🍅Tomato\n',
+        '# 🥔Potato\n',
+    ]) | 'Strip header' >> beam.Map(lambda text: text.strip('# \n')) |
+              beam.Map(print))
     # [END map_lambda]
     if test:
       test(plants)
@@ -99,18 +85,13 @@ def map_multiple_arguments(test=None):
     return text.strip(chars)
 
   with beam.Pipeline() as pipeline:
-    plants = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            '# 🍓Strawberry\n',
-            '# 🥕Carrot\n',
-            '# 🍆Eggplant\n',
-            '# 🍅Tomato\n',
-            '# 🥔Potato\n',
-        ])
-        | 'Strip header' >> beam.Map(strip, chars='# \n')
-        | beam.Map(print)
-    )
+    plants = (pipeline | 'Gardening plants' >> beam.Create([
+        '# 🍓Strawberry\n',
+        '# 🥕Carrot\n',
+        '# 🍆Eggplant\n',
+        '# 🍅Tomato\n',
+        '# 🥔Potato\n',
+    ]) | 'Strip header' >> beam.Map(strip, chars='# \n') | beam.Map(print))
     # [END map_multiple_arguments]
     if test:
       test(plants)
@@ -121,19 +102,15 @@ def map_tuple(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    plants = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            ('🍓', 'Strawberry'),
-            ('🥕', 'Carrot'),
-            ('🍆', 'Eggplant'),
-            ('🍅', 'Tomato'),
-            ('🥔', 'Potato'),
-        ])
-        | 'Format' >> beam.MapTuple(
-            lambda icon, plant: '{}{}'.format(icon, plant))
-        | beam.Map(print)
-    )
+    plants = (pipeline | 'Gardening plants' >> beam.Create([
+        ('🍓', 'Strawberry'),
+        ('🥕', 'Carrot'),
+        ('🍆', 'Eggplant'),
+        ('🍅', 'Tomato'),
+        ('🥔', 'Potato'),
+    ]) | 'Format' >>
+              beam.MapTuple(lambda icon, plant: '{}{}'.format(icon, plant)) |
+              beam.Map(print))
     # [END map_tuple]
     if test:
       test(plants)
@@ -146,21 +123,16 @@ def map_side_inputs_singleton(test=None):
   with beam.Pipeline() as pipeline:
     chars = pipeline | 'Create chars' >> beam.Create(['# \n'])
 
-    plants = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            '# 🍓Strawberry\n',
-            '# 🥕Carrot\n',
-            '# 🍆Eggplant\n',
-            '# 🍅Tomato\n',
-            '# 🥔Potato\n',
-        ])
-        | 'Strip header' >> beam.Map(
-            lambda text, chars: text.strip(chars),
-            chars=beam.pvalue.AsSingleton(chars),
-        )
-        | beam.Map(print)
-    )
+    plants = (pipeline | 'Gardening plants' >> beam.Create([
+        '# 🍓Strawberry\n',
+        '# 🥕Carrot\n',
+        '# 🍆Eggplant\n',
+        '# 🍅Tomato\n',
+        '# 🥔Potato\n',
+    ]) | 'Strip header' >> beam.Map(
+        lambda text, chars: text.strip(chars),
+        chars=beam.pvalue.AsSingleton(chars),
+    ) | beam.Map(print))
     # [END map_side_inputs_singleton]
     if test:
       test(plants)
@@ -173,21 +145,16 @@ def map_side_inputs_iter(test=None):
   with beam.Pipeline() as pipeline:
     chars = pipeline | 'Create chars' >> beam.Create(['#', ' ', '\n'])
 
-    plants = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            '# 🍓Strawberry\n',
-            '# 🥕Carrot\n',
-            '# 🍆Eggplant\n',
-            '# 🍅Tomato\n',
-            '# 🥔Potato\n',
-        ])
-        | 'Strip header' >> beam.Map(
-            lambda text, chars: text.strip(''.join(chars)),
-            chars=beam.pvalue.AsIter(chars),
-        )
-        | beam.Map(print)
-    )
+    plants = (pipeline | 'Gardening plants' >> beam.Create([
+        '# 🍓Strawberry\n',
+        '# 🥕Carrot\n',
+        '# 🍆Eggplant\n',
+        '# 🍅Tomato\n',
+        '# 🥔Potato\n',
+    ]) | 'Strip header' >> beam.Map(
+        lambda text, chars: text.strip(''.join(chars)),
+        chars=beam.pvalue.AsIter(chars),
+    ) | beam.Map(print))
     # [END map_side_inputs_iter]
     if test:
       test(plants)
@@ -208,21 +175,36 @@ def map_side_inputs_dict(test=None):
         (2, 'perennial'),
     ])
 
-    plant_details = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            {'icon': '🍓', 'name': 'Strawberry', 'duration': 2},
-            {'icon': '🥕', 'name': 'Carrot', 'duration': 1},
-            {'icon': '🍆', 'name': 'Eggplant', 'duration': 2},
-            {'icon': '🍅', 'name': 'Tomato', 'duration': 0},
-            {'icon': '🥔', 'name': 'Potato', 'duration': 2},
-        ])
-        | 'Replace duration' >> beam.Map(
-            replace_duration,
-            durations=beam.pvalue.AsDict(durations),
-        )
-        | beam.Map(print)
-    )
+    plant_details = (pipeline | 'Gardening plants' >> beam.Create([
+        {
+            'icon': '🍓',
+            'name': 'Strawberry',
+            'duration': 2
+        },
+        {
+            'icon': '🥕',
+            'name': 'Carrot',
+            'duration': 1
+        },
+        {
+            'icon': '🍆',
+            'name': 'Eggplant',
+            'duration': 2
+        },
+        {
+            'icon': '🍅',
+            'name': 'Tomato',
+            'duration': 0
+        },
+        {
+            'icon': '🥔',
+            'name': 'Potato',
+            'duration': 2
+        },
+    ]) | 'Replace duration' >> beam.Map(
+        replace_duration,
+        durations=beam.pvalue.AsDict(durations),
+    ) | beam.Map(print))
     # [END map_side_inputs_dict]
     if test:
       test(plant_details)

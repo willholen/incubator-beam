@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Utility functions for all microbenchmarks."""
 
 # pytype: skip-file
@@ -47,8 +46,8 @@ def check_compiled(module):
 
 
 class BenchmarkConfig(
-    collections.namedtuple(
-        "BenchmarkConfig", ["benchmark", "size", "num_runs"])):
+    collections.namedtuple("BenchmarkConfig",
+                           ["benchmark", "size", "num_runs"])):
   """
   Attributes:
     benchmark: a callable that takes an int argument - benchmark size,
@@ -69,9 +68,8 @@ class BenchmarkConfig(
   """
 
   def __str__(self):
-    return "%s, %s element(s)" % (
-        getattr(self.benchmark, '__name__', str(self.benchmark)),
-        str(self.size))
+    return "%s, %s element(s)" % (getattr(self.benchmark, '__name__',
+                                          str(self.benchmark)), str(self.size))
 
 
 class LinearRegressionBenchmarkConfig(
@@ -98,12 +96,11 @@ class LinearRegressionBenchmarkConfig(
       benchmark.
     num_runs: int, number of times to run each benchmark.
   """
+
   def __str__(self):
-    return "%s, %s element(s) at start, %s growth per run" % (
-        getattr(self.benchmark, '__name__', str(self.benchmark)),
-        str(self.starting_point), str(self.increment))
-
-
+    return "%s, %s element(s) at start, %s growth per run" % (getattr(
+        self.benchmark, '__name__', str(
+            self.benchmark)), str(self.starting_point), str(self.increment))
 
 
 def run_benchmarks(benchmark_suite, verbose=True):
@@ -153,8 +150,8 @@ def run_benchmarks(benchmark_suite, verbose=True):
       size_series[name].append(size)
       if verbose:
         per_element_cost = time_cost / size
-        print("%s: run %d of %d, per element time cost: %g sec" % (
-            name, run_id + 1, num_runs, per_element_cost))
+        print("%s: run %d of %d, per element time cost: %g sec" %
+              (name, run_id + 1, num_runs, per_element_cost))
 
       # Incrementing the size of the benchmark run by the step size
       size += step
@@ -178,13 +175,12 @@ def run_benchmarks(benchmark_suite, verbose=True):
         print("R^2         ", r_value**2)
       else:
         assert isinstance(benchmark_config, BenchmarkConfig)
-        per_element_median_cost = (
-            numpy.median(cost_series[name]) / benchmark_config.size)
+        per_element_median_cost = (numpy.median(cost_series[name]) /
+                                   benchmark_config.size)
         std = numpy.std(cost_series[name]) / benchmark_config.size
 
-        print(
-            "%s: p. element median time cost: %g sec, relative std: %.2f%%" % (
-                name.ljust(pad_length, " "), per_element_median_cost,
-                std * 100 / per_element_median_cost))
+        print("%s: p. element median time cost: %g sec, relative std: %.2f%%" %
+              (name.ljust(pad_length, " "), per_element_median_cost,
+               std * 100 / per_element_median_cost))
 
   return size_series, cost_series

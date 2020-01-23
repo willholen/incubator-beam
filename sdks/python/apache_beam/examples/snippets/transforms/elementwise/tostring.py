@@ -27,18 +27,13 @@ def tostring_kvs(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    plants = (
-        pipeline
-        | 'Garden plants' >> beam.Create([
-            ('🍓', 'Strawberry'),
-            ('🥕', 'Carrot'),
-            ('🍆', 'Eggplant'),
-            ('🍅', 'Tomato'),
-            ('🥔', 'Potato'),
-        ])
-        | 'To string' >> beam.ToString.Kvs()
-        | beam.Map(print)
-    )
+    plants = (pipeline | 'Garden plants' >> beam.Create([
+        ('🍓', 'Strawberry'),
+        ('🥕', 'Carrot'),
+        ('🍆', 'Eggplant'),
+        ('🍅', 'Tomato'),
+        ('🥔', 'Potato'),
+    ]) | 'To string' >> beam.ToString.Kvs() | beam.Map(print))
     # [END tostring_kvs]
     if test:
       test(plants)
@@ -49,18 +44,13 @@ def tostring_element(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    plant_lists = (
-        pipeline
-        | 'Garden plants' >> beam.Create([
-            ['🍓', 'Strawberry', 'perennial'],
-            ['🥕', 'Carrot', 'biennial'],
-            ['🍆', 'Eggplant', 'perennial'],
-            ['🍅', 'Tomato', 'annual'],
-            ['🥔', 'Potato', 'perennial'],
-        ])
-        | 'To string' >> beam.ToString.Element()
-        | beam.Map(print)
-    )
+    plant_lists = (pipeline | 'Garden plants' >> beam.Create([
+        ['🍓', 'Strawberry', 'perennial'],
+        ['🥕', 'Carrot', 'biennial'],
+        ['🍆', 'Eggplant', 'perennial'],
+        ['🍅', 'Tomato', 'annual'],
+        ['🥔', 'Potato', 'perennial'],
+    ]) | 'To string' >> beam.ToString.Element() | beam.Map(print))
     # [END tostring_element]
     if test:
       test(plant_lists)
@@ -71,18 +61,13 @@ def tostring_iterables(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    plants_csv = (
-        pipeline
-        | 'Garden plants' >> beam.Create([
-            ['🍓', 'Strawberry', 'perennial'],
-            ['🥕', 'Carrot', 'biennial'],
-            ['🍆', 'Eggplant', 'perennial'],
-            ['🍅', 'Tomato', 'annual'],
-            ['🥔', 'Potato', 'perennial'],
-        ])
-        | 'To string' >> beam.ToString.Iterables()
-        | beam.Map(print)
-    )
+    plants_csv = (pipeline | 'Garden plants' >> beam.Create([
+        ['🍓', 'Strawberry', 'perennial'],
+        ['🥕', 'Carrot', 'biennial'],
+        ['🍆', 'Eggplant', 'perennial'],
+        ['🍅', 'Tomato', 'annual'],
+        ['🥔', 'Potato', 'perennial'],
+    ]) | 'To string' >> beam.ToString.Iterables() | beam.Map(print))
     # [END tostring_iterables]
     if test:
       test(plants_csv)

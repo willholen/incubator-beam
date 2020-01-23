@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """End-to-end test for the streaming wordcount example."""
 
 # pytype: skip-file
@@ -42,7 +41,7 @@ INPUT_SUB = 'wc_subscription_input'
 OUTPUT_SUB = 'wc_subscription_output'
 
 DEFAULT_INPUT_NUMBERS = 500
-WAIT_UNTIL_FINISH_DURATION = 6 * 60 * 1000   # in milliseconds
+WAIT_UNTIL_FINISH_DURATION = 6 * 60 * 1000  # in milliseconds
 
 
 class StreamingWordCountIT(unittest.TestCase):
@@ -84,8 +83,9 @@ class StreamingWordCountIT(unittest.TestCase):
   @attr('IT')
   def test_streaming_wordcount_it(self):
     # Build expected dataset.
-    expected_msg = [('%d: 1' % num).encode('utf-8')
-                    for num in range(DEFAULT_INPUT_NUMBERS)]
+    expected_msg = [
+        ('%d: 1' % num).encode('utf-8') for num in range(DEFAULT_INPUT_NUMBERS)
+    ]
 
     # Set extra options to the pipeline for test purpose
     state_verifier = PipelineStateMatcher(PipelineState.RUNNING)
@@ -93,11 +93,12 @@ class StreamingWordCountIT(unittest.TestCase):
                                                self.output_sub.name,
                                                expected_msg,
                                                timeout=400)
-    extra_opts = {'input_subscription': self.input_sub.name,
-                  'output_topic': self.output_topic.name,
-                  'wait_until_finish_duration': WAIT_UNTIL_FINISH_DURATION,
-                  'on_success_matcher': all_of(state_verifier,
-                                               pubsub_msg_verifier)}
+    extra_opts = {
+        'input_subscription': self.input_sub.name,
+        'output_topic': self.output_topic.name,
+        'wait_until_finish_duration': WAIT_UNTIL_FINISH_DURATION,
+        'on_success_matcher': all_of(state_verifier, pubsub_msg_verifier)
+    }
 
     # Generate input data and inject to PubSub.
     self._inject_numbers(self.input_topic, DEFAULT_INPUT_NUMBERS)

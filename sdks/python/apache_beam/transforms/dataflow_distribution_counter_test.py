@@ -8,7 +8,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for DataflowDistributionCounter
 When Cython is available, unit tests will test on cythonized module,
 otherwise, test on pure python module
@@ -28,6 +27,7 @@ INT64_MAX = 2**63 - 1
 
 
 class DataflowDistributionAccumulatorTest(unittest.TestCase):
+
   def test_calculate_bucket_index_with_input_0(self):
     counter = DataflowDistributionCounter()
     index = counter.calculate_bucket_index(0)

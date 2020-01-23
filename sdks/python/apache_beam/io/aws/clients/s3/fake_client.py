@@ -53,6 +53,7 @@ class FakeFile(object):
 
 
 class FakeS3Client(object):
+
   def __init__(self):
     self.files = {}
     self.list_continuation_tokens = {}
@@ -101,8 +102,8 @@ class FakeS3Client(object):
         matching_files.append(file_object)
 
     if not matching_files:
-      message = 'Tried to list nonexistent S3 path: s3://%s/%s' % (
-          bucket, prefix)
+      message = 'Tried to list nonexistent S3 path: s3://%s/%s' % (bucket,
+                                                                   prefix)
       raise messages.S3ClientError(message, 404)
 
     # Handle pagination.
@@ -173,8 +174,7 @@ class FakeS3Client(object):
   def copy(self, request):
 
     src_file = self.get_file(request.src_bucket, request.src_key)
-    dest_file = FakeFile(request.dest_bucket,
-                         request.dest_key,
+    dest_file = FakeFile(request.dest_bucket, request.dest_key,
                          src_file.contents)
     self.add_file(dest_file)
 
@@ -202,7 +202,7 @@ class FakeS3Client(object):
     return messages.UploadPartResponse(etag, part_number)
 
   def complete_multipart_upload(self, request):
-    MIN_PART_SIZE = 5 * 2**10 # 5 KiB
+    MIN_PART_SIZE = 5 * 2**10  # 5 KiB
 
     parts_received = self.multipart_uploads[request.upload_id]
 

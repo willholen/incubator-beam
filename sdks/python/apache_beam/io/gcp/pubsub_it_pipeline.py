@@ -33,12 +33,13 @@ def run_pipeline(argv, with_attributes, id_label, timestamp_attribute):
   """Build and run the pipeline."""
 
   parser = argparse.ArgumentParser()
+  parser.add_argument('--output_topic',
+                      required=True,
+                      help=('Output PubSub topic of the form '
+                            '"projects/<PROJECT>/topic/<TOPIC>".'))
   parser.add_argument(
-      '--output_topic', required=True,
-      help=('Output PubSub topic of the form '
-            '"projects/<PROJECT>/topic/<TOPIC>".'))
-  parser.add_argument(
-      '--input_subscription', required=True,
+      '--input_subscription',
+      required=True,
       help=('Input PubSub subscription of the form '
             '"projects/<PROJECT>/subscriptions/<SUBSCRIPTION>."'))
   known_args, pipeline_args = parser.parse_known_args(argv)

@@ -29,6 +29,7 @@ from apache_beam.testing.test_pipeline import TestPipeline
 
 
 class CallSequenceEnforcingDoFn(beam.DoFn):
+
   def __init__(self):
     self._setup_called = False
     self._start_bundle_calls = 0
@@ -77,11 +78,11 @@ class CallSequenceEnforcingDoFn(beam.DoFn):
 
 @attr('ValidatesRunner')
 class DoFnLifecycleTest(unittest.TestCase):
+
   def test_dofn_lifecycle(self):
     with TestPipeline() as p:
-      _ = (p
-           | 'Start' >> beam.Create([1, 2, 3])
-           | 'Do' >> beam.ParDo(CallSequenceEnforcingDoFn()))
+      _ = (p | 'Start' >> beam.Create([1, 2, 3]) |
+           'Do' >> beam.ParDo(CallSequenceEnforcingDoFn()))
     # Assumes that the worker is run in the same process as the test.
 
 

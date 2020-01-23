@@ -47,6 +47,7 @@ class SubprocessServer(object):
       with SubprocessServer(GrpcStubClass, [executable, arg, ...]) as stub:
           stub.CallService(...)
   """
+
   def __init__(self, stub_class, cmd, port=None):
     """Creates the server object.
 
@@ -91,17 +92,15 @@ class SubprocessServer(object):
         while True:
           if self._process.poll() is not None:
             _LOGGER.error("Starting job service with %s", cmd)
-            raise RuntimeError(
-                'Service failed to start up with error %s' %
-                self._process.poll())
+            raise RuntimeError('Service failed to start up with error %s' %
+                               self._process.poll())
           try:
             channel_ready.result(timeout=wait_secs)
             break
           except (grpc.FutureTimeoutError, grpc._channel._Rendezvous):
             wait_secs *= 1.2
             logging.log(logging.WARNING if wait_secs > 1 else logging.DEBUG,
-                        'Waiting for grpc channel to be ready at %s.',
-                        endpoint)
+                        'Waiting for grpc channel to be ready at %s.', endpoint)
         return self._stub_class(channel)
       except:  # pylint: disable=bare-except
         _LOGGER.exception("Error bringing up service")
@@ -133,28 +132,27 @@ class JavaJarServer(SubprocessServer):
   JAR_CACHE = os.path.expanduser("~/.apache_beam/cache/jars")
 
   def __init__(self, stub_class, path_to_jar, java_arguments):
-    super(JavaJarServer, self).__init__(
-        stub_class, ['java', '-jar', path_to_jar] + list(java_arguments))
+    super(JavaJarServer,
+          self).__init__(stub_class,
+                         ['java', '-jar', path_to_jar] + list(java_arguments))
 
   @classmethod
   def jar_name(cls, artifact_id, version, classifier=None, appendix=None):
     return '-'.join(filter(
-        None, [artifact_id, appendix, version, classifier]))  + '.jar'
+        None, [artifact_id, appendix, version, classifier])) + '.jar'
 
   @classmethod
-  def path_to_maven_jar(
-      cls,
-      artifact_id,
-      group_id,
-      version,
-      repository=APACHE_REPOSITORY,
-      classifier=None):
+  def path_to_maven_jar(cls,
+                        artifact_id,
+                        group_id,
+                        version,
+                        repository=APACHE_REPOSITORY,
+                        classifier=None):
     return '/'.join([
         repository,
-        group_id.replace('.', '/'),
-        artifact_id,
-        version,
-        cls.jar_name(artifact_id, version, classifier)])
+        group_id.replace('.', '/'), artifact_id, version,
+        cls.jar_name(artifact_id, version, classifier)
+    ])
 
   @classmethod
   def path_to_beam_jar(cls, gradle_target, appendix=None):
@@ -163,15 +161,11 @@ class JavaJarServer(SubprocessServer):
     project_root = os.path.sep.join(
         os.path.abspath(__file__).split(os.path.sep)[:-5])
     local_path = os.path.join(
-        project_root,
-        gradle_package.replace(':', os.path.sep),
-        'build',
-        'libs',
-        cls.jar_name(
-            artifact_id,
-            beam_version.replace('.dev', ''),
-            classifier='SNAPSHOT',
-            appendix=appendix))
+        project_root, gradle_package.replace(':', os.path.sep), 'build', 'libs',
+        cls.jar_name(artifact_id,
+                     beam_version.replace('.dev', ''),
+                     classifier='SNAPSHOT',
+                     appendix=appendix))
     if os.path.exists(local_path):
       _LOGGER.info('Using pre-built snapshot at %s', local_path)
       return local_path
@@ -179,11 +173,11 @@ class JavaJarServer(SubprocessServer):
       # TODO: Attempt to use nightly snapshots?
       raise RuntimeError(
           ('%s not found. '
-           'Please build the server with \n  cd %s; ./gradlew %s') % (
-               local_path, os.path.abspath(project_root), gradle_target))
+           'Please build the server with \n  cd %s; ./gradlew %s') %
+          (local_path, os.path.abspath(project_root), gradle_target))
     else:
-      return cls.path_to_maven_jar(
-          artifact_id, cls.BEAM_GROUP_ID, beam_version, cls.APACHE_REPOSITORY)
+      return cls.path_to_maven_jar(artifact_id, cls.BEAM_GROUP_ID, beam_version,
+                                   cls.APACHE_REPOSITORY)
 
   @classmethod
   def local_jar(cls, url):
@@ -203,8 +197,8 @@ class JavaJarServer(SubprocessServer):
             shutil.copyfileobj(url_read, jar_write, length=1 << 20)
           os.rename(cached_jar + '.tmp', cached_jar)
         except URLError as e:
-          raise RuntimeError(
-              'Unable to fetch remote job server jar at %s: %s' % (url, e))
+          raise RuntimeError('Unable to fetch remote job server jar at %s: %s' %
+                             (url, e))
       return cached_jar
 
 

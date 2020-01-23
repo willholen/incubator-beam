@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """File-based sink."""
 
 # pytype: skip-file
@@ -45,7 +44,6 @@ from apache_beam.transforms.display import DisplayDataItem
 DEFAULT_SHARD_NAME_TEMPLATE = '-SSSSS-of-NNNNN'
 
 __all__ = ['FileBasedSink']
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,16 +111,18 @@ class FileBasedSink(iobase.Sink):
     self.mime_type = mime_type
 
   def display_data(self):
-    return {'shards':
+    return {
+        'shards':
             DisplayDataItem(self.num_shards,
                             label='Number of Shards').drop_if_default(0),
-            'compression':
+        'compression':
             DisplayDataItem(str(self.compression_type)),
-            'file_pattern':
+        'file_pattern':
             DisplayDataItem('{}{}{}'.format(self.file_path_prefix,
                                             self.shard_name_format,
                                             self.file_name_suffix),
-                            label='File Pattern')}
+                            label='File Pattern')
+    }
 
   @check_accessible(['file_path_prefix'])
   def open(self, temp_path):
@@ -173,8 +173,9 @@ class FileBasedSink(iobase.Sink):
         raise ValueError('Cannot create a temporary directory for root path '
                          'prefix %s. Please specify a file path prefix with '
                          'at least two components.' % file_path_prefix)
-    path_components = [base_path,
-                       'beam-temp-' + last_component + '-' + uuid.uuid1().hex]
+    path_components = [
+        base_path, 'beam-temp-' + last_component + '-' + uuid.uuid1().hex
+    ]
     return FileSystems.join(*path_components)
 
   @check_accessible(['file_path_prefix', 'file_name_suffix'])
@@ -185,17 +186,15 @@ class FileBasedSink(iobase.Sink):
     # file_name_suffix.
     file_path_prefix = self.file_path_prefix.get()
     file_name_suffix = self.file_name_suffix.get()
-    suffix = (
-        '.' + os.path.basename(file_path_prefix) + file_name_suffix)
+    suffix = ('.' + os.path.basename(file_path_prefix) + file_name_suffix)
     writer_path = FileSystems.join(init_result, uid) + suffix
     return FileBasedSinkWriter(self, writer_path)
 
   @check_accessible(['file_path_prefix', 'file_name_suffix'])
   def _get_final_name(self, shard_num, num_shards):
     return ''.join([
-        self.file_path_prefix.get(),
-        self.shard_name_format % dict(shard_num=shard_num,
-                                      num_shards=num_shards),
+        self.file_path_prefix.get(), self.shard_name_format %
+        dict(shard_num=shard_num, num_shards=num_shards),
         self.file_name_suffix.get()
     ])
 
@@ -210,9 +209,11 @@ class FileBasedSink(iobase.Sink):
   def pre_finalize(self, init_result, writer_results):
     num_shards = len(list(writer_results))
     dst_glob = self._get_final_name_glob(num_shards)
-    dst_glob_files = [file_metadata.path
-                      for mr in FileSystems.match([dst_glob])
-                      for file_metadata in mr.metadata_list]
+    dst_glob_files = [
+        file_metadata.path
+        for mr in FileSystems.match([dst_glob])
+        for file_metadata in mr.metadata_list
+    ]
 
     if dst_glob_files:
       _LOGGER.warning('Deleting %d existing files in target path matching: %s',
@@ -252,8 +253,8 @@ class FileBasedSink(iobase.Sink):
       src_exists = src in src_glob_files
       dst_exists = dst in dst_glob_files
       if not src_exists and not dst_exists:
-        raise BeamIOError('src and dst files do not exist. src: %s, dst: %s' % (
-            src, dst))
+        raise BeamIOError('src and dst files do not exist. src: %s, dst: %s' %
+                          (src, dst))
       if not src_exists and dst_exists:
         _LOGGER.debug('src: %s -> dst: %s already renamed, skipping', src, dst)
         num_skipped += 1
@@ -283,17 +284,20 @@ class FileBasedSink(iobase.Sink):
     num_threads = max(1, min_threads)
 
     chunk_size = FileSystems.get_chunk_size(self.file_path_prefix.get())
-    source_file_batch = [src_files[i:i + chunk_size]
-                         for i in range(0, len(src_files), chunk_size)]
-    destination_file_batch = [dst_files[i:i + chunk_size]
-                              for i in range(0, len(dst_files), chunk_size)]
+    source_file_batch = [
+        src_files[i:i + chunk_size]
+        for i in range(0, len(src_files), chunk_size)
+    ]
+    destination_file_batch = [
+        dst_files[i:i + chunk_size]
+        for i in range(0, len(dst_files), chunk_size)
+    ]
 
     if num_shards_to_finalize:
       _LOGGER.info(
           'Starting finalize_write threads with num_shards: %d (skipped: %d), '
-          'batches: %d, num_threads: %d',
-          num_shards_to_finalize, num_skipped, len(source_file_batch),
-          num_threads)
+          'batches: %d, num_threads: %d', num_shards_to_finalize, num_skipped,
+          len(source_file_batch), num_threads)
       start_time = time.time()
 
       # Use a thread pool for renaming operations.
@@ -320,11 +324,12 @@ class FileBasedSink(iobase.Sink):
           _rename_batch, list(zip(source_file_batch, destination_file_batch)),
           num_threads)
 
-      all_exceptions = [e for exception_batch in exception_batches
-                        for e in exception_batch]
+      all_exceptions = [
+          e for exception_batch in exception_batches for e in exception_batch
+      ]
       if all_exceptions:
-        raise Exception(
-            'Encountered exceptions in finalize_write: %s' % all_exceptions)
+        raise Exception('Encountered exceptions in finalize_write: %s' %
+                        all_exceptions)
 
       for final_name in dst_files:
         yield final_name

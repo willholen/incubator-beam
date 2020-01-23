@@ -37,6 +37,7 @@ __all__ = ['LocalFileSystem']
 class LocalFileSystem(FileSystem):
   """A Local ``FileSystem`` implementation for accessing files on disk.
   """
+
   @classmethod
   def scheme(cls):
     """URI scheme for the FileSystem
@@ -129,7 +130,10 @@ class LocalFileSystem(FileSystem):
     except Exception as e:  # pylint: disable=broad-except
       raise BeamIOError("List operation failed", {dir_or_prefix: e})
 
-  def _path_open(self, path, mode, mime_type='application/octet-stream',
+  def _path_open(self,
+                 path,
+                 mode,
+                 mime_type='application/octet-stream',
                  compression_type=CompressionTypes.AUTO):
     """Helper functions to open a file in the provided mode.
     """
@@ -140,7 +144,9 @@ class LocalFileSystem(FileSystem):
     else:
       return CompressedFile(raw_file, compression_type=compression_type)
 
-  def create(self, path, mime_type='application/octet-stream',
+  def create(self,
+             path,
+             mime_type='application/octet-stream',
              compression_type=CompressionTypes.AUTO):
     # type: (...) -> BinaryIO
     """Returns a write channel for the given file path.
@@ -154,7 +160,9 @@ class LocalFileSystem(FileSystem):
     """
     return self._path_open(path, 'wb', mime_type, compression_type)
 
-  def open(self, path, mime_type='application/octet-stream',
+  def open(self,
+           path,
+           mime_type='application/octet-stream',
            compression_type=CompressionTypes.AUTO):
     # type: (...) -> BinaryIO
     """Returns a read channel for the given file path.
@@ -307,6 +315,7 @@ class LocalFileSystem(FileSystem):
     Raises:
       ``BeamIOError`` if any of the delete operations fail
     """
+
     def _delete_path(path):
       """Recursively delete the file or directory at the provided path.
       """

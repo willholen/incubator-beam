@@ -138,6 +138,7 @@ if os.environ.get('LOAD_TEST_ENABLED') == 'true':
 
 @unittest.skipIf(not load_test_enabled, 'Enabled only for phrase triggering.')
 class GroupByKeyTest(LoadTest):
+
   def setUp(self):
     super(GroupByKeyTest, self).setUp()
     self.fanout = self.pipeline.get_option('fanout')
@@ -153,6 +154,7 @@ class GroupByKeyTest(LoadTest):
       self.iterations = int(self.iterations)
 
   class _UngroupAndReiterate(beam.DoFn):
+
     def process(self, element, iterations):
       key, value = element
       for i in range(iterations):
@@ -161,22 +163,17 @@ class GroupByKeyTest(LoadTest):
             return (key, v)
 
   def testGroupByKey(self):
-    input = (self.pipeline
-             | beam.io.Read(synthetic_pipeline.SyntheticSource(
-                 self.parseTestPipelineOptions()))
-             | 'Measure time: Start' >> beam.ParDo(
-                 MeasureTime(self.metrics_namespace))
-            )
+    input = (self.pipeline | beam.io.Read(
+        synthetic_pipeline.SyntheticSource(self.parseTestPipelineOptions())) |
+             'Measure time: Start' >> beam.ParDo(
+                 MeasureTime(self.metrics_namespace)))
 
     for branch in range(self.fanout):
       # pylint: disable=expression-not-assigned
-      (input
-       | 'GroupByKey %i' % branch >> beam.GroupByKey()
-       | 'Ungroup %i' % branch >> beam.ParDo(
-           self._UngroupAndReiterate(), self.iterations)
-       | 'Measure time: End %i' % branch >> beam.ParDo(
-           MeasureTime(self.metrics_namespace))
-      )
+      (input | 'GroupByKey %i' % branch >> beam.GroupByKey() | 'Ungroup %i' %
+       branch >> beam.ParDo(self._UngroupAndReiterate(), self.iterations) |
+       'Measure time: End %i' % branch >> beam.ParDo(
+           MeasureTime(self.metrics_namespace)))
 
 
 if __name__ == '__main__':

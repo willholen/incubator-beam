@@ -46,11 +46,10 @@ def _fill_in_missing(x):
     A rank 1 tensor where missing values of `x` have been filled in.
   """
   default_value = '' if x.dtype == tf.string else 0
-  return tf.squeeze(
-      tf.sparse.to_dense(
-          tf.SparseTensor(x.indices, x.values, [x.dense_shape[0], 1]),
-          default_value),
-      axis=1)
+  return tf.squeeze(tf.sparse.to_dense(
+      tf.SparseTensor(x.indices, x.values, [x.dense_shape[0], 1]),
+      default_value),
+                    axis=1)
 
 
 def transform_data(input_handle,
@@ -99,8 +98,8 @@ def transform_data(input_handle,
 
     for key in taxi.VOCAB_FEATURE_KEYS:
       # Build a vocabulary for this feature.
-      outputs[
-          taxi.transformed_name(key)] = transform.compute_and_apply_vocabulary(
+      outputs[taxi.transformed_name(
+          key)] = transform.compute_and_apply_vocabulary(
               _fill_in_missing(inputs[key]),
               top_k=taxi.VOCAB_SIZE,
               num_oov_buckets=taxi.OOV_SIZE)
@@ -119,11 +118,11 @@ def transform_data(input_handle,
         tf.is_nan(taxi_fare),
         tf.cast(tf.zeros_like(taxi_fare), tf.int64),
         # Test if the tip was > 20% of the fare.
-        tf.cast(
-            tf.greater(tips, tf.multiply(taxi_fare, tf.constant(0.2))),
-            tf.int64))
+        tf.cast(tf.greater(tips, tf.multiply(taxi_fare, tf.constant(0.2))),
+                tf.int64))
 
     return outputs
+
   namespace = metrics_table
   metrics_monitor = None
   if publish_to_bq:
@@ -132,8 +131,7 @@ def transform_data(input_handle,
         project_name=project,
         bq_table=metrics_table,
         bq_dataset=metrics_dataset,
-        filters=MetricsFilter().with_namespace(namespace)
-    )
+        filters=MetricsFilter().with_namespace(namespace))
   schema = taxi.read_schema(schema_file)
   raw_feature_spec = taxi.get_raw_feature_spec(schema)
   raw_schema = dataset_schema.from_feature_spec(raw_feature_spec)
@@ -142,22 +140,19 @@ def transform_data(input_handle,
   pipeline = beam.Pipeline(argv=pipeline_args)
   with tft_beam.Context(temp_dir=working_dir):
     query = taxi.make_sql(input_handle, max_rows, for_eval=False)
-    raw_data = (
-        pipeline
-        | 'ReadBigQuery' >> ReadFromBigQuery(query=query, project=project,
-                                             use_standard_sql=True)
-        | 'Measure time: start' >> beam.ParDo(MeasureTime(namespace)))
-    decode_transform = beam.Map(
-        taxi.clean_raw_data_dict, raw_feature_spec=raw_feature_spec)
+    raw_data = (pipeline | 'ReadBigQuery' >> ReadFromBigQuery(
+        query=query, project=project, use_standard_sql=True) |
+                'Measure time: start' >> beam.ParDo(MeasureTime(namespace)))
+    decode_transform = beam.Map(taxi.clean_raw_data_dict,
+                                raw_feature_spec=raw_feature_spec)
 
     if transform_dir is None:
       decoded_data = raw_data | 'DecodeForAnalyze' >> decode_transform
-      transform_fn = (
-          (decoded_data, raw_data_metadata) |
-          ('Analyze' >> tft_beam.AnalyzeDataset(preprocessing_fn)))
+      transform_fn = ((decoded_data, raw_data_metadata) |
+                      ('Analyze' >> tft_beam.AnalyzeDataset(preprocessing_fn)))
 
-      _ = (transform_fn | ('WriteTransformFn' >>
-                           tft_beam.WriteTransformFn(working_dir)))
+      _ = (transform_fn |
+           ('WriteTransformFn' >> tft_beam.WriteTransformFn(working_dir)))
     else:
       transform_fn = pipeline | tft_beam.ReadTransformFn(transform_dir)
 
@@ -167,19 +162,15 @@ def transform_data(input_handle,
     shuffled_data = raw_data | 'RandomizeData' >> beam.transforms.Reshuffle()
 
     decoded_data = shuffled_data | 'DecodeForTransform' >> decode_transform
-    (transformed_data, transformed_metadata) = (
-        ((decoded_data, raw_data_metadata), transform_fn)
-        | 'Transform' >> tft_beam.TransformDataset())
+    (transformed_data,
+     transformed_metadata) = (((decoded_data, raw_data_metadata), transform_fn)
+                              | 'Transform' >> tft_beam.TransformDataset())
 
     coder = example_proto_coder.ExampleProtoCoder(transformed_metadata.schema)
-    _ = (
-        transformed_data
-        | 'SerializeExamples' >> beam.Map(coder.encode)
-        | 'Measure time: end' >> beam.ParDo(MeasureTime(namespace))
-        | 'WriteExamples' >> beam.io.WriteToTFRecord(
-            os.path.join(working_dir, outfile_prefix),
-            file_name_suffix='.gz')
-    )
+    _ = (transformed_data | 'SerializeExamples' >> beam.Map(coder.encode) |
+         'Measure time: end' >> beam.ParDo(MeasureTime(namespace)) |
+         'WriteExamples' >> beam.io.WriteToTFRecord(
+             os.path.join(working_dir, outfile_prefix), file_name_suffix='.gz'))
   result = pipeline.run()
   result.wait_until_finish()
   if metrics_monitor:
@@ -189,72 +180,62 @@ def transform_data(input_handle,
 def main():
   tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
   parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--input',
-      help=('Input BigQuery table to process specified as: '
-            'DATASET.TABLE'))
+  parser.add_argument('--input',
+                      help=('Input BigQuery table to process specified as: '
+                            'DATASET.TABLE'))
 
-  parser.add_argument(
-      '--schema_file', help='File holding the schema for the input data')
+  parser.add_argument('--schema_file',
+                      help='File holding the schema for the input data')
 
   parser.add_argument(
       '--output_dir',
       help=('Directory in which transformed examples and function '
             'will be emitted.'))
 
-  parser.add_argument(
-      '--outfile_prefix',
-      help='Filename prefix for emitted transformed examples')
+  parser.add_argument('--outfile_prefix',
+                      help='Filename prefix for emitted transformed examples')
 
-  parser.add_argument(
-      '--transform_dir',
-      required=False,
-      default=None,
-      help='Directory in which the transform output is located')
+  parser.add_argument('--transform_dir',
+                      required=False,
+                      default=None,
+                      help='Directory in which the transform output is located')
 
-  parser.add_argument(
-      '--max_rows',
-      help='Number of rows to query from BigQuery',
-      default=None,
-      type=int)
-  parser.add_argument(
-      '--publish_to_big_query',
-      help='Whether to publish to BQ',
-      default=None,
-      type=bool)
+  parser.add_argument('--max_rows',
+                      help='Number of rows to query from BigQuery',
+                      default=None,
+                      type=int)
+  parser.add_argument('--publish_to_big_query',
+                      help='Whether to publish to BQ',
+                      default=None,
+                      type=bool)
 
-  parser.add_argument(
-      '--metrics_dataset',
-      help='BQ dataset',
-      default=None,
-      type=str)
+  parser.add_argument('--metrics_dataset',
+                      help='BQ dataset',
+                      default=None,
+                      type=str)
 
-  parser.add_argument(
-      '--metrics_table',
-      help='BQ table',
-      default=None,
-      type=str)
+  parser.add_argument('--metrics_table',
+                      help='BQ table',
+                      default=None,
+                      type=str)
 
-  parser.add_argument(
-      '--metric_reporting_project',
-      help='BQ table project',
-      default=None,
-      type=str)
+  parser.add_argument('--metric_reporting_project',
+                      help='BQ table project',
+                      default=None,
+                      type=str)
 
   known_args, pipeline_args = parser.parse_known_args()
-  transform_data(
-      input_handle=known_args.input,
-      outfile_prefix=known_args.outfile_prefix,
-      working_dir=known_args.output_dir,
-      schema_file=known_args.schema_file,
-      transform_dir=known_args.transform_dir,
-      max_rows=known_args.max_rows,
-      pipeline_args=pipeline_args,
-      publish_to_bq=known_args.publish_to_big_query,
-      metrics_dataset=known_args.metrics_dataset,
-      metrics_table=known_args.metrics_table,
-      project=known_args.metric_reporting_project
-  )
+  transform_data(input_handle=known_args.input,
+                 outfile_prefix=known_args.outfile_prefix,
+                 working_dir=known_args.output_dir,
+                 schema_file=known_args.schema_file,
+                 transform_dir=known_args.transform_dir,
+                 max_rows=known_args.max_rows,
+                 pipeline_args=pipeline_args,
+                 publish_to_bq=known_args.publish_to_big_query,
+                 metrics_dataset=known_args.metrics_dataset,
+                 metrics_table=known_args.metrics_table,
+                 project=known_args.metric_reporting_project)
 
 
 if __name__ == '__main__':

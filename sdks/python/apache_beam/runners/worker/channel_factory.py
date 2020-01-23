@@ -34,13 +34,15 @@ class GRPCChannelFactory(grpc.StreamStreamClientInterceptor):
   def insecure_channel(target, options=None):
     if options is None:
       options = []
-    return grpc.insecure_channel(
-        target, options=options + GRPCChannelFactory.DEFAULT_OPTIONS)
+    return grpc.insecure_channel(target,
+                                 options=options +
+                                 GRPCChannelFactory.DEFAULT_OPTIONS)
 
   @staticmethod
   def secure_channel(target, credentials, options=None):
     if options is None:
       options = []
-    return grpc.secure_channel(
-        target, credentials,
-        options=options + GRPCChannelFactory.DEFAULT_OPTIONS)
+    return grpc.secure_channel(target,
+                               credentials,
+                               options=options +
+                               GRPCChannelFactory.DEFAULT_OPTIONS)

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for UnboundedThreadPoolExecutor."""
 
 # pytype: skip-file
@@ -34,6 +33,7 @@ from apache_beam.utils.thread_pool_executor import UnboundedThreadPoolExecutor
 
 
 class UnboundedThreadPoolExecutorTest(unittest.TestCase):
+
   def setUp(self):
     self._lock = threading.Lock()
     self._worker_idents = []

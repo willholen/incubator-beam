@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Type coders registration.
 
 This module contains functionality to define and use coders for custom classes.
@@ -120,8 +119,8 @@ class CoderRegistry(object):
   def get_coder(self, typehint):
     # type: (Any) -> coders.Coder
     coder = self._coders.get(
-        typehint.__class__ if isinstance(typehint, typehints.TypeConstraint)
-        else typehint, None)
+        typehint.__class__
+        if isinstance(typehint, typehints.TypeConstraint) else typehint, None)
     if isinstance(typehint, typehints.TypeConstraint) and coder is not None:
       return coder.from_type_hint(typehint, self)
     if coder is None:
@@ -131,8 +130,9 @@ class CoderRegistry(object):
         raise RuntimeError(
             'Coder registry has no fallback coder. This can happen if the '
             'fast_coders module could not be imported.')
-      if isinstance(typehint, (typehints.IterableTypeConstraint,
-                               typehints.ListConstraint)):
+      if isinstance(
+          typehint,
+          (typehints.IterableTypeConstraint, typehints.ListConstraint)):
         return coders.IterableCoder.from_type_hint(typehint, self)
       elif typehint is None:
         # In some old code, None is used for Any.

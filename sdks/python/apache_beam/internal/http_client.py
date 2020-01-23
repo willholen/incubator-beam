@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Utility functions used for creating a common Http client from httplib2.
 
 For internal use only. No backwards compatibility guarantees.

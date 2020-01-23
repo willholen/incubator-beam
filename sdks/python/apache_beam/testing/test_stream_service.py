@@ -28,6 +28,7 @@ from apache_beam.portability.api.beam_runner_api_pb2_grpc import TestStreamServi
 
 
 class TestStreamServiceController(TestStreamServiceServicer):
+
   def __init__(self, events, endpoint=None):
     self._server = grpc.server(ThreadPoolExecutor(max_workers=10))
 

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A Dataflow job that uses BigQuery sources as a side inputs.
 
 Illustrates how to insert side-inputs into transforms in three different forms,
@@ -67,15 +66,10 @@ def create_groups(group_ids, corpus, word, ignore_corpus, ignore_word):
 
     yield group + (selected,)
 
-  return (group_ids
-          | 'attach corpus' >> beam.FlatMap(
-              attach_corpus_fn,
-              AsList(corpus),
-              AsSingleton(ignore_corpus))
-          | 'attach word' >> beam.FlatMap(
-              attach_word_fn,
-              AsList(word),
-              AsSingleton(ignore_word)))
+  return (group_ids | 'attach corpus' >> beam.FlatMap(
+      attach_corpus_fn, AsList(corpus), AsSingleton(ignore_corpus)) |
+          'attach word' >> beam.FlatMap(attach_word_fn, AsList(word),
+                                        AsSingleton(ignore_word)))
 
 
 def run(argv=None):

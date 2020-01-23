@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Pickler for values, functions, and classes.
 
 For internal use only. No backwards compatibility guarantees.
@@ -47,6 +46,7 @@ import dill
 
 
 class _NoOpContextManager(object):
+
   def __enter__(self):
     pass
 
@@ -76,9 +76,8 @@ if not getattr(dill, '_dill', None):
 
 def _is_nested_class(cls):
   """Returns true if argument is a class object that appears to be nested."""
-  return (isinstance(cls, type)
-          and cls.__module__ is not None
-          and cls.__module__ != 'builtins'     # Python 3
+  return (isinstance(cls, type) and cls.__module__ is not None and
+          cls.__module__ != 'builtins'  # Python 3
           and cls.__module__ != '__builtin__'  # Python 2
           and cls.__name__ not in sys.modules[cls.__module__].__dict__)
 
@@ -97,7 +96,8 @@ def _find_containing_class(nested_class):
         return outer, k
       elif isinstance(v, type) and hasattr(v, '__dict__'):
         res = _find_containing_class_inner(v)
-        if res: return res
+        if res:
+          return res
 
   return _find_containing_class_inner(sys.modules[nested_class.__module__])
 
@@ -124,17 +124,15 @@ def _nested_type_wrapper(fun):
     if _is_nested_class(obj) and obj.__module__ != '__main__':
       containing_class_and_name = _find_containing_class(obj)
       if containing_class_and_name is not None:
-        return pickler.save_reduce(
-            getattr, containing_class_and_name, obj=obj)
+        return pickler.save_reduce(getattr, containing_class_and_name, obj=obj)
     try:
       return fun(pickler, obj)
     except dill.dill.PicklingError:
       # pylint: disable=protected-access
-      return pickler.save_reduce(
-          dill.dill._create_type,
-          (type(obj), obj.__name__, obj.__bases__,
-           dill.dill._dict_from_dictproxy(obj.__dict__)),
-          obj=obj)
+      return pickler.save_reduce(dill.dill._create_type,
+                                 (type(obj), obj.__name__, obj.__bases__,
+                                  dill.dill._dict_from_dictproxy(obj.__dict__)),
+                                 obj=obj)
       # pylint: enable=protected-access
 
   return wrapper
@@ -159,7 +157,6 @@ def _reject_generators(unused_pickler, unused_obj):
 
 dill.dill.Pickler.dispatch[types.GeneratorType] = _reject_generators
 
-
 # This if guards against dill not being full initialized when generating docs.
 if 'save_module' in dir(dill.dill):
 
@@ -180,7 +177,8 @@ if 'save_module' in dir(dill.dill):
   # Pickle module dictionaries (commonly found in lambda's globals)
   # by referencing their module.
   old_save_module_dict = dill.dill.save_module_dict
-  known_module_dicts = {}  # type: Dict[int, Tuple[types.ModuleType, Dict[str, Any]]]
+  known_module_dicts = {
+  }  # type: Dict[int, Tuple[types.ModuleType, Dict[str, Any]]]
 
   @dill.dill.register(dict)
   def new_save_module_dict(pickler, obj):
@@ -200,9 +198,8 @@ if 'save_module' in dir(dill.dill):
 
         for m in sys.modules.values():
           try:
-            if (m
-                and m.__name__ != '__main__'
-                and isinstance(m, dill.dill.ModuleType)):
+            if (m and m.__name__ != '__main__' and
+                isinstance(m, dill.dill.ModuleType)):
               d = m.__dict__
               known_module_dicts[id(d)] = m, d
           except AttributeError:
@@ -213,15 +210,18 @@ if 'save_module' in dir(dill.dill):
       try:
         # pylint: disable=protected-access
         dill.dill._import_module(m.__name__)
-        return pickler.save_reduce(
-            getattr, (known_module_dicts[obj_id][0], '__dict__'), obj=obj)
+        return pickler.save_reduce(getattr,
+                                   (known_module_dicts[obj_id][0], '__dict__'),
+                                   obj=obj)
       except (ImportError, AttributeError):
         return old_save_module_dict(pickler, obj)
     else:
       return old_save_module_dict(pickler, obj)
+
   dill.dill.save_module_dict = new_save_module_dict
 
   if hasattr(types, "MappingProxyType"):
+
     @dill.dill.register(types.MappingProxyType)
     def save_mappingproxy(pickler, obj):
       # pickling mappingproxy AS IS, not as dict
@@ -239,6 +239,7 @@ if 'save_module' in dir(dill.dill):
       old_log_info(
           ('1 2 3 4 5 6 7 8 9 0 ' * 10)[:len(traceback.extract_stack())] + msg,
           *args, **kwargs)
+
     dill.dill.log.info = new_log_info
 
 
@@ -255,7 +256,7 @@ def dumps(o, enable_trace=True):
   with pickle_lock_unless_py2:
     try:
       s = dill.dumps(o)
-    except Exception:      # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
       if enable_trace:
         dill.dill._trace(True)  # pylint: disable=protected-access
         s = dill.dumps(o)
@@ -284,9 +285,9 @@ def loads(encoded, enable_trace=True):
   with pickle_lock_unless_py2:
     try:
       return dill.loads(s)
-    except Exception:          # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
       if enable_trace:
-        dill.dill._trace(True)   # pylint: disable=protected-access
+        dill.dill._trace(True)  # pylint: disable=protected-access
         return dill.loads(s)
       else:
         raise

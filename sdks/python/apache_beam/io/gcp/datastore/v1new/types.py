@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 Beam Datastore types.
 
@@ -37,8 +36,17 @@ __all__ = ['Query', 'Key', 'Entity']
 
 
 class Query(object):
-  def __init__(self, kind=None, project=None, namespace=None, ancestor=None,
-               filters=(), projection=(), order=(), distinct_on=(), limit=None):
+
+  def __init__(self,
+               kind=None,
+               project=None,
+               namespace=None,
+               ancestor=None,
+               filters=(),
+               projection=(),
+               order=(),
+               distinct_on=(),
+               limit=None):
     """Represents a Datastore query.
 
     Args:
@@ -85,11 +93,15 @@ class Query(object):
 
     self.filters = self._set_runtime_filters()
 
-    return query.Query(
-        client, kind=self.kind, project=self.project, namespace=self.namespace,
-        ancestor=ancestor_client_key, filters=self.filters,
-        projection=self.projection, order=self.order,
-        distinct_on=self.distinct_on)
+    return query.Query(client,
+                       kind=self.kind,
+                       project=self.project,
+                       namespace=self.namespace,
+                       ancestor=ancestor_client_key,
+                       filters=self.filters,
+                       projection=self.projection,
+                       order=self.order,
+                       distinct_on=self.distinct_on)
 
   def _set_runtime_filters(self):
     """
@@ -101,8 +113,8 @@ class Query(object):
     runtime_filters = []
     if not all(len(filter_tuple) == 3 for filter_tuple in self.filters):
       raise TypeError('%s: filters must be a sequence of tuple with length=3'
-                      ' got %r instead'
-                      % (self.__class__.__name__, self.filters))
+                      ' got %r instead' %
+                      (self.__class__.__name__, self.filters))
 
     for filter_type, filter_operator, filter_value in self.filters:
       if isinstance(filter_type, ValueProvider):
@@ -119,14 +131,15 @@ class Query(object):
     return copy.copy(self)
 
   def __repr__(self):
-    return ('<Query(kind=%s, project=%s, namespace=%s, ancestor=%s, filters=%s,'
-            'projection=%s, order=%s, distinct_on=%s, limit=%s)>' % (
-                self.kind, self.project, self.namespace, self.ancestor,
-                self.filters, self.projection, self.order, self.distinct_on,
-                self.limit))
+    return (
+        '<Query(kind=%s, project=%s, namespace=%s, ancestor=%s, filters=%s,'
+        'projection=%s, order=%s, distinct_on=%s, limit=%s)>' %
+        (self.kind, self.project, self.namespace, self.ancestor, self.filters,
+         self.projection, self.order, self.distinct_on, self.limit))
 
 
 class Key(object):
+
   def __init__(self, path_elements, parent=None, project=None, namespace=None):
     """
     Represents a Datastore key.
@@ -155,7 +168,8 @@ class Key(object):
 
   @staticmethod
   def from_client_key(client_key):
-    return Key(client_key.flat_path, project=client_key.project,
+    return Key(client_key.flat_path,
+               project=client_key.project,
                namespace=client_key.namespace)
 
   def to_client_key(self):
@@ -166,7 +180,9 @@ class Key(object):
     parent = self.parent
     if parent is not None:
       parent = parent.to_client_key()
-    return key.Key(*self.path_elements, parent=parent, namespace=self.namespace,
+    return key.Key(*self.path_elements,
+                   parent=parent,
+                   namespace=self.namespace,
                    project=self.project)
 
   def __eq__(self, other):
@@ -185,11 +201,12 @@ class Key(object):
 
   def __repr__(self):
     return '<%s(%s, parent=%s, project=%s, namespace=%s)>' % (
-        self.__class__.__name__, str(self.path_elements), str(self.parent),
-        self.project, self.namespace)
+        self.__class__.__name__, str(self.path_elements), str(
+            self.parent), self.project, self.namespace)
 
 
 class Entity(object):
+
   def __init__(self, key, exclude_from_indexes=()):
     """
     Represents a Datastore entity.
@@ -217,9 +234,8 @@ class Entity(object):
 
   @staticmethod
   def from_client_entity(client_entity):
-    res = Entity(
-        Key.from_client_key(client_entity.key),
-        exclude_from_indexes=set(client_entity.exclude_from_indexes))
+    res = Entity(Key.from_client_key(client_entity.key),
+                 exclude_from_indexes=set(client_entity.exclude_from_indexes))
     for name, value in client_entity.items():
       if isinstance(value, key.Key):
         value = Key.from_client_key(value)
@@ -258,5 +274,5 @@ class Entity(object):
 
   def __repr__(self):
     return "<%s(key=%s, exclude_from_indexes=%s) properties=%s>" % (
-        self.__class__.__name__, str(self.key),
-        str(self.exclude_from_indexes), str(self.properties))
+        self.__class__.__name__, str(self.key), str(
+            self.exclude_from_indexes), str(self.properties))

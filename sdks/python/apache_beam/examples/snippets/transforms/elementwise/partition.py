@@ -34,20 +34,39 @@ def partition_function(test=None):
 
   with beam.Pipeline() as pipeline:
     annuals, biennials, perennials = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            {'icon': '🍓', 'name': 'Strawberry', 'duration': 'perennial'},
-            {'icon': '🥕', 'name': 'Carrot', 'duration': 'biennial'},
-            {'icon': '🍆', 'name': 'Eggplant', 'duration': 'perennial'},
-            {'icon': '🍅', 'name': 'Tomato', 'duration': 'annual'},
-            {'icon': '🥔', 'name': 'Potato', 'duration': 'perennial'},
-        ])
-        | 'Partition' >> beam.Partition(by_duration, len(durations))
-    )
+        pipeline | 'Gardening plants' >> beam.Create([
+            {
+                'icon': '🍓',
+                'name': 'Strawberry',
+                'duration': 'perennial'
+            },
+            {
+                'icon': '🥕',
+                'name': 'Carrot',
+                'duration': 'biennial'
+            },
+            {
+                'icon': '🍆',
+                'name': 'Eggplant',
+                'duration': 'perennial'
+            },
+            {
+                'icon': '🍅',
+                'name': 'Tomato',
+                'duration': 'annual'
+            },
+            {
+                'icon': '🥔',
+                'name': 'Potato',
+                'duration': 'perennial'
+            },
+        ]) | 'Partition' >> beam.Partition(by_duration, len(durations)))
 
     annuals | 'Annuals' >> beam.Map(lambda x: print('annual: {}'.format(x)))
-    biennials | 'Biennials' >> beam.Map(lambda x: print('biennial: {}'.format(x)))
-    perennials | 'Perennials' >> beam.Map(lambda x: print('perennial: {}'.format(x)))
+    biennials | 'Biennials' >> beam.Map(
+        lambda x: print('biennial: {}'.format(x)))
+    perennials | 'Perennials' >> beam.Map(
+        lambda x: print('perennial: {}'.format(x)))
     # [END partition_function]
     # pylint: enable=line-too-long, expression-not-assigned
     if test:
@@ -63,23 +82,42 @@ def partition_lambda(test=None):
 
   with beam.Pipeline() as pipeline:
     annuals, biennials, perennials = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            {'icon': '🍓', 'name': 'Strawberry', 'duration': 'perennial'},
-            {'icon': '🥕', 'name': 'Carrot', 'duration': 'biennial'},
-            {'icon': '🍆', 'name': 'Eggplant', 'duration': 'perennial'},
-            {'icon': '🍅', 'name': 'Tomato', 'duration': 'annual'},
-            {'icon': '🥔', 'name': 'Potato', 'duration': 'perennial'},
-        ])
-        | 'Partition' >> beam.Partition(
+        pipeline | 'Gardening plants' >> beam.Create([
+            {
+                'icon': '🍓',
+                'name': 'Strawberry',
+                'duration': 'perennial'
+            },
+            {
+                'icon': '🥕',
+                'name': 'Carrot',
+                'duration': 'biennial'
+            },
+            {
+                'icon': '🍆',
+                'name': 'Eggplant',
+                'duration': 'perennial'
+            },
+            {
+                'icon': '🍅',
+                'name': 'Tomato',
+                'duration': 'annual'
+            },
+            {
+                'icon': '🥔',
+                'name': 'Potato',
+                'duration': 'perennial'
+            },
+        ]) | 'Partition' >> beam.Partition(
             lambda plant, num_partitions: durations.index(plant['duration']),
             len(durations),
-        )
-    )
+        ))
 
     annuals | 'Annuals' >> beam.Map(lambda x: print('annual: {}'.format(x)))
-    biennials | 'Biennials' >> beam.Map(lambda x: print('biennial: {}'.format(x)))
-    perennials | 'Perennials' >> beam.Map(lambda x: print('perennial: {}'.format(x)))
+    biennials | 'Biennials' >> beam.Map(
+        lambda x: print('biennial: {}'.format(x)))
+    perennials | 'Perennials' >> beam.Map(
+        lambda x: print('perennial: {}'.format(x)))
     # [END partition_lambda]
     # pylint: enable=line-too-long, expression-not-assigned
     if test:
@@ -104,19 +142,36 @@ def partition_multiple_arguments(test=None):
 
   with beam.Pipeline() as pipeline:
     train_dataset, test_dataset = (
-        pipeline
-        | 'Gardening plants' >> beam.Create([
-            {'icon': '🍓', 'name': 'Strawberry', 'duration': 'perennial'},
-            {'icon': '🥕', 'name': 'Carrot', 'duration': 'biennial'},
-            {'icon': '🍆', 'name': 'Eggplant', 'duration': 'perennial'},
-            {'icon': '🍅', 'name': 'Tomato', 'duration': 'annual'},
-            {'icon': '🥔', 'name': 'Potato', 'duration': 'perennial'},
-        ])
-        | 'Partition' >> beam.Partition(split_dataset, 2, ratio=[8, 2])
-    )
+        pipeline | 'Gardening plants' >> beam.Create([
+            {
+                'icon': '🍓',
+                'name': 'Strawberry',
+                'duration': 'perennial'
+            },
+            {
+                'icon': '🥕',
+                'name': 'Carrot',
+                'duration': 'biennial'
+            },
+            {
+                'icon': '🍆',
+                'name': 'Eggplant',
+                'duration': 'perennial'
+            },
+            {
+                'icon': '🍅',
+                'name': 'Tomato',
+                'duration': 'annual'
+            },
+            {
+                'icon': '🥔',
+                'name': 'Potato',
+                'duration': 'perennial'
+            },
+        ]) | 'Partition' >> beam.Partition(split_dataset, 2, ratio=[8, 2]))
 
     train_dataset | 'Train' >> beam.Map(lambda x: print('train: {}'.format(x)))
-    test_dataset | 'Test'  >> beam.Map(lambda x: print('test: {}'.format(x)))
+    test_dataset | 'Test' >> beam.Map(lambda x: print('test: {}'.format(x)))
     # [END partition_multiple_arguments]
     # pylint: enable=expression-not-assigned
     if test:

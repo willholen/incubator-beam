@@ -129,7 +129,10 @@ class GCSFileSystem(FileSystem):
     except Exception as e:  # pylint: disable=broad-except
       raise BeamIOError("List operation failed", {dir_or_prefix: e})
 
-  def _path_open(self, path, mode, mime_type='application/octet-stream',
+  def _path_open(self,
+                 path,
+                 mode,
+                 mime_type='application/octet-stream',
                  compression_type=CompressionTypes.AUTO):
     """Helper functions to open a file in the provided mode.
     """
@@ -140,7 +143,9 @@ class GCSFileSystem(FileSystem):
       return raw_file
     return CompressedFile(raw_file, compression_type=compression_type)
 
-  def create(self, path, mime_type='application/octet-stream',
+  def create(self,
+             path,
+             mime_type='application/octet-stream',
              compression_type=CompressionTypes.AUTO):
     # type: (...) -> BinaryIO
     """Returns a write channel for the given file path.
@@ -154,7 +159,9 @@ class GCSFileSystem(FileSystem):
     """
     return self._path_open(path, 'wb', mime_type, compression_type)
 
-  def open(self, path, mime_type='application/octet-stream',
+  def open(self,
+           path,
+           mime_type='application/octet-stream',
            compression_type=CompressionTypes.AUTO):
     # type: (...) -> BinaryIO
     """Returns a read channel for the given file path.
@@ -308,6 +315,7 @@ class GCSFileSystem(FileSystem):
     Args:
       paths: list of paths that give the file objects to be deleted
     """
+
     def _delete_path(path):
       """Recursively delete the file or directory at the provided path.
       """

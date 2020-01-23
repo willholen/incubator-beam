@@ -41,10 +41,9 @@ _LOGGER = logging.getLogger(__name__)
 
 @ptransform.PTransform.register_urn('beam:transforms:xlang:count', None)
 class CountPerElementTransform(ptransform.PTransform):
+
   def expand(self, pcoll):
-    return (
-        pcoll | combine.Count.PerElement()
-    )
+    return (pcoll | combine.Count.PerElement())
 
   def to_runner_api_parameter(self, unused_context):
     return 'beam:transforms:xlang:count', None
@@ -54,21 +53,20 @@ class CountPerElementTransform(ptransform.PTransform):
     return CountPerElementTransform()
 
 
-@ptransform.PTransform.register_urn(
-    'beam:transforms:xlang:filter_less_than_eq', bytes)
+@ptransform.PTransform.register_urn('beam:transforms:xlang:filter_less_than_eq',
+                                    bytes)
 class FilterLessThanTransform(ptransform.PTransform):
+
   def __init__(self, payload):
     self._payload = payload
 
   def expand(self, pcoll):
-    return (
-        pcoll | beam.Filter(
-            lambda elem, target: elem <= target, int(ord(self._payload[0])))
-    )
+    return (pcoll | beam.Filter(lambda elem, target: elem <= target,
+                                int(ord(self._payload[0]))))
 
   def to_runner_api_parameter(self, unused_context):
-    return (
-        'beam:transforms:xlang:filter_less_than', self._payload.encode('utf8'))
+    return ('beam:transforms:xlang:filter_less_than',
+            self._payload.encode('utf8'))
 
   @staticmethod
   def from_runner_api_parameter(payload, unused_context):
@@ -77,6 +75,7 @@ class FilterLessThanTransform(ptransform.PTransform):
 
 @ptransform.PTransform.register_urn('simple', None)
 class SimpleTransform(ptransform.PTransform):
+
   def expand(self, pcoll):
     return pcoll | 'TestLabel' >> beam.Map(lambda x: 'Simple(%s)' % x)
 
@@ -90,14 +89,13 @@ class SimpleTransform(ptransform.PTransform):
 
 @ptransform.PTransform.register_urn('multi', None)
 class MutltiTransform(ptransform.PTransform):
+
   def expand(self, pcolls):
     return {
-        'main':
-            (pcolls['main1'], pcolls['main2'])
-            | beam.Flatten()
-            | beam.Map(lambda x, s: x + s,
-                       beam.pvalue.AsSingleton(pcolls['side'])),
-        'side': pcolls['side'] | beam.Map(lambda x: x + x),
+        'main': (pcolls['main1'], pcolls['main2']) | beam.Flatten() | beam.Map(
+            lambda x, s: x + s, beam.pvalue.AsSingleton(pcolls['side'])),
+        'side':
+            pcolls['side'] | beam.Map(lambda x: x + x),
     }
 
   def to_runner_api_parameter(self, unused_context):
@@ -110,6 +108,7 @@ class MutltiTransform(ptransform.PTransform):
 
 @ptransform.PTransform.register_urn('payload', bytes)
 class PayloadTransform(ptransform.PTransform):
+
   def __init__(self, payload):
     self._payload = payload
 
@@ -126,6 +125,7 @@ class PayloadTransform(ptransform.PTransform):
 
 @ptransform.PTransform.register_urn('fib', bytes)
 class FibTransform(ptransform.PTransform):
+
   def __init__(self, level):
     self._level = level
 
@@ -134,15 +134,15 @@ class FibTransform(ptransform.PTransform):
       return p | beam.Create([1])
     else:
       a = p | 'A' >> beam.ExternalTransform(
-          'fib', str(self._level - 1).encode('ascii'),
+          'fib',
+          str(self._level - 1).encode('ascii'),
           expansion_service.ExpansionServiceServicer())
       b = p | 'B' >> beam.ExternalTransform(
-          'fib', str(self._level - 2).encode('ascii'),
+          'fib',
+          str(self._level - 2).encode('ascii'),
           expansion_service.ExpansionServiceServicer())
-      return (
-          (a, b)
-          | beam.Flatten()
-          | beam.CombineGlobally(sum).without_defaults())
+      return ((a, b) | beam.Flatten() |
+              beam.CombineGlobally(sum).without_defaults())
 
   def to_runner_api_parameter(self, unused_context):
     return 'fib', str(self._level).encode('ascii')
@@ -162,15 +162,15 @@ def cleanup(unused_signum, unused_frame):
 
 def main(unused_argv):
   parser = argparse.ArgumentParser()
-  parser.add_argument('-p', '--port',
+  parser.add_argument('-p',
+                      '--port',
                       type=int,
                       help='port on which to serve the job api')
   options = parser.parse_args()
   global server
   server = grpc.server(UnboundedThreadPoolExecutor())
   beam_expansion_api_pb2_grpc.add_ExpansionServiceServicer_to_server(
-      expansion_service.ExpansionServiceServicer(PipelineOptions()), server
-  )
+      expansion_service.ExpansionServiceServicer(PipelineOptions()), server)
   server.add_insecure_port('localhost:{}'.format(options.port))
   server.start()
   _LOGGER.info('Listening for expansion requests at %d', options.port)

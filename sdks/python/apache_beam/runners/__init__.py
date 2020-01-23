@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Runner objects execute a Pipeline.
 
 This package defines runners, which are used to execute a pipeline.

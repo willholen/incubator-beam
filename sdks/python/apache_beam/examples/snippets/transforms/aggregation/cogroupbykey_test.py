@@ -45,6 +45,7 @@ def check_plants(actual):
     details['icons'] = sorted(details['icons'])
     details['durations'] = sorted(details['durations'])
     return name, details
+
   assert_matches_stdout(actual, expected, normalize_element)
 
 
@@ -53,6 +54,7 @@ def check_plants(actual):
     'apache_beam.examples.snippets.transforms.aggregation.cogroupbykey.print',
     str)
 class CoGroupByKeyTest(unittest.TestCase):
+
   def test_cogroupbykey(self):
     cogroupbykey.cogroupbykey(check_plants)
 

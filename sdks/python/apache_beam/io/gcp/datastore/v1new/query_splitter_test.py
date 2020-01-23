@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Cloud Datastore query splitter test."""
 
 # pytype: skip-file
@@ -61,7 +60,11 @@ class QuerySplitterTest(QuerySplitterTestBase):
   def setUp(self):
     """Overrides base class version with skipIf() decorators."""
 
-  def create_query(self, kinds=(), order=False, limit=None, offset=None,
+  def create_query(self,
+                   kinds=(),
+                   order=False,
+                   limit=None,
+                   offset=None,
                    inequality_filter=False):
     if len(kinds) > 1:
       self.skipTest('v1new queries do not support more than one kind.')
@@ -90,7 +93,7 @@ class QuerySplitterTest(QuerySplitterTestBase):
     scatter_query = query_splitter._create_scatter_query(query, num_splits)
     self.assertEqual(scatter_query.kind, query.kind)
     self.assertEqual(scatter_query.limit,
-                     (num_splits -1) * query_splitter.KEYS_PER_SPLIT)
+                     (num_splits - 1) * query_splitter.KEYS_PER_SPLIT)
     self.assertEqual(scatter_query.order,
                      [query_splitter.SCATTER_PROPERTY_NAME])
     self.assertEqual(scatter_query.projection,
@@ -111,8 +114,8 @@ class QuerySplitterTest(QuerySplitterTestBase):
     for id_or_name in [True, False, None]:
       if id_or_name is None:
         client_entities = helper.create_client_entities(num_entities, False)
-        client_entities.extend(helper.create_client_entities(num_entities,
-                                                             True))
+        client_entities.extend(helper.create_client_entities(
+            num_entities, True))
         num_entities *= 2
       else:
         client_entities = helper.create_client_entities(num_entities,
@@ -121,10 +124,11 @@ class QuerySplitterTest(QuerySplitterTestBase):
       mock_client = mock.MagicMock()
       mock_client_query = mock.MagicMock()
       mock_client_query.fetch.return_value = client_entities
-      with mock.patch.object(
-          types.Query, '_to_client_query', return_value=mock_client_query):
-        split_queries = query_splitter.get_splits(
-            mock_client, query, num_splits)
+      with mock.patch.object(types.Query,
+                             '_to_client_query',
+                             return_value=mock_client_query):
+        split_queries = query_splitter.get_splits(mock_client, query,
+                                                  num_splits)
 
       mock_client_query.fetch.assert_called_once()
       # if request num_splits is greater than num_entities, the best it can
@@ -217,7 +221,6 @@ class QuerySplitterTest(QuerySplitterTestBase):
 
 # Hide base class from collection by nose.
 del QuerySplitterTestBase
-
 
 if __name__ == '__main__':
   unittest.main()

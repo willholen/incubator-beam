@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """User-facing interfaces for the Beam State and Timer APIs.
 
 Experimental; no backwards-compatibility guarantees.
@@ -175,8 +174,8 @@ def on_timer(timer_spec):
     if not callable(method):
       raise ValueError('@on_timer decorator expected callable.')
     if timer_spec._attached_callback:
-      raise ValueError(
-          'Multiple on_timer callbacks registered for %r.' % timer_spec)
+      raise ValueError('Multiple on_timer callbacks registered for %r.' %
+                       timer_spec)
     timer_spec._attached_callback = method
     return method
 
@@ -207,12 +206,12 @@ def get_dofn_specs(dofn):
     if not isinstance(getattr(dofn, method_name, None), types.MethodType):
       continue
     method = MethodWrapper(dofn, method_name)
-    param_ids = [d.param_id for d in method.defaults
-                 if isinstance(d, _DoFnParam)]
+    param_ids = [
+        d.param_id for d in method.defaults if isinstance(d, _DoFnParam)
+    ]
     if len(param_ids) != len(set(param_ids)):
-      raise ValueError(
-          'DoFn %r has duplicate %s method parameters: %s.' % (
-              dofn, method_name, param_ids))
+      raise ValueError('DoFn %r has duplicate %s method parameters: %s.' %
+                       (dofn, method_name, param_ids))
     for d in method.defaults:
       if isinstance(d, _StateDoFnParam):
         all_state_specs.add(d.state_spec)
@@ -238,13 +237,11 @@ def validate_stateful_dofn(dofn):
 
   # Reject DoFns that have multiple state or timer specs with the same name.
   if len(all_state_specs) != len(set(s.name for s in all_state_specs)):
-    raise ValueError(
-        'DoFn %r has multiple StateSpecs with the same name: %s.' % (
-            dofn, all_state_specs))
+    raise ValueError('DoFn %r has multiple StateSpecs with the same name: %s.' %
+                     (dofn, all_state_specs))
   if len(all_timer_specs) != len(set(s.name for s in all_timer_specs)):
-    raise ValueError(
-        'DoFn %r has multiple TimerSpecs with the same name: %s.' % (
-            dofn, all_timer_specs))
+    raise ValueError('DoFn %r has multiple TimerSpecs with the same name: %s.' %
+                     (dofn, all_timer_specs))
 
   # Reject DoFns that use timer specs without corresponding timer callbacks.
   for timer_spec in all_timer_specs:
@@ -253,12 +250,12 @@ def validate_stateful_dofn(dofn):
           ('DoFn %r has a TimerSpec without an associated on_timer '
            'callback: %s.') % (dofn, timer_spec))
     method_name = timer_spec._attached_callback.__name__
-    if (timer_spec._attached_callback !=
-        getattr(dofn, method_name, None).__func__):
+    if (timer_spec._attached_callback != getattr(dofn, method_name,
+                                                 None).__func__):
       raise ValueError(
           ('The on_timer callback for %s is not the specified .%s method '
-           'for DoFn %r (perhaps it was overwritten?).') % (
-               timer_spec, method_name, dofn))
+           'for DoFn %r (perhaps it was overwritten?).') %
+          (timer_spec, method_name, dofn))
 
 
 class RuntimeTimer(object):
@@ -278,12 +275,14 @@ class RuntimeTimer(object):
 
 class RuntimeState(object):
   """State interface object passed to user code."""
+
   def prefetch(self):
     # The default implementation here does nothing.
     pass
 
 
 class AccumulatingRuntimeState(RuntimeState):
+
   def read(self):
     # type: () -> Iterable[Any]
     raise NotImplementedError(type(self))

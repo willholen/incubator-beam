@@ -48,9 +48,10 @@ def check_elements_with_mean_value_per_key(actual):
 
 
 @mock.patch('apache_beam.Pipeline', TestPipeline)
-@mock.patch(
-    'apache_beam.examples.snippets.transforms.aggregation.mean.print', str)
+@mock.patch('apache_beam.examples.snippets.transforms.aggregation.mean.print',
+            str)
 class MeanTest(unittest.TestCase):
+
   def test_mean_globally(self):
     mean.mean_globally(check_mean_element)
 

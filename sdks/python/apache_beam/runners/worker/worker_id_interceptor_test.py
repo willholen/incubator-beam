@@ -42,16 +42,13 @@ class WorkerIdInterceptorTest(unittest.TestCase):
     headers_holder = {}
 
     def continuation(client_details, request_iterator):
-      headers_holder.update({
-          worker_id_key: dict(client_details.metadata).get(worker_id_key)
-      })
+      headers_holder.update(
+          {worker_id_key: dict(client_details.metadata).get(worker_id_key)})
 
     WorkerIdInterceptor._worker_id = 'my_worker_id'
 
-    WorkerIdInterceptor().intercept_stream_stream(continuation,
-                                                  _ClientCallDetails(
-                                                      None, None, None, None),
-                                                  [])
+    WorkerIdInterceptor().intercept_stream_stream(
+        continuation, _ClientCallDetails(None, None, None, None), [])
     self.assertEqual(headers_holder[worker_id_key], 'my_worker_id',
                      'worker_id_key not set')
 
@@ -60,9 +57,8 @@ class WorkerIdInterceptorTest(unittest.TestCase):
     headers_holder = {}
 
     def continuation(client_details, request_iterator):
-      headers_holder.update({
-          worker_id_key: dict(client_details.metadata).get(worker_id_key)
-      })
+      headers_holder.update(
+          {worker_id_key: dict(client_details.metadata).get(worker_id_key)})
 
     WorkerIdInterceptor._worker_id = 'my_worker_id'
 

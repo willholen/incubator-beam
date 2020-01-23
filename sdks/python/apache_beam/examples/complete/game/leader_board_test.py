@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Test for the leader_board example."""
 
 # pytype: skip-file
@@ -51,20 +50,17 @@ class LeaderBoardTest(unittest.TestCase):
 
   def test_leader_board_teams(self):
     with TestPipeline() as p:
-      result = (
-          self.create_data(p)
-          | leader_board.CalculateTeamScores(
-              team_window_duration=60,
-              allowed_lateness=120))
-      assert_that(result, equal_to([
-          ('team1', 14), ('team1', 18), ('team1', 18), ('team2', 2),
-          ('team3', 13)]))
+      result = (self.create_data(p) | leader_board.CalculateTeamScores(
+          team_window_duration=60, allowed_lateness=120))
+      assert_that(
+          result,
+          equal_to([('team1', 14), ('team1', 18), ('team1', 18), ('team2', 2),
+                    ('team3', 13)]))
 
   def test_leader_board_users(self):
     with TestPipeline() as p:
-      result = (
-          self.create_data(p)
-          | leader_board.CalculateUserScores(allowed_lateness=120))
+      result = (self.create_data(p) |
+                leader_board.CalculateUserScores(allowed_lateness=120))
       assert_that(result, equal_to([]))
 
 

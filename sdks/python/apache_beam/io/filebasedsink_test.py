@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for file sinks."""
 
 # pytype: skip-file
@@ -76,9 +75,10 @@ class _TestCaseWithTempDirCleanUp(unittest.TestCase):
       name = tempfile.template
     if not dir:
       dir = self._new_tempdir()
-    file_name = tempfile.NamedTemporaryFile(
-        delete=False, prefix=name,
-        dir=dir, suffix=suffix).name
+    file_name = tempfile.NamedTemporaryFile(delete=False,
+                                            prefix=name,
+                                            dir=dir,
+                                            suffix=suffix).name
 
     if content:
       with open(file_name, 'w') as f:
@@ -134,17 +134,18 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
 
   def test_file_sink_writing(self):
     temp_path = os.path.join(self._new_tempdir(), 'FileBasedSink')
-    sink = MyFileBasedSink(
-        temp_path, file_name_suffix='.output', coder=coders.ToStringCoder())
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix='.output',
+                           coder=coders.ToStringCoder())
 
     init_token, writer_results = self._common_init(sink)
 
     pre_finalize_results = sink.pre_finalize(init_token, writer_results)
-    finalize_res1 = list(sink.finalize_write(init_token, writer_results,
-                                             pre_finalize_results))
+    finalize_res1 = list(
+        sink.finalize_write(init_token, writer_results, pre_finalize_results))
     # Retry the finalize operation (as if the first attempt was lost).
-    finalize_res2 = list(sink.finalize_write(init_token, writer_results,
-                                             pre_finalize_results))
+    finalize_res2 = list(
+        sink.finalize_write(init_token, writer_results, pre_finalize_results))
 
     # Check the results.
     shard1 = temp_path + '-00000-of-00002.output'
@@ -159,24 +160,24 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
 
   def test_file_sink_display_data(self):
     temp_path = os.path.join(self._new_tempdir(), 'display')
-    sink = MyFileBasedSink(
-        temp_path, file_name_suffix='.output', coder=coders.ToStringCoder())
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix='.output',
+                           coder=coders.ToStringCoder())
     dd = DisplayData.create_from(sink)
     expected_items = [
-        DisplayDataItemMatcher(
-            'compression', 'auto'),
+        DisplayDataItemMatcher('compression', 'auto'),
         DisplayDataItemMatcher(
             'file_pattern',
-            '{}{}'.format(
-                temp_path,
-                '-%(shard_num)05d-of-%(num_shards)05d.output'))]
+            '{}{}'.format(temp_path,
+                          '-%(shard_num)05d-of-%(num_shards)05d.output'))
+    ]
     hc.assert_that(dd.items, hc.contains_inanyorder(*expected_items))
 
   def test_empty_write(self):
     temp_path = tempfile.NamedTemporaryFile().name
-    sink = MyFileBasedSink(
-        temp_path, file_name_suffix='.output', coder=coders.ToStringCoder()
-    )
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix='.output',
+                           coder=coders.ToStringCoder())
     with TestPipeline() as p:
       p | beam.Create([]) | beam.io.Write(sink)  # pylint: disable=expression-not-assigned
     self.assertEqual(
@@ -185,11 +186,10 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
   def test_static_value_provider_empty_write(self):
     temp_path = StaticValueProvider(value_type=str,
                                     value=tempfile.NamedTemporaryFile().name)
-    sink = MyFileBasedSink(
-        temp_path,
-        file_name_suffix=StaticValueProvider(value_type=str, value='.output'),
-        coder=coders.ToStringCoder()
-    )
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix=StaticValueProvider(
+                               value_type=str, value='.output'),
+                           coder=coders.ToStringCoder())
     with TestPipeline() as p:
       p | beam.Create([]) | beam.io.Write(sink)  # pylint: disable=expression-not-assigned
     self.assertEqual(
@@ -197,12 +197,11 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
 
   def test_fixed_shard_write(self):
     temp_path = os.path.join(self._new_tempdir(), 'empty')
-    sink = MyFileBasedSink(
-        temp_path,
-        file_name_suffix='.output',
-        num_shards=3,
-        shard_name_template='_NN_SSS_',
-        coder=coders.ToStringCoder())
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix='.output',
+                           num_shards=3,
+                           shard_name_template='_NN_SSS_',
+                           coder=coders.ToStringCoder())
     with TestPipeline() as p:
       p | beam.Create(['a', 'b']) | beam.io.Write(sink)  # pylint: disable=expression-not-assigned
 
@@ -215,10 +214,11 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
   # Not using 'test' in name so that 'nose' doesn't pick this as a test.
   def run_temp_dir_check(self, no_dir_path, dir_path, no_dir_root_path,
                          dir_root_path, prefix, separator):
+
     def _get_temp_dir(file_path_prefix):
-      sink = MyFileBasedSink(
-          file_path_prefix, file_name_suffix='.output',
-          coder=coders.ToStringCoder())
+      sink = MyFileBasedSink(file_path_prefix,
+                             file_name_suffix='.output',
+                             coder=coders.ToStringCoder())
       return sink.initialize_write()
 
     temp_dir = _get_temp_dir(no_dir_path)
@@ -247,9 +247,8 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
 
   def test_temp_dir_gcs(self):
     try:
-      self.run_temp_dir_check(
-          'gs://aaa/bbb', 'gs://aaa/bbb/', 'gs://aaa', 'gs://aaa/', 'gs://',
-          '/')
+      self.run_temp_dir_check('gs://aaa/bbb', 'gs://aaa/bbb/', 'gs://aaa',
+                              'gs://aaa/', 'gs://', '/')
     except ValueError:
       _LOGGER.debug('Ignoring test since GCP module is not installed')
 
@@ -271,13 +270,13 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
     filesystem_os_mock.path.abspath = lambda a: a
     filesystem_os_mock.path.split.side_effect = _fake_unix_split
     filesystem_os_mock.path.join.side_effect = _fake_unix_join
-    self.run_temp_dir_check(
-        '/aaa/bbb', '/aaa/bbb/', '/', '/', '/', '/')
+    self.run_temp_dir_check('/aaa/bbb', '/aaa/bbb/', '/', '/', '/', '/')
 
   def test_file_sink_multi_shards(self):
     temp_path = os.path.join(self._new_tempdir(), 'multishard')
-    sink = MyFileBasedSink(
-        temp_path, file_name_suffix='.output', coder=coders.ToStringCoder())
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix='.output',
+                           coder=coders.ToStringCoder())
 
     # Manually invoke the generic Sink API.
     init_token = sink.initialize_write()
@@ -293,8 +292,8 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
       writer_results.append(writer.close())
 
     pre_finalize_results = sink.pre_finalize(init_token, writer_results)
-    res = sorted(sink.finalize_write(init_token, writer_results,
-                                     pre_finalize_results))
+    res = sorted(
+        sink.finalize_write(init_token, writer_results, pre_finalize_results))
 
     for i in range(num_shards):
       shard_name = '%s-%05d-of-%05d.output' % (temp_path, i, num_shards)
@@ -309,22 +308,24 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
   @mock.patch.object(filebasedsink.FileSystems, 'rename')
   def test_file_sink_rename_error(self, rename_mock):
     temp_path = os.path.join(self._new_tempdir(), 'rename_error')
-    sink = MyFileBasedSink(
-        temp_path, file_name_suffix='.output', coder=coders.ToStringCoder())
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix='.output',
+                           coder=coders.ToStringCoder())
     init_token, writer_results = self._common_init(sink)
     pre_finalize_results = sink.pre_finalize(init_token, writer_results)
 
     error_str = 'mock rename error description'
-    rename_mock.side_effect = BeamIOError(
-        'mock rename error', {('src', 'dst'): error_str})
+    rename_mock.side_effect = BeamIOError('mock rename error',
+                                          {('src', 'dst'): error_str})
     with self.assertRaisesRegex(Exception, error_str):
       list(sink.finalize_write(init_token, writer_results,
                                pre_finalize_results))
 
   def test_file_sink_src_missing(self):
     temp_path = os.path.join(self._new_tempdir(), 'src_missing')
-    sink = MyFileBasedSink(
-        temp_path, file_name_suffix='.output', coder=coders.ToStringCoder())
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix='.output',
+                           coder=coders.ToStringCoder())
     init_token, writer_results = self._common_init(sink)
     pre_finalize_results = sink.pre_finalize(init_token, writer_results)
 
@@ -335,8 +336,9 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
 
   def test_file_sink_dst_matches_src(self):
     temp_path = os.path.join(self._new_tempdir(), 'dst_matches_src')
-    sink = MyFileBasedSink(
-        temp_path, file_name_suffix='.output', coder=coders.ToStringCoder())
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix='.output',
+                           coder=coders.ToStringCoder())
     init_token, [res1, res2] = self._common_init(sink)
 
     pre_finalize_results = sink.pre_finalize(init_token, [res1, res2])
@@ -356,8 +358,9 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
 
   def test_pre_finalize(self):
     temp_path = os.path.join(self._new_tempdir(), 'pre_finalize')
-    sink = MyFileBasedSink(
-        temp_path, file_name_suffix='.output', coder=coders.ToStringCoder())
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix='.output',
+                           coder=coders.ToStringCoder())
     init_token, [res1, res2] = self._common_init(sink)
 
     # no-op
@@ -385,8 +388,9 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
   @mock.patch.object(filebasedsink.FileSystems, 'delete')
   def test_pre_finalize_error(self, delete_mock):
     temp_path = os.path.join(self._new_tempdir(), 'pre_finalize')
-    sink = MyFileBasedSink(
-        temp_path, file_name_suffix='.output', coder=coders.ToStringCoder())
+    sink = MyFileBasedSink(temp_path,
+                           file_name_suffix='.output',
+                           coder=coders.ToStringCoder())
     init_token, [res1, res2] = self._common_init(sink)
 
     # no-op
@@ -402,8 +406,8 @@ class TestFileBasedSink(_TestCaseWithTempDirCleanUp):
       f.write('foo')
 
     error_str = 'mock rename error description'
-    delete_mock.side_effect = BeamIOError(
-        'mock rename error', {shard2: error_str})
+    delete_mock.side_effect = BeamIOError('mock rename error',
+                                          {shard2: error_str})
     with self.assertRaisesRegex(Exception, error_str):
       sink.pre_finalize(init_token, [res1, res2])
 

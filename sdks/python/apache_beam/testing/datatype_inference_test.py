@@ -94,11 +94,26 @@ TEST_DATA = [
             "type":
                 "record",
             "fields": [
-                {"name": "a", "type": "int"},
-                {"name": "b", "type": "double"},
-                {"name": "c", "type": "string"},
-                {"name": "d", "type": "bytes"},
-                {"name": "e", "type": "bytes"},
+                {
+                    "name": "a",
+                    "type": "int"
+                },
+                {
+                    "name": "b",
+                    "type": "double"
+                },
+                {
+                    "name": "c",
+                    "type": "string"
+                },
+                {
+                    "name": "d",
+                    "type": "bytes"
+                },
+                {
+                    "name": "e",
+                    "type": "bytes"
+                },
             ],
         },
     },
@@ -115,11 +130,15 @@ def nullify_data_and_schemas(test_data):
     new_fields = []
     for field in schema["fields"]:
       if isinstance(field["type"], str):
-        new_fields.append(
-            {"name": field["name"], "type": sorted([field["type"], "null"])})
+        new_fields.append({
+            "name": field["name"],
+            "type": sorted([field["type"], "null"])
+        })
       else:
-        new_fields.append(
-            {"name": field["name"], "type": sorted(field["type"] + ["null"])})
+        new_fields.append({
+            "name": field["name"],
+            "type": sorted(field["type"] + ["null"])
+        })
     schema["fields"] = new_fields
     return schema
 

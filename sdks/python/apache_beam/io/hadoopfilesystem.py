@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """:class:`~apache_beam.io.filesystem.FileSystem` implementation for accessing
 Hadoop Distributed File System files."""
 
@@ -44,7 +43,7 @@ __all__ = ['HadoopFileSystem']
 
 _HDFS_PREFIX = 'hdfs:/'
 _URL_RE = re.compile(r'^' + _HDFS_PREFIX + r'(/.*)')
-_COPY_BUFFER_SIZE = 2 ** 16
+_COPY_BUFFER_SIZE = 2**16
 _DEFAULT_BUFFER_SIZE = 20 * 1024 * 1024
 
 # WebHDFS FileChecksum property constants.
@@ -73,8 +72,9 @@ class HdfsDownloader(filesystemio.Downloader):
     return self._size
 
   def get_range(self, start, end):
-    with self._hdfs_client.read(
-        self._path, offset=start, length=end - start + 1) as reader:
+    with self._hdfs_client.read(self._path,
+                                offset=start,
+                                length=end - start + 1) as reader:
       return reader.read()
 
 
@@ -129,8 +129,9 @@ class HadoopFileSystem(FileSystem):
       raise ValueError('hdfs_port is not set')
     if hdfs_user is None:
       raise ValueError('hdfs_user is not set')
-    self._hdfs_client = hdfs.InsecureClient(
-        'http://%s:%s' % (hdfs_host, str(hdfs_port)), user=hdfs_user)
+    self._hdfs_client = hdfs.InsecureClient('http://%s:%s' %
+                                            (hdfs_host, str(hdfs_port)),
+                                            user=hdfs_user)
 
   @classmethod
   def scheme(cls):
@@ -201,8 +202,9 @@ class HadoopFileSystem(FileSystem):
   @staticmethod
   def _add_compression(stream, path, mime_type, compression_type):
     if mime_type != 'application/octet-stream':
-      _LOGGER.warning('Mime types are not supported. Got non-default mime_type:'
-                      ' %s', mime_type)
+      _LOGGER.warning(
+          'Mime types are not supported. Got non-default mime_type:'
+          ' %s', mime_type)
     if compression_type == CompressionTypes.AUTO:
       compression_type = CompressionTypes.detect_compression_type(path)
     if compression_type != CompressionTypes.UNCOMPRESSED:
@@ -210,7 +212,9 @@ class HadoopFileSystem(FileSystem):
 
     return stream
 
-  def create(self, url, mime_type='application/octet-stream',
+  def create(self,
+             url,
+             mime_type='application/octet-stream',
              compression_type=CompressionTypes.AUTO):
     # type: (...) -> BinaryIO
     """
@@ -220,15 +224,18 @@ class HadoopFileSystem(FileSystem):
     path = self._parse_url(url)
     return self._create(path, mime_type, compression_type)
 
-  def _create(self, path, mime_type='application/octet-stream',
+  def _create(self,
+              path,
+              mime_type='application/octet-stream',
               compression_type=CompressionTypes.AUTO):
-    stream = io.BufferedWriter(
-        filesystemio.UploaderStream(
-            HdfsUploader(self._hdfs_client, path)),
-        buffer_size=_DEFAULT_BUFFER_SIZE)
+    stream = io.BufferedWriter(filesystemio.UploaderStream(
+        HdfsUploader(self._hdfs_client, path)),
+                               buffer_size=_DEFAULT_BUFFER_SIZE)
     return self._add_compression(stream, path, mime_type, compression_type)
 
-  def open(self, url, mime_type='application/octet-stream',
+  def open(self,
+           url,
+           mime_type='application/octet-stream',
            compression_type=CompressionTypes.AUTO):
     # type: (...) -> BinaryIO
     """
@@ -238,12 +245,13 @@ class HadoopFileSystem(FileSystem):
     path = self._parse_url(url)
     return self._open(path, mime_type, compression_type)
 
-  def _open(self, path, mime_type='application/octet-stream',
+  def _open(self,
+            path,
+            mime_type='application/octet-stream',
             compression_type=CompressionTypes.AUTO):
-    stream = io.BufferedReader(
-        filesystemio.DownloaderStream(
-            HdfsDownloader(self._hdfs_client, path)),
-        buffer_size=_DEFAULT_BUFFER_SIZE)
+    stream = io.BufferedReader(filesystemio.DownloaderStream(
+        HdfsDownloader(self._hdfs_client, path)),
+                               buffer_size=_DEFAULT_BUFFER_SIZE)
     return self._add_compression(stream, path, mime_type, compression_type)
 
   def copy(self, source_file_names, destination_file_names):
@@ -257,10 +265,9 @@ class HadoopFileSystem(FileSystem):
       destination_file_names: iterable of URLs.
     """
     if len(source_file_names) != len(destination_file_names):
-      raise BeamIOError(
-          'source_file_names and destination_file_names should '
-          'be equal in length: %d != %d' % (
-              len(source_file_names), len(destination_file_names)))
+      raise BeamIOError('source_file_names and destination_file_names should '
+                        'be equal in length: %d != %d' %
+                        (len(source_file_names), len(destination_file_names)))
 
     def _copy_file(source, destination):
       with self._open(source) as f1:

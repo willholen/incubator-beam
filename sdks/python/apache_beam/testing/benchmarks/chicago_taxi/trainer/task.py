@@ -52,32 +52,25 @@ def train_and_maybe_evaluate(hparams):
   tf_transform_output = tft.TFTransformOutput(hparams.tf_transform_dir)
 
   train_input = lambda: model.input_fn(
-      hparams.train_files,
-      tf_transform_output,
-      batch_size=TRAIN_BATCH_SIZE
-  )
+      hparams.train_files, tf_transform_output, batch_size=TRAIN_BATCH_SIZE)
 
   eval_input = lambda: model.input_fn(
-      hparams.eval_files,
-      tf_transform_output,
-      batch_size=EVAL_BATCH_SIZE
-  )
+      hparams.eval_files, tf_transform_output, batch_size=EVAL_BATCH_SIZE)
 
-  train_spec = tf.estimator.TrainSpec(
-      train_input, max_steps=hparams.train_steps)
+  train_spec = tf.estimator.TrainSpec(train_input,
+                                      max_steps=hparams.train_steps)
 
   serving_receiver_fn = lambda: model.example_serving_receiver_fn(
       tf_transform_output, schema)
 
   exporter = tf.estimator.FinalExporter('chicago-taxi', serving_receiver_fn)
-  eval_spec = tf.estimator.EvalSpec(
-      eval_input,
-      steps=hparams.eval_steps,
-      exporters=[exporter],
-      name='chicago-taxi-eval')
+  eval_spec = tf.estimator.EvalSpec(eval_input,
+                                    steps=hparams.eval_steps,
+                                    exporters=[exporter],
+                                    name='chicago-taxi-eval')
 
-  run_config = tf.estimator.RunConfig(
-      save_checkpoints_steps=999, keep_checkpoint_max=1)
+  run_config = tf.estimator.RunConfig(save_checkpoints_steps=999,
+                                      keep_checkpoint_max=1)
 
   serving_model_dir = os.path.join(hparams.output_dir, SERVING_MODEL_DIR)
   run_config = run_config.replace(model_dir=serving_model_dir)
@@ -111,42 +104,38 @@ def run_experiment(hparams):
   # Save a model for tfma eval
   eval_model_dir = os.path.join(hparams.output_dir, EVAL_MODEL_DIR)
 
-  receiver_fn = lambda: model.eval_input_receiver_fn(
-      tf_transform_output, schema)
+  receiver_fn = lambda: model.eval_input_receiver_fn(tf_transform_output, schema
+                                                    )
 
-  tfma.export.export_eval_savedmodel(
-      estimator=estimator,
-      export_dir_base=eval_model_dir,
-      eval_input_receiver_fn=receiver_fn)
+  tfma.export.export_eval_savedmodel(estimator=estimator,
+                                     export_dir_base=eval_model_dir,
+                                     eval_input_receiver_fn=receiver_fn)
 
 
 def main():
   parser = argparse.ArgumentParser()
   # Input Arguments
-  parser.add_argument(
-      '--train-files',
-      help='GCS or local paths to training data',
-      nargs='+',
-      required=True)
+  parser.add_argument('--train-files',
+                      help='GCS or local paths to training data',
+                      nargs='+',
+                      required=True)
 
   parser.add_argument(
       '--tf-transform-dir',
       help='Tf-transform directory with model from preprocessing step',
       required=True)
 
-  parser.add_argument(
-      '--output-dir',
-      help="""\
+  parser.add_argument('--output-dir',
+                      help="""\
           Directory under which which the serving model (under /serving_model_dir)\
           and the tf-mode-analysis model (under /eval_model_dir) will be written\
           """,
-      required=True)
+                      required=True)
 
-  parser.add_argument(
-      '--eval-files',
-      help='GCS or local paths to evaluation data',
-      nargs='+',
-      required=True)
+  parser.add_argument('--eval-files',
+                      help='GCS or local paths to evaluation data',
+                      nargs='+',
+                      required=True)
   # Training arguments
   parser.add_argument(
       '--job-dir',
@@ -160,19 +149,17 @@ def main():
       default='INFO',
   )
   # Experiment arguments
-  parser.add_argument(
-      '--train-steps',
-      help='Count of steps to run the training job for',
-      required=True,
-      type=int)
+  parser.add_argument('--train-steps',
+                      help='Count of steps to run the training job for',
+                      required=True,
+                      type=int)
   parser.add_argument(
       '--eval-steps',
       help='Number of steps to run evalution for at each checkpoint',
       default=100,
       type=int)
-  parser.add_argument(
-      '--schema-file',
-      help='File holding the schema for the input data')
+  parser.add_argument('--schema-file',
+                      help='File holding the schema for the input data')
 
   args = parser.parse_args()
 

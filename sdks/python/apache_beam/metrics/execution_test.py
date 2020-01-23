@@ -28,14 +28,18 @@ from apache_beam.metrics.metricbase import MetricName
 
 
 class TestMetricKey(unittest.TestCase):
+
   def test_equality_for_key_with_labels(self):
     test_labels = {'label1', 'value1'}
-    test_object = MetricKey(
-        'step', MetricName('namespace', 'name'), labels=test_labels)
-    same_labels = MetricKey(
-        'step', MetricName('namespace', 'name'), labels={'label1', 'value1'})
-    same_label_reference = MetricKey(
-        'step', MetricName('namespace', 'name'), labels=test_labels)
+    test_object = MetricKey('step',
+                            MetricName('namespace', 'name'),
+                            labels=test_labels)
+    same_labels = MetricKey('step',
+                            MetricName('namespace', 'name'),
+                            labels={'label1', 'value1'})
+    same_label_reference = MetricKey('step',
+                                     MetricName('namespace', 'name'),
+                                     labels=test_labels)
     self.assertEqual(test_object, same_labels)
     self.assertEqual(test_object, same_label_reference)
     self.assertEqual(hash(test_object), hash(same_labels))
@@ -43,13 +47,16 @@ class TestMetricKey(unittest.TestCase):
 
   def test_inequality_for_key_with_labels(self):
     test_labels = {'label1', 'value1'}
-    test_object = MetricKey(
-        'step', MetricName('namespace', 'name'), labels=test_labels)
+    test_object = MetricKey('step',
+                            MetricName('namespace', 'name'),
+                            labels=test_labels)
     no_labels = MetricKey('step', MetricName('namespace', 'name'))
-    diff_label_key = MetricKey(
-        'step', MetricName('namespace', 'name'), labels={'l1_diff', 'value1'})
-    diff_label_value = MetricKey(
-        'step', MetricName('namespace', 'name'), labels={'label1', 'v1_diff'})
+    diff_label_key = MetricKey('step',
+                               MetricName('namespace', 'name'),
+                               labels={'l1_diff', 'value1'})
+    diff_label_value = MetricKey('step',
+                                 MetricName('namespace', 'name'),
+                                 labels={'label1', 'v1_diff'})
     self.assertNotEqual(test_object, no_labels)
     self.assertNotEqual(test_object, diff_label_key)
     self.assertNotEqual(test_object, diff_label_value)
@@ -75,6 +82,7 @@ class TestMetricKey(unittest.TestCase):
 
 
 class TestMetricsContainer(unittest.TestCase):
+
   def test_add_to_counter(self):
     mc = MetricsContainer('astep')
     counter = mc.get_counter(MetricName('namespace', 'name'))

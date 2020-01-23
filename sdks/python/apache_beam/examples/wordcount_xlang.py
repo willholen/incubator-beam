@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A cross-language word-counting workflow."""
 
 # pytype: skip-file
@@ -63,11 +62,10 @@ def build_pipeline(p, input_file, output_file):
   # Read the text file[pattern] into a PCollection.
   lines = p | 'read' >> ReadFromText(input_file)
 
-  counts = (lines
-            | 'split' >> (beam.ParDo(WordExtractingDoFn())
-                          .with_output_types(unicode))
-            | 'count' >> beam.ExternalTransform(
-                'beam:transforms:xlang:count', None, EXPANSION_SERVICE_ADDR))
+  counts = (lines | 'split' >>
+            (beam.ParDo(WordExtractingDoFn()).with_output_types(unicode)) |
+            'count' >> beam.ExternalTransform('beam:transforms:xlang:count',
+                                              None, EXPANSION_SERVICE_ADDR))
 
   # Format the counts into a PCollection of strings.
   def format_result(word_count):
@@ -101,9 +99,8 @@ def main():
   known_args, pipeline_args = parser.parse_known_args()
 
   pipeline_options = PipelineOptions(pipeline_args)
-  assert (
-      pipeline_options.view_as(StandardOptions).runner.lower()
-      == "portablerunner"), "Only PortableRunner is supported."
+  assert (pipeline_options.view_as(StandardOptions).runner.lower() ==
+          "portablerunner"), "Only PortableRunner is supported."
 
   # We use the save_main_session option because one or more DoFn's in this
   # workflow rely on global context (e.g., a module imported at module level).
@@ -111,8 +108,8 @@ def main():
 
   try:
     server = subprocess.Popen([
-        'java', '-jar', known_args.expansion_service_jar,
-        EXPANSION_SERVICE_PORT])
+        'java', '-jar', known_args.expansion_service_jar, EXPANSION_SERVICE_PORT
+    ])
 
     with grpc.insecure_channel(EXPANSION_SERVICE_ADDR) as channel:
       grpc.channel_ready_future(channel).result()

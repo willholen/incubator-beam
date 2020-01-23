@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for apache_beam.runners.interactive.pipeline_ananlyzer.
 
 This module is experimental. No backwards-compatibility guarantees.
@@ -38,8 +37,7 @@ def to_stable_runner_api(p):
   """The extra round trip ensures a stable pipeline proto.
   """
   return (beam.pipeline.Pipeline.from_runner_api(
-      p.to_runner_api(use_fake_coders=True),
-      p.runner,
+      p.to_runner_api(use_fake_coders=True), p.runner,
       p._options).to_runner_api(use_fake_coders=True))
 
 
@@ -92,18 +90,14 @@ class PipelineAnalyzerTest(unittest.TestCase):
     p = beam.Pipeline(runner=self.runner)
 
     # The cold run.
-    pcoll = (p
-             | 'Create' >> beam.Create([1, 2, 3])
-             | 'Double' >> beam.Map(lambda x: x*2)
-             | 'Square' >> beam.Map(lambda x: x**2))
+    pcoll = (p | 'Create' >> beam.Create([1, 2, 3]) |
+             'Double' >> beam.Map(lambda x: x * 2) |
+             'Square' >> beam.Map(lambda x: x**2))
     analyzer = pipeline_analyzer.PipelineAnalyzer(self.cache_manager,
                                                   to_stable_runner_api(p),
                                                   self.runner)
     pipeline_to_execute = beam.pipeline.Pipeline.from_runner_api(
-        analyzer.pipeline_proto_to_execute(),
-        p.runner,
-        p._options
-    )
+        analyzer.pipeline_proto_to_execute(), p.runner, p._options)
     pipeline_to_execute.run().wait_until_finish()
     self.assertEqual(
         len(analyzer.tl_required_trans_ids()),
@@ -114,17 +108,13 @@ class PipelineAnalyzerTest(unittest.TestCase):
     self.assertEqual(len(analyzer.write_cache_ids()), 4)
 
     # The second run.
-    _ = (pcoll
-         | 'Triple' >> beam.Map(lambda x: x*3)
-         | 'Cube' >> beam.Map(lambda x: x**3))
+    _ = (pcoll | 'Triple' >> beam.Map(lambda x: x * 3) |
+         'Cube' >> beam.Map(lambda x: x**3))
     analyzer = pipeline_analyzer.PipelineAnalyzer(self.cache_manager,
                                                   to_stable_runner_api(p),
                                                   self.runner)
     pipeline_to_execute = beam.pipeline.Pipeline.from_runner_api(
-        analyzer.pipeline_proto_to_execute(),
-        p.runner,
-        p._options
-    )
+        analyzer.pipeline_proto_to_execute(), p.runner, p._options)
     self.assertEqual(
         len(analyzer.tl_required_trans_ids()),
         6  # Read, Triple, Cube, CacheSample * 2, CacheFull
@@ -181,17 +171,14 @@ class PipelineAnalyzerTest(unittest.TestCase):
                              expected_pipeline_proto)
 
     pipeline_to_execute = beam.pipeline.Pipeline.from_runner_api(
-        analyzer.pipeline_proto_to_execute(),
-        p.runner,
-        p._options
-    )
+        analyzer.pipeline_proto_to_execute(), p.runner, p._options)
     pipeline_to_execute.run().wait_until_finish()
 
   def test_write_cache_expansion(self):
     p = beam.Pipeline(runner=self.runner)
 
     pcoll1 = p | 'Create' >> beam.Create([1, 2, 3])
-    pcoll2 = pcoll1 | 'Double' >> beam.Map(lambda x: x*2)
+    pcoll2 = pcoll1 | 'Double' >> beam.Map(lambda x: x * 2)
     pcoll3 = pcoll2 | 'Square' >> beam.Map(lambda x: x**2)
     analyzer = pipeline_analyzer.PipelineAnalyzer(self.cache_manager,
                                                   to_stable_runner_api(p),
@@ -221,10 +208,9 @@ class PipelineAnalyzerTest(unittest.TestCase):
     p = beam.Pipeline(runner=self.runner)
 
     # The cold run.
-    pcoll = (p
-             | 'Create' >> beam.Create([1, 2, 3])
-             | 'Double' >> beam.Map(lambda x: x*2)
-             | 'Square' >> beam.Map(lambda x: x**2))
+    pcoll = (p | 'Create' >> beam.Create([1, 2, 3]) |
+             'Double' >> beam.Map(lambda x: x * 2) |
+             'Square' >> beam.Map(lambda x: x**2))
     pipeline_proto = to_stable_runner_api(p)
 
     pipeline_info = pipeline_analyzer.PipelineInfo(pipeline_proto.components)
@@ -232,28 +218,22 @@ class PipelineAnalyzerTest(unittest.TestCase):
     cache_label1 = pipeline_info.cache_label(pcoll_id)
 
     analyzer = pipeline_analyzer.PipelineAnalyzer(self.cache_manager,
-                                                  pipeline_proto,
-                                                  self.runner)
+                                                  pipeline_proto, self.runner)
     pipeline_to_execute = beam.pipeline.Pipeline.from_runner_api(
-        analyzer.pipeline_proto_to_execute(),
-        p.runner,
-        p._options
-    )
+        analyzer.pipeline_proto_to_execute(), p.runner, p._options)
     pipeline_to_execute.run().wait_until_finish()
 
     # The second run.
-    _ = (pcoll
-         | 'Triple' >> beam.Map(lambda x: x*3)
-         | 'Cube' >> beam.Map(lambda x: x**3))
+    _ = (pcoll | 'Triple' >> beam.Map(lambda x: x * 3) |
+         'Cube' >> beam.Map(lambda x: x**3))
     analyzer = pipeline_analyzer.PipelineAnalyzer(self.cache_manager,
                                                   to_stable_runner_api(p),
                                                   self.runner)
 
     expected_pipeline = beam.Pipeline(runner=self.runner)
-    pcoll1 = (expected_pipeline
-              | 'Load%s' % cache_label1 >> cache.ReadCache(
-                  self.cache_manager, cache_label1))
-    pcoll2 = pcoll1 | 'Triple' >> beam.Map(lambda x: x*3)
+    pcoll1 = (expected_pipeline | 'Load%s' % cache_label1 >> cache.ReadCache(
+        self.cache_manager, cache_label1))
+    pcoll2 = pcoll1 | 'Triple' >> beam.Map(lambda x: x * 3)
     pcoll3 = pcoll2 | 'Cube' >> beam.Map(lambda x: x**3)
 
     cache_label2 = 'PColl-7654321'
@@ -274,6 +254,7 @@ class PipelineAnalyzerTest(unittest.TestCase):
 
 
 class PipelineInfoTest(unittest.TestCase):
+
   def setUp(self):
     self.runner = direct_runner.DirectRunner()
 
@@ -282,7 +263,9 @@ class PipelineInfoTest(unittest.TestCase):
     Test that PTransforms which pass through their input PCollection can be
     used with PipelineInfo.
     """
+
     class Passthrough(beam.PTransform):
+
       def expand(self, pcoll):
         return pcoll
 

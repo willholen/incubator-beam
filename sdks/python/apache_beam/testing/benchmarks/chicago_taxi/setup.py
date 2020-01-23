@@ -34,6 +34,6 @@ if __name__ == '__main__':
           'tensorflow-model-analysis>=0.13.2,<0.14',
           'tensorflow-serving-api>=1.13.0,<1.14',
           'tensorflow-transform>=0.13.0,<0.14',
-          ],
+      ],
       python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,<4',
   )

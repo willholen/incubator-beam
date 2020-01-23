@@ -67,8 +67,8 @@ class _TestWriter(iobase.Writer):
     self.return_write_results = return_write_results
 
   def close(self):
-    assert self.state in (
-        _TestWriter.STATE_WRITTEN, _TestWriter.STATE_UNSTARTED)
+    assert self.state in (_TestWriter.STATE_WRITTEN,
+                          _TestWriter.STATE_UNSTARTED)
     self.state = _TestWriter.STATE_CLOSED
     if self.return_write_results:
       return _TestWriter.TEST_WRITE_RESULT

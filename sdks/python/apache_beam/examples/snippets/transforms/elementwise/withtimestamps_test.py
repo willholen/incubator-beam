@@ -75,6 +75,7 @@ def check_plant_processing_times(actual):
     'apache_beam.examples.snippets.transforms.elementwise.withtimestamps.print',
     str)
 class WithTimestampsTest(unittest.TestCase):
+
   def test_event_time(self):
     withtimestamps.withtimestamps_event_time(check_plant_timestamps)
 

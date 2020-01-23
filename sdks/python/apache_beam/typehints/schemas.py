@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """ Support for mapping python types to proto Schemas and back again.
 
 Python              Schema
@@ -67,6 +66,7 @@ from apache_beam.typehints.native_type_compatibility import extract_optional_typ
 
 # Registry of typings for a schema by UUID
 class SchemaTypeRegistry(object):
+
   def __init__(self):
     self.by_id = {}
     self.by_typing = {}
@@ -85,7 +85,6 @@ class SchemaTypeRegistry(object):
 
 SCHEMA_REGISTRY = SchemaTypeRegistry()
 
-
 # Bi-directional mappings
 _PRIMITIVES = (
     (np.int8, schema_pb2.BYTE),
@@ -96,8 +95,7 @@ _PRIMITIVES = (
     (np.float64, schema_pb2.DOUBLE),
     (unicode, schema_pb2.STRING),
     (bool, schema_pb2.BOOLEAN),
-    (bytes if sys.version_info.major >= 3 else ByteString,
-     schema_pb2.BYTES),
+    (bytes if sys.version_info.major >= 3 else ByteString, schema_pb2.BYTES),
 )
 
 PRIMITIVE_TO_ATOMIC_TYPE = dict((typ, atomic) for typ, atomic in _PRIMITIVES)
@@ -124,17 +122,15 @@ def typing_to_runner_api(type_):
       schema = SCHEMA_REGISTRY.get_schema_by_id(type_.id)
     if schema is None:
       fields = [
-          schema_pb2.Field(
-              name=name, type=typing_to_runner_api(type_._field_types[name]))
+          schema_pb2.Field(name=name,
+                           type=typing_to_runner_api(type_._field_types[name]))
           for name in type_._fields
       ]
       type_id = str(uuid4())
       schema = schema_pb2.Schema(fields=fields, id=type_id)
       SCHEMA_REGISTRY.add(type_, schema)
 
-    return schema_pb2.FieldType(
-        row_type=schema_pb2.RowType(
-            schema=schema))
+    return schema_pb2.FieldType(row_type=schema_pb2.RowType(schema=schema))
 
   # All concrete types (other than NamedTuple sub-classes) should map to
   # a supported primitive type.
@@ -145,8 +141,7 @@ def typing_to_runner_api(type_):
     raise ValueError(
         "type 'str' is not supported in python 2. Please use 'unicode' or "
         "'typing.ByteString' instead to unambiguously indicate if this is a "
-        "UTF-8 string or a byte array."
-    )
+        "UTF-8 string or a byte array.")
 
   elif _match_is_exactly_mapping(type_):
     key_type, value_type = map(typing_to_runner_api, _get_args(type_))
@@ -163,8 +158,8 @@ def typing_to_runner_api(type_):
 
   elif _safe_issubclass(type_, Sequence):
     element_type = typing_to_runner_api(_get_args(type_)[0])
-    return schema_pb2.FieldType(
-        array_type=schema_pb2.ArrayType(element_type=element_type))
+    return schema_pb2.FieldType(array_type=schema_pb2.ArrayType(
+        element_type=element_type))
 
   raise ValueError("Unsupported type: %s" % type_)
 
@@ -189,10 +184,8 @@ def typing_from_runner_api(fieldtype_proto):
     return Sequence[typing_from_runner_api(
         fieldtype_proto.array_type.element_type)]
   elif type_info == "map_type":
-    return Mapping[
-        typing_from_runner_api(fieldtype_proto.map_type.key_type),
-        typing_from_runner_api(fieldtype_proto.map_type.value_type)
-    ]
+    return Mapping[typing_from_runner_api(fieldtype_proto.map_type.key_type),
+                   typing_from_runner_api(fieldtype_proto.map_type.value_type)]
   elif type_info == "row_type":
     schema = fieldtype_proto.row_type.schema
     user_type = SCHEMA_REGISTRY.get_typing_by_id(schema.id)

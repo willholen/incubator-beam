@@ -28,8 +28,10 @@ from apache_beam.testing.util import assert_that
 from apache_beam.testing.util import equal_to
 
 
-def assert_matches_stdout(
-    actual, expected_stdout, normalize_fn=lambda elem: elem, label=''):
+def assert_matches_stdout(actual,
+                          expected_stdout,
+                          normalize_fn=lambda elem: elem,
+                          label=''):
   """Asserts a PCollection of strings matches the expected stdout elements.
 
   Args:
@@ -39,6 +41,7 @@ def assert_matches_stdout(
         comparing them. Can be used to sort lists before comparing.
     label (str): [optional] Label to make transform names unique.
   """
+
   def stdout_to_python_object(elem_str):
     try:
       elem = ast.literal_eval(elem_str)

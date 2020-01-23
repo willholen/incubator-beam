@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unittest for GCP Bigtable testing."""
 # pytype: skip-file
 
@@ -68,17 +67,19 @@ class GenerateTestRows(beam.PTransform):
   Bigtable Table.
 
   """
-  def __init__(self, number, project_id=None, instance_id=None,
-               table_id=None):
+
+  def __init__(self, number, project_id=None, instance_id=None, table_id=None):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(WriteToBigTable, self).__init__()
     beam.PTransform.__init__(self)
     self.number = number
     self.rand = random.choice(string.ascii_letters + string.digits)
     self.column_family_id = 'cf1'
-    self.beam_options = {'project_id': project_id,
-                         'instance_id': instance_id,
-                         'table_id': table_id}
+    self.beam_options = {
+        'project_id': project_id,
+        'instance_id': instance_id,
+        'table_id': table_id
+    }
 
   def _generate(self):
     value = ''.join(self.rand for i in range(100))
@@ -88,18 +89,15 @@ class GenerateTestRows(beam.PTransform):
       direct_row = row.DirectRow(row_key=key)
       for column_id in range(10):
         direct_row.set_cell(self.column_family_id,
-                            ('field%s' % column_id).encode('utf-8'),
-                            value,
+                            ('field%s' % column_id).encode('utf-8'), value,
                             datetime.datetime.now())
       yield direct_row
 
   def expand(self, pvalue):
     beam_options = self.beam_options
-    return (pvalue
-            | beam.Create(self._generate())
-            | WriteToBigTable(beam_options['project_id'],
-                              beam_options['instance_id'],
-                              beam_options['table_id']))
+    return (pvalue | beam.Create(self._generate()) | WriteToBigTable(
+        beam_options['project_id'], beam_options['instance_id'],
+        beam_options['table_id']))
 
 
 @unittest.skipIf(Client is None, 'GCP Bigtable dependencies are not installed')
@@ -152,11 +150,14 @@ class BigtableIOWriteTest(unittest.TestCase):
     EXISTING_INSTANCES[:] = instances
 
     def age_in_hours(micros):
-      return (datetime.datetime.utcnow().replace(tzinfo=UTC) - (
-          _datetime_from_microseconds(micros))).total_seconds() // 3600
-    CLEAN_INSTANCE = [i for instance in EXISTING_INSTANCES for i in instance if(
-        LABEL_KEY in i.labels.keys() and
-        (age_in_hours(int(i.labels[LABEL_KEY])) >= 2))]
+      return (datetime.datetime.utcnow().replace(tzinfo=UTC) -
+              (_datetime_from_microseconds(micros))).total_seconds() // 3600
+
+    CLEAN_INSTANCE = [
+        i for instance in EXISTING_INSTANCES for i in instance
+        if (LABEL_KEY in i.labels.keys() and
+            (age_in_hours(int(i.labels[LABEL_KEY])) >= 2))
+    ]
 
     if CLEAN_INSTANCE:
       for instance in CLEAN_INSTANCE:
@@ -172,12 +173,13 @@ class BigtableIOWriteTest(unittest.TestCase):
     pipeline_options = PipelineOptions(pipeline_args)
 
     with beam.Pipeline(options=pipeline_options) as pipeline:
-      config_data = {'project_id':self.project,
-                     'instance_id':self.instance,
-                     'table_id':self.table}
-      _ = (
-          pipeline
-          | 'Generate Direct Rows' >> GenerateTestRows(number, **config_data))
+      config_data = {
+          'project_id': self.project,
+          'instance_id': self.instance,
+          'table_id': self.table
+      }
+      _ = (pipeline |
+           'Generate Direct Rows' >> GenerateTestRows(number, **config_data))
 
       result = pipeline.run()
       result.wait_until_finish()

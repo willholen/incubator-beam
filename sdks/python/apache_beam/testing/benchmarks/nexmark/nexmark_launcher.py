@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Nexmark launcher.
 
 The Nexmark suite is a series of queries (streaming pipelines) performed
@@ -81,6 +80,7 @@ from apache_beam.testing.benchmarks.nexmark.queries import query2
 
 
 class NexmarkLauncher(object):
+
   def __init__(self):
     self.parse_args()
     self.uuid = str(uuid.uuid4())
@@ -103,7 +103,8 @@ class NexmarkLauncher(object):
   def parse_args(self):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--query', '-q',
+    parser.add_argument('--query',
+                        '-q',
                         type=int,
                         action='append',
                         required=True,
@@ -118,11 +119,11 @@ class NexmarkLauncher(object):
                         type=str,
                         help='Pub/Sub topic to read from')
 
-    parser.add_argument('--loglevel',
-                        choices=['DEBUG', 'INFO', 'WARNING',
-                                 'ERROR', 'CRITICAL'],
-                        default='INFO',
-                        help='Set logging level to debug')
+    parser.add_argument(
+        '--loglevel',
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+        default='INFO',
+        help='Set logging level to debug')
     parser.add_argument('--input',
                         type=str,
                         required=True,
@@ -151,11 +152,10 @@ class NexmarkLauncher(object):
 
     # wait_until_finish ensures that the streaming job is canceled.
     self.wait_until_finish_duration = (
-        self.pipeline_options.view_as(TestOptions).wait_until_finish_duration
-    )
+        self.pipeline_options.view_as(TestOptions).wait_until_finish_duration)
     if self.wait_until_finish_duration is None:
       parser.print_usage()
-      print(sys.argv[0] + ': error: argument --wait_until_finish_duration is required') # pylint: disable=line-too-long
+      print(sys.argv[0] + ': error: argument --wait_until_finish_duration is required')  # pylint: disable=line-too-long
       sys.exit(1)
 
     # We use the save_main_session option because one or more DoFn's in this
@@ -200,9 +200,8 @@ class NexmarkLauncher(object):
       query.load(raw_events, query_args)
       result = self.pipeline.run()
       job_duration = (
-          self.pipeline_options.view_as(TestOptions).wait_until_finish_duration
-      )
-      if self.pipeline_options.view_as(StandardOptions).runner == 'DataflowRunner': # pylint: disable=line-too-long
+          self.pipeline_options.view_as(TestOptions).wait_until_finish_duration)
+      if self.pipeline_options.view_as(StandardOptions).runner == 'DataflowRunner':  # pylint: disable=line-too-long
         result.wait_until_finish(duration=job_duration)
         result.cancel()
       else:
@@ -229,11 +228,7 @@ class NexmarkLauncher(object):
     }
 
     # TODO(mariagh): Move to a config file.
-    query_args = {
-        2: {
-            'auction_id': 'a1003'
-        }
-    }
+    query_args = {2: {'auction_id': 'a1003'}}
 
     query_errors = []
     for i in self.args.query:
@@ -245,11 +240,11 @@ class NexmarkLauncher(object):
       launch_from_direct_runner = self.pipeline_options.view_as(
           StandardOptions).runner in [None, 'DirectRunner']
 
-      query_duration = self.pipeline_options.view_as(TestOptions).wait_until_finish_duration # pylint: disable=line-too-long
+      query_duration = self.pipeline_options.view_as(TestOptions).wait_until_finish_duration  # pylint: disable=line-too-long
       if launch_from_direct_runner:
-        command = Command(self.run_query, args=[queries[i],
-                                                query_args.get(i),
-                                                query_errors])
+        command = Command(self.run_query,
+                          args=[queries[i],
+                                query_args.get(i), query_errors])
         command.run(timeout=query_duration // 1000)
       else:
         try:

@@ -29,16 +29,13 @@ from apache_beam.transforms import Map
 from apache_beam.transforms.external import ExternalTransform
 from apache_beam.transforms.external import NamedTupleBasedPayloadBuilder
 
-ReadFromPubsubSchema = typing.NamedTuple(
-    'ReadFromPubsubSchema',
-    [
-        ('topic', typing.Optional[unicode]),
-        ('subscription', typing.Optional[unicode]),
-        ('id_label', typing.Optional[unicode]),
-        ('with_attributes', bool),
-        ('timestamp_attribute', typing.Optional[unicode]),
-    ]
-)
+ReadFromPubsubSchema = typing.NamedTuple('ReadFromPubsubSchema', [
+    ('topic', typing.Optional[unicode]),
+    ('subscription', typing.Optional[unicode]),
+    ('id_label', typing.Optional[unicode]),
+    ('with_attributes', bool),
+    ('timestamp_attribute', typing.Optional[unicode]),
+])
 
 
 class ReadFromPubSub(beam.PTransform):
@@ -50,8 +47,12 @@ class ReadFromPubSub(beam.PTransform):
 
   URN = 'beam:external:java:pubsub:read:v1'
 
-  def __init__(self, topic=None, subscription=None, id_label=None,
-               with_attributes=False, timestamp_attribute=None,
+  def __init__(self,
+               topic=None,
+               subscription=None,
+               id_label=None,
+               with_attributes=False,
+               timestamp_attribute=None,
                expansion_service=None):
     """Initializes ``ReadFromPubSub``.
 
@@ -86,19 +87,17 @@ class ReadFromPubSub(beam.PTransform):
           timestamp is optional, and digits beyond the first three (i.e., time
           units smaller than milliseconds) may be ignored.
     """
-    self.params = ReadFromPubsubSchema(
-        topic=topic,
-        subscription=subscription,
-        id_label=id_label,
-        with_attributes=with_attributes,
-        timestamp_attribute=timestamp_attribute)
+    self.params = ReadFromPubsubSchema(topic=topic,
+                                       subscription=subscription,
+                                       id_label=id_label,
+                                       with_attributes=with_attributes,
+                                       timestamp_attribute=timestamp_attribute)
     self.expansion_service = expansion_service
 
   def expand(self, pbegin):
     pcoll = pbegin.apply(
-        ExternalTransform(
-            self.URN, NamedTupleBasedPayloadBuilder(self.params),
-            self.expansion_service))
+        ExternalTransform(self.URN, NamedTupleBasedPayloadBuilder(self.params),
+                          self.expansion_service))
 
     if self.params.with_attributes:
       pcoll = pcoll | 'FromProto' >> Map(pubsub.PubsubMessage._from_proto_str)
@@ -116,8 +115,7 @@ WriteToPubsubSchema = typing.NamedTuple(
         # this is not implemented yet on the Java side:
         # ('with_attributes', bool),
         ('timestamp_attribute', typing.Optional[unicode]),
-    ]
-)
+    ])
 
 
 class WriteToPubSub(beam.PTransform):
@@ -129,8 +127,12 @@ class WriteToPubSub(beam.PTransform):
 
   URN = 'beam:external:java:pubsub:write:v1'
 
-  def __init__(self, topic, with_attributes=False, id_label=None,
-               timestamp_attribute=None, expansion_service=None):
+  def __init__(self,
+               topic,
+               with_attributes=False,
+               id_label=None,
+               timestamp_attribute=None,
+               expansion_service=None):
     """Initializes ``WriteToPubSub``.
 
     Args:
@@ -163,8 +165,5 @@ class WriteToPubSub(beam.PTransform):
     pcoll.element_type = bytes
 
     return pcoll.apply(
-        ExternalTransform(
-            self.URN,
-            NamedTupleBasedPayloadBuilder(self.params),
-            self.expansion_service)
-    )
+        ExternalTransform(self.URN, NamedTupleBasedPayloadBuilder(self.params),
+                          self.expansion_service))

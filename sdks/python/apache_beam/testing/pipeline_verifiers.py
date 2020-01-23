@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """End-to-end test result verifiers
 
 A set of verifiers that are used in end-to-end tests to verify state/output
@@ -40,8 +39,7 @@ __all__ = [
     'PipelineStateMatcher',
     'FileChecksumMatcher',
     'retry_on_io_error_and_server_error',
-    ]
-
+]
 
 try:
   from apitools.base.py.exceptions import HttpError
@@ -106,8 +104,8 @@ class FileChecksumMatcher(BaseMatcher):
         self.sleep_secs = sleep_secs
       else:
         raise ValueError('Sleep seconds, if received, must be int. '
-                         'But received: %r, %s' % (sleep_secs,
-                                                   type(sleep_secs)))
+                         'But received: %r, %s' %
+                         (sleep_secs, type(sleep_secs)))
     else:
       self.sleep_secs = None
 
@@ -115,8 +113,7 @@ class FileChecksumMatcher(BaseMatcher):
     self.expected_checksum = expected_checksum
 
   @retry.with_exponential_backoff(
-      num_retries=MAX_RETRIES,
-      retry_filter=retry_on_io_error_and_server_error)
+      num_retries=MAX_RETRIES, retry_filter=retry_on_io_error_and_server_error)
   def _read_with_retry(self):
     """Read path with retry if I/O failed"""
     read_lines = []
@@ -125,8 +122,8 @@ class FileChecksumMatcher(BaseMatcher):
     if not matched_path:
       raise IOError('No such file or directory: %s' % self.file_path)
 
-    _LOGGER.info('Find %d files in %s: \n%s',
-                 len(matched_path), self.file_path, '\n'.join(matched_path))
+    _LOGGER.info('Find %d files in %s: \n%s', len(matched_path), self.file_path,
+                 '\n'.join(matched_path))
     for path in matched_path:
       with FileSystems.open(path, 'r') as f:
         for line in f:

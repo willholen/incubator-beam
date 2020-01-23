@@ -43,6 +43,7 @@ from apache_beam.transforms import window
 
 
 def run(argv=None):
+
   class MessageParser(beam.DoFn):
     # It is required to parse messages for GBK operation.
     # Otherwise there are encoding problems.
@@ -58,18 +59,17 @@ def run(argv=None):
       yield bytes(v, encoding='utf8')
 
   parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--output_topic', required=True,
-      help=('Output PubSub topic of the form '
-            '"projects/<PROJECT>/topic/<TOPIC>".'))
+  parser.add_argument('--output_topic',
+                      required=True,
+                      help=('Output PubSub topic of the form '
+                            '"projects/<PROJECT>/topic/<TOPIC>".'))
   parser.add_argument(
       '--input_subscription',
       help=('Input PubSub subscription of the form '
             '"projects/<PROJECT>/subscriptions/<SUBSCRIPTION>."'))
-  parser.add_argument(
-      '--metrics_namespace',
-      help=('Namespace of metrics '
-            '"string".'))
+  parser.add_argument('--metrics_namespace',
+                      help=('Namespace of metrics '
+                            '"string".'))
   known_args, pipeline_args = parser.parse_known_args(argv)
 
   pipeline_options = PipelineOptions(pipeline_args)
@@ -78,21 +78,17 @@ def run(argv=None):
   p = beam.Pipeline(options=pipeline_options)
 
   # pylint: disable=expression-not-assigned
-  (p
-   | ReadFromPubSub(subscription=known_args.input_subscription,
-                    with_attributes=True)
-   | 'Window' >> beam.WindowInto(window.FixedWindows(1000, 0))
-   | 'Measure time: Start' >> beam.ParDo(
-       MeasureTime(known_args.metrics_namespace))
-   | 'Count messages' >> beam.ParDo(CountMessages(known_args.metrics_namespace))
-   | 'Parse' >> beam.ParDo(MessageParser())
-   | 'GroupByKey' >> beam.GroupByKey()
-   | 'Ungroup' >> beam.FlatMap(lambda elm: [(elm[0], v) for v in elm[1]])
-   | 'Measure time: End' >> beam.ParDo(
-       MeasureTime(known_args.metrics_namespace))
-   | 'Parse to bytes' >> beam.ParDo(ParserToBytes())
-   | 'Write' >> beam.io.WriteToPubSub(topic=known_args.output_topic)
-  )
+  (p | ReadFromPubSub(subscription=known_args.input_subscription,
+                      with_attributes=True) |
+   'Window' >> beam.WindowInto(window.FixedWindows(1000, 0)) |
+   'Measure time: Start' >> beam.ParDo(MeasureTime(
+       known_args.metrics_namespace)) |
+   'Count messages' >> beam.ParDo(CountMessages(known_args.metrics_namespace)) |
+   'Parse' >> beam.ParDo(MessageParser()) | 'GroupByKey' >> beam.GroupByKey() |
+   'Ungroup' >> beam.FlatMap(lambda elm: [(elm[0], v) for v in elm[1]]) |
+   'Measure time: End' >> beam.ParDo(MeasureTime(known_args.metrics_namespace))
+   | 'Parse to bytes' >> beam.ParDo(ParserToBytes()) |
+   'Write' >> beam.io.WriteToPubSub(topic=known_args.output_topic))
 
   result = p.run()
   result.wait_until_finish()

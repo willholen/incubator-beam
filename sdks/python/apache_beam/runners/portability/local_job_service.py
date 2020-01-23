@@ -82,12 +82,13 @@ class LocalJobServicer(abstract_job_service.AbstractJobServiceServicer):
         self._staging_dir)
     self._artifact_staging_endpoint = None  # type: Optional[endpoints_pb2.ApiServiceDescriptor]
 
-  def create_beam_job(self,
-                      preparation_id,  # stype: str
-                      job_name,  # type: str
-                      pipeline,  # type: beam_runner_api_pb2.Pipeline
-                      options  # type: struct_pb2.Struct
-                     ):
+  def create_beam_job(
+      self,
+      preparation_id,  # stype: str
+      job_name,  # type: str
+      pipeline,  # type: beam_runner_api_pb2.Pipeline
+      options  # type: struct_pb2.Struct
+  ):
     # type: (...) -> BeamJob
     # TODO(angoenka): Pass an appropriate staging_session_token. The token can
     # be obtained in PutArtifactResponse from JobService
@@ -104,14 +105,9 @@ class LocalJobServicer(abstract_job_service.AbstractJobServiceServicer):
             job_name=job_name,
             pipeline_options=options,
             retrieval_token=self._artifact_service.retrieval_token(
-                preparation_id)),
-        self._staging_dir)
-    return BeamJob(
-        preparation_id,
-        pipeline,
-        options,
-        provision_info,
-        self._artifact_staging_endpoint)
+                preparation_id)), self._staging_dir)
+    return BeamJob(preparation_id, pipeline, options, provision_info,
+                   self._artifact_staging_endpoint)
 
   def get_bind_address(self):
     """Return the address used to open the port on the gRPC server.
@@ -133,8 +129,8 @@ class LocalJobServicer(abstract_job_service.AbstractJobServiceServicer):
 
   def start_grpc_server(self, port=0):
     self._server = grpc.server(UnboundedThreadPoolExecutor())
-    port = self._server.add_insecure_port(
-        '%s:%d' % (self.get_bind_address(), port))
+    port = self._server.add_insecure_port('%s:%d' %
+                                          (self.get_bind_address(), port))
     beam_job_api_pb2_grpc.add_JobServiceServicer_to_server(self, self._server)
     beam_artifact_api_pb2_grpc.add_ArtifactStagingServiceServicer_to_server(
         self._artifact_service, self._server)
@@ -175,11 +171,11 @@ class SubprocessSdkWorker(object):
   """Manages a SDK worker implemented as a subprocess communicating over grpc.
     """
 
-  def __init__(self,
-               worker_command_line,  # type: bytes
-               control_address,
-               worker_id=None
-              ):
+  def __init__(
+      self,
+      worker_command_line,  # type: bytes
+      control_address,
+      worker_id=None):
     self._worker_command_line = worker_command_line
     self._control_address = control_address
     self._worker_id = worker_id
@@ -197,25 +193,20 @@ class SubprocessSdkWorker(object):
     control_descriptor = text_format.MessageToString(
         endpoints_pb2.ApiServiceDescriptor(url=self._control_address))
 
-    env_dict = dict(
-        os.environ,
-        CONTROL_API_SERVICE_DESCRIPTOR=control_descriptor,
-        LOGGING_API_SERVICE_DESCRIPTOR=logging_descriptor
-    )
+    env_dict = dict(os.environ,
+                    CONTROL_API_SERVICE_DESCRIPTOR=control_descriptor,
+                    LOGGING_API_SERVICE_DESCRIPTOR=logging_descriptor)
     # only add worker_id when it is set.
     if self._worker_id:
       env_dict['WORKER_ID'] = self._worker_id
 
     with fn_api_runner.SUBPROCESS_LOCK:
-      p = subprocess.Popen(
-          self._worker_command_line,
-          shell=True,
-          env=env_dict)
+      p = subprocess.Popen(self._worker_command_line, shell=True, env=env_dict)
     try:
       p.wait()
       if p.returncode:
-        raise RuntimeError(
-            'Worker subprocess exited with return code %s' % p.returncode)
+        raise RuntimeError('Worker subprocess exited with return code %s' %
+                           p.returncode)
     finally:
       if p.poll() is None:
         p.kill()
@@ -228,15 +219,17 @@ class BeamJob(abstract_job_service.AbstractBeamJob):
     The current state of the pipeline is available as self.state.
     """
 
-  def __init__(self,
-               job_id,  # type: str
-               pipeline,
-               options,
-               provision_info,  # type: fn_api_runner.ExtendedProvisionInfo
-               artifact_staging_endpoint  # type: Optional[endpoints_pb2.ApiServiceDescriptor]
-              ):
-    super(BeamJob, self).__init__(
-        job_id, provision_info.provision_info.job_name, pipeline, options)
+  def __init__(
+      self,
+      job_id,  # type: str
+      pipeline,
+      options,
+      provision_info,  # type: fn_api_runner.ExtendedProvisionInfo
+      artifact_staging_endpoint  # type: Optional[endpoints_pb2.ApiServiceDescriptor]
+  ):
+    super(BeamJob,
+          self).__init__(job_id, provision_info.provision_info.job_name,
+                         pipeline, options)
     self._provision_info = provision_info
     self._artifact_staging_endpoint = artifact_staging_endpoint
     self._state_queues = []  # type: List[queue.Queue]

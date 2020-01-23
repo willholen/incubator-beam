@@ -49,17 +49,17 @@ class GenerateSequence(ExternalTransform):
   """
   URN = 'beam:external:java:generate_sequence:v1'
 
-  def __init__(self, start, stop=None,
-               elements_per_period=None, max_read_time=None,
+  def __init__(self,
+               start,
+               stop=None,
+               elements_per_period=None,
+               max_read_time=None,
                expansion_service=None):
     super(GenerateSequence, self).__init__(
         self.URN,
-        ImplicitSchemaPayloadBuilder(
-            {
-                'start': start,
-                'stop': stop,
-                'elements_per_period': elements_per_period,
-                'max_read_time': max_read_time,
-            }
-        ),
-        expansion_service)
+        ImplicitSchemaPayloadBuilder({
+            'start': start,
+            'stop': stop,
+            'elements_per_period': elements_per_period,
+            'max_read_time': max_read_time,
+        }), expansion_service)

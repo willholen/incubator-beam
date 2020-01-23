@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Third in a series of four pipelines that tell a story in a 'gaming' domain.
 
 Concepts include: processing unbounded data using fixed windows; use of custom
@@ -116,6 +115,7 @@ class ParseGameEventFn(beam.DoFn):
 
   The human-readable time string is not used here.
   """
+
   def __init__(self):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(ParseGameEventFn, self).__init__()
@@ -142,6 +142,7 @@ class ExtractAndSumScore(beam.PTransform):
   The constructor argument `field` determines whether 'team' or 'user' info is
   extracted.
   """
+
   def __init__(self, field):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(ExtractAndSumScore, self).__init__()
@@ -149,9 +150,8 @@ class ExtractAndSumScore(beam.PTransform):
     self.field = field
 
   def expand(self, pcoll):
-    return (pcoll
-            | beam.Map(lambda elem: (elem[self.field], elem['score']))
-            | beam.CombinePerKey(sum))
+    return (pcoll | beam.Map(lambda elem: (elem[self.field], elem['score'])) |
+            beam.CombinePerKey(sum))
 
 
 class TeamScoresDict(beam.DoFn):
@@ -161,6 +161,7 @@ class TeamScoresDict(beam.DoFn):
   formats everything together into a dictionary. The dictionary is in the format
   {'bigquery_column': value}
   """
+
   def process(self, team_score, window=beam.DoFn.WindowParam):
     team, score = team_score
     start = timestamp2str(int(window.start))
@@ -174,6 +175,7 @@ class TeamScoresDict(beam.DoFn):
 
 class WriteToBigQuery(beam.PTransform):
   """Generate, format, and write BigQuery table row information."""
+
   def __init__(self, table_name, dataset, schema, project):
     """Initializes the transform.
     Args:
@@ -192,16 +194,13 @@ class WriteToBigQuery(beam.PTransform):
 
   def get_schema(self):
     """Build the output table schema."""
-    return ', '.join(
-        '%s:%s' % (col, self.schema[col]) for col in self.schema)
+    return ', '.join('%s:%s' % (col, self.schema[col]) for col in self.schema)
 
   def expand(self, pcoll):
-    return (
-        pcoll
-        | 'ConvertToRow' >> beam.Map(
-            lambda elem: {col: elem[col] for col in self.schema})
-        | beam.io.WriteToBigQuery(
-            self.table_name, self.dataset, self.project, self.get_schema()))
+    return (pcoll | 'ConvertToRow' >>
+            beam.Map(lambda elem: {col: elem[col] for col in self.schema}) |
+            beam.io.WriteToBigQuery(self.table_name, self.dataset, self.project,
+                                    self.get_schema()))
 
 
 # [START window_and_trigger]
@@ -211,6 +210,7 @@ class CalculateTeamScores(beam.PTransform):
   Extract team/score pairs from the event stream, using hour-long windows by
   default.
   """
+
   def __init__(self, team_window_duration, allowed_lateness):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(CalculateTeamScores, self).__init__()
@@ -233,6 +233,8 @@ class CalculateTeamScores(beam.PTransform):
             accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
         # Extract and sum teamname/score pairs from the event data.
         | 'ExtractAndSumScore' >> ExtractAndSumScore('team'))
+
+
 # [END window_and_trigger]
 
 
@@ -241,6 +243,7 @@ class CalculateUserScores(beam.PTransform):
   """Extract user/score pairs from the event stream using processing time, via
   global windowing. Get periodic updates on all users' running scores.
   """
+
   def __init__(self, allowed_lateness):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(CalculateUserScores, self).__init__()
@@ -251,15 +254,16 @@ class CalculateUserScores(beam.PTransform):
     # NOTE: the behavior does not exactly match the Java example
     # TODO: allowed_lateness not implemented yet in FixedWindows
     # TODO: AfterProcessingTime not implemented yet, replace AfterCount
-    return (
-        pcoll
-        # Get periodic results every ten events.
-        | 'LeaderboardUserGlobalWindows' >> beam.WindowInto(
-            beam.window.GlobalWindows(),
-            trigger=trigger.Repeatedly(trigger.AfterCount(10)),
-            accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
-        # Extract and sum username/score pairs from the event data.
-        | 'ExtractAndSumScore' >> ExtractAndSumScore('user'))
+    return (pcoll
+            # Get periodic results every ten events.
+            | 'LeaderboardUserGlobalWindows' >> beam.WindowInto(
+                beam.window.GlobalWindows(),
+                trigger=trigger.Repeatedly(trigger.AfterCount(10)),
+                accumulation_mode=trigger.AccumulationMode.ACCUMULATING)
+            # Extract and sum username/score pairs from the event data.
+            | 'ExtractAndSumScore' >> ExtractAndSumScore('user'))
+
+
 # [END processing_time_trigger]
 
 
@@ -267,9 +271,7 @@ def run(argv=None, save_main_session=True):
   """Main entry point; defines and runs the hourly_team_score pipeline."""
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--topic',
-                      type=str,
-                      help='Pub/Sub topic to read from')
+  parser.add_argument('--topic', type=str, help='Pub/Sub topic to read from')
   parser.add_argument('--subscription',
                       type=str,
                       help='Pub/Sub subscription to read from')
@@ -285,7 +287,7 @@ def run(argv=None, save_main_session=True):
                       type=int,
                       default=60,
                       help='Numeric value of fixed window duration for team '
-                           'analysis, in minutes')
+                      'analysis, in minutes')
   parser.add_argument('--allowed_lateness',
                       type=int,
                       default=120,
@@ -322,28 +324,27 @@ def run(argv=None, save_main_session=True):
       scores = p | 'ReadPubSub' >> beam.io.ReadFromPubSub(
           subscription=args.subscription)
     else:
-      scores = p | 'ReadPubSub' >> beam.io.ReadFromPubSub(
-          topic=args.topic)
+      scores = p | 'ReadPubSub' >> beam.io.ReadFromPubSub(topic=args.topic)
 
     events = (
-        scores
-        | 'DecodeString' >> beam.Map(lambda b: b.decode('utf-8'))
-        | 'ParseGameEventFn' >> beam.ParDo(ParseGameEventFn())
-        | 'AddEventTimestamps' >> beam.Map(
+        scores | 'DecodeString' >> beam.Map(lambda b: b.decode('utf-8')) |
+        'ParseGameEventFn' >> beam.ParDo(ParseGameEventFn()) |
+        'AddEventTimestamps' >> beam.Map(
             lambda elem: beam.window.TimestampedValue(elem, elem['timestamp'])))
 
     # Get team scores and write the results to BigQuery
     (events  # pylint: disable=expression-not-assigned
-     | 'CalculateTeamScores' >> CalculateTeamScores(
-         args.team_window_duration, args.allowed_lateness)
-     | 'TeamScoresDict' >> beam.ParDo(TeamScoresDict())
-     | 'WriteTeamScoreSums' >> WriteToBigQuery(
+     | 'CalculateTeamScores' >> CalculateTeamScores(args.team_window_duration,
+                                                    args.allowed_lateness) |
+     'TeamScoresDict' >> beam.ParDo(TeamScoresDict()) |
+     'WriteTeamScoreSums' >> WriteToBigQuery(
          args.table_name + '_teams', args.dataset, {
              'team': 'STRING',
              'total_score': 'INTEGER',
              'window_start': 'STRING',
              'processing_time': 'STRING',
-         }, options.view_as(GoogleCloudOptions).project))
+         },
+         options.view_as(GoogleCloudOptions).project))
 
     def format_user_score_sums(user_score):
       (user, score) = user_score
@@ -351,13 +352,14 @@ def run(argv=None, save_main_session=True):
 
     # Get user scores and write the results to BigQuery
     (events  # pylint: disable=expression-not-assigned
-     | 'CalculateUserScores' >> CalculateUserScores(args.allowed_lateness)
-     | 'FormatUserScoreSums' >> beam.Map(format_user_score_sums)
-     | 'WriteUserScoreSums' >> WriteToBigQuery(
+     | 'CalculateUserScores' >> CalculateUserScores(args.allowed_lateness) |
+     'FormatUserScoreSums' >> beam.Map(format_user_score_sums) |
+     'WriteUserScoreSums' >> WriteToBigQuery(
          args.table_name + '_users', args.dataset, {
              'user': 'STRING',
              'total_score': 'INTEGER',
-         }, options.view_as(GoogleCloudOptions).project))
+         },
+         options.view_as(GoogleCloudOptions).project))
 
 
 if __name__ == '__main__':

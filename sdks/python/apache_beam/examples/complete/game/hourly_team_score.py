@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Second in a series of four pipelines that tell a story in a 'gaming' domain.
 
 In addition to the concepts introduced in `user_score`, new concepts include:
@@ -107,6 +106,7 @@ class ParseGameEventFn(beam.DoFn):
 
   The human-readable time string is not used here.
   """
+
   def __init__(self):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(ParseGameEventFn, self).__init__()
@@ -133,6 +133,7 @@ class ExtractAndSumScore(beam.PTransform):
   The constructor argument `field` determines whether 'team' or 'user' info is
   extracted.
   """
+
   def __init__(self, field):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(ExtractAndSumScore, self).__init__()
@@ -140,9 +141,8 @@ class ExtractAndSumScore(beam.PTransform):
     self.field = field
 
   def expand(self, pcoll):
-    return (pcoll
-            | beam.Map(lambda elem: (elem[self.field], elem['score']))
-            | beam.CombinePerKey(sum))
+    return (pcoll | beam.Map(lambda elem: (elem[self.field], elem['score'])) |
+            beam.CombinePerKey(sum))
 
 
 class TeamScoresDict(beam.DoFn):
@@ -152,6 +152,7 @@ class TeamScoresDict(beam.DoFn):
   formats everything together into a dictionary. The dictionary is in the format
   {'bigquery_column': value}
   """
+
   def process(self, team_score, window=beam.DoFn.WindowParam):
     team, score = team_score
     start = timestamp2str(int(window.start))
@@ -165,6 +166,7 @@ class TeamScoresDict(beam.DoFn):
 
 class WriteToBigQuery(beam.PTransform):
   """Generate, format, and write BigQuery table row information."""
+
   def __init__(self, table_name, dataset, schema, project):
     """Initializes the transform.
     Args:
@@ -183,20 +185,18 @@ class WriteToBigQuery(beam.PTransform):
 
   def get_schema(self):
     """Build the output table schema."""
-    return ', '.join(
-        '%s:%s' % (col, self.schema[col]) for col in self.schema)
+    return ', '.join('%s:%s' % (col, self.schema[col]) for col in self.schema)
 
   def expand(self, pcoll):
-    return (
-        pcoll
-        | 'ConvertToRow' >> beam.Map(
-            lambda elem: {col: elem[col] for col in self.schema})
-        | beam.io.WriteToBigQuery(
-            self.table_name, self.dataset, self.project, self.get_schema()))
+    return (pcoll | 'ConvertToRow' >>
+            beam.Map(lambda elem: {col: elem[col] for col in self.schema}) |
+            beam.io.WriteToBigQuery(self.table_name, self.dataset, self.project,
+                                    self.get_schema()))
 
 
 # [START main]
 class HourlyTeamScore(beam.PTransform):
+
   def __init__(self, start_min, stop_min, window_duration):
     # TODO(BEAM-6158): Revert the workaround once we can pickle super() on py3.
     # super(HourlyTeamScore, self).__init__()
@@ -207,8 +207,7 @@ class HourlyTeamScore(beam.PTransform):
 
   def expand(self, pcoll):
     return (
-        pcoll
-        | 'ParseGameEventFn' >> beam.ParDo(ParseGameEventFn())
+        pcoll | 'ParseGameEventFn' >> beam.ParDo(ParseGameEventFn())
 
         # Filter out data before and after the given times so that it is not
         # included in the calculations. As we collect data in batches (say, by
@@ -219,10 +218,10 @@ class HourlyTeamScore(beam.PTransform):
         # need to weed out events that fall after the time period we want to
         # analyze.
         # [START filter_by_time_range]
-        | 'FilterStartTime' >> beam.Filter(
-            lambda elem: elem['timestamp'] > self.start_timestamp)
-        | 'FilterEndTime' >> beam.Filter(
-            lambda elem: elem['timestamp'] < self.stop_timestamp)
+        | 'FilterStartTime' >>
+        beam.Filter(lambda elem: elem['timestamp'] > self.start_timestamp) |
+        'FilterEndTime' >>
+        beam.Filter(lambda elem: elem['timestamp'] < self.stop_timestamp)
         # [END filter_by_time_range]
 
         # [START add_timestamp_and_window]
@@ -264,18 +263,18 @@ def run(argv=None, save_main_session=True):
                       type=str,
                       default='1970-01-01-00-00',
                       help='String representation of the first minute after '
-                           'which to generate results in the format: '
-                           'yyyy-MM-dd-HH-mm. Any input data timestamped '
-                           'prior to that minute won\'t be included in the '
-                           'sums.')
+                      'which to generate results in the format: '
+                      'yyyy-MM-dd-HH-mm. Any input data timestamped '
+                      'prior to that minute won\'t be included in the '
+                      'sums.')
   parser.add_argument('--stop_min',
                       type=str,
                       default='2100-01-01-00-00',
                       help='String representation of the first minute for '
-                           'which to generate results in the format: '
-                           'yyyy-MM-dd-HH-mm. Any input data timestamped '
-                           'after to that minute won\'t be included in the '
-                           'sums.')
+                      'which to generate results in the format: '
+                      'yyyy-MM-dd-HH-mm. Any input data timestamped '
+                      'after to that minute won\'t be included in the '
+                      'sums.')
 
   args, pipeline_args = parser.parse_known_args(argv)
 
@@ -293,18 +292,18 @@ def run(argv=None, save_main_session=True):
 
   with beam.Pipeline(options=options) as p:
     (p  # pylint: disable=expression-not-assigned
-     | 'ReadInputText' >> beam.io.ReadFromText(args.input)
-     | 'HourlyTeamScore' >> HourlyTeamScore(
-         args.start_min, args.stop_min, args.window_duration)
-     | 'TeamScoresDict' >> beam.ParDo(TeamScoresDict())
-     | 'WriteTeamScoreSums' >> WriteToBigQuery(
-         args.table_name, args.dataset, {
-             'team': 'STRING',
-             'total_score': 'INTEGER',
-             'window_start': 'STRING',
-         }, options.view_as(GoogleCloudOptions).project))
-# [END main]
+     | 'ReadInputText' >> beam.io.ReadFromText(args.input) | 'HourlyTeamScore'
+     >> HourlyTeamScore(args.start_min, args.stop_min, args.window_duration) |
+     'TeamScoresDict' >> beam.ParDo(TeamScoresDict()) | 'WriteTeamScoreSums' >>
+     WriteToBigQuery(args.table_name, args.dataset, {
+         'team': 'STRING',
+         'total_score': 'INTEGER',
+         'window_start': 'STRING',
+     },
+                     options.view_as(GoogleCloudOptions).project))
 
+
+# [END main]
 
 if __name__ == '__main__':
   logging.getLogger().setLevel(logging.INFO)

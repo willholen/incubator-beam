@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Dataflow native sources and sinks.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -42,17 +41,18 @@ _LOGGER = logging.getLogger(__name__)
 
 def _dict_printable_fields(dict_object, skip_fields):
   """Returns a list of strings for the interesting fields of a dict."""
-  return ['%s=%r' % (name, value)
-          for name, value in dict_object.items()
-          # want to output value 0 but not None nor []
-          if (value or value == 0)
-          and name not in skip_fields]
+  return [
+      '%s=%r' % (name, value)
+      for name, value in dict_object.items()
+      # want to output value 0 but not None nor []
+      if (value or value == 0) and name not in skip_fields
+  ]
 
 
-_minor_fields = ['coder', 'key_coder', 'value_coder',
-                 'config_bytes', 'elements',
-                 'append_trailing_newlines', 'strip_trailing_newlines',
-                 'compression_type']
+_minor_fields = [
+    'coder', 'key_coder', 'value_coder', 'config_bytes', 'elements',
+    'append_trailing_newlines', 'strip_trailing_newlines', 'compression_type'
+]
 
 
 class NativeSource(iobase.SourceBase):
@@ -75,8 +75,7 @@ class NativeSource(iobase.SourceBase):
   def __repr__(self):
     return '<{name} {vals}>'.format(
         name=self.__class__.__name__,
-        vals=', '.join(_dict_printable_fields(self.__dict__,
-                                              _minor_fields)))
+        vals=', '.join(_dict_printable_fields(self.__dict__, _minor_fields)))
 
 
 class NativeSourceReader(object):
@@ -147,15 +146,18 @@ class NativeSourceReader(object):
     """
     _LOGGER.debug(
         'SourceReader %r does not support dynamic splitting. Ignoring dynamic '
-        'split request: %r',
-        self, dynamic_split_request)
+        'split request: %r', self, dynamic_split_request)
 
 
 class ReaderProgress(object):
   """A representation of how far a NativeSourceReader has read."""
 
-  def __init__(self, position=None, percent_complete=None, remaining_time=None,
-               consumed_split_points=None, remaining_split_points=None):
+  def __init__(self,
+               position=None,
+               percent_complete=None,
+               remaining_time=None,
+               consumed_split_points=None,
+               remaining_split_points=None):
 
     self._position = position
 
@@ -163,8 +165,8 @@ class ReaderProgress(object):
       percent_complete = float(percent_complete)
       if percent_complete < 0 or percent_complete > 1:
         raise ValueError(
-            'The percent_complete argument was %f. Must be in range [0, 1].'
-            % percent_complete)
+            'The percent_complete argument was %f. Must be in range [0, 1].' %
+            percent_complete)
     self._percent_complete = percent_complete
 
     self._remaining_time = remaining_time
@@ -205,8 +207,13 @@ class ReaderProgress(object):
 class ReaderPosition(object):
   """A representation of position in an iteration of a 'NativeSourceReader'."""
 
-  def __init__(self, end=None, key=None, byte_offset=None, record_index=None,
-               shuffle_position=None, concat_position=None):
+  def __init__(self,
+               end=None,
+               key=None,
+               byte_offset=None,
+               record_index=None,
+               shuffle_position=None,
+               concat_position=None):
     """Initializes ReaderPosition.
 
     A ReaderPosition may get instantiated for one of these position types. Only
@@ -286,9 +293,9 @@ class NativeSink(HasDisplayData):
     raise NotImplementedError
 
   def __repr__(self):
-    return '<{name} {vals}>'.format(
-        name=self.__class__.__name__,
-        vals=_dict_printable_fields(self.__dict__, _minor_fields))
+    return '<{name} {vals}>'.format(name=self.__class__.__name__,
+                                    vals=_dict_printable_fields(
+                                        self.__dict__, _minor_fields))
 
 
 class NativeSinkWriter(object):

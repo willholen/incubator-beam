@@ -16,7 +16,6 @@
 #
 
 # cython: language_level=3
-
 """A library of basic cythonized CombineFn subclasses.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -58,8 +57,8 @@ class AccumulatorCombineFn(core.CombineFn):
     return accumulator.extract_output()
 
   def __eq__(self, other):
-    return (isinstance(other, AccumulatorCombineFn)
-            and self._accumulator_type is other._accumulator_type)
+    return (isinstance(other, AccumulatorCombineFn) and
+            self._accumulator_type is other._accumulator_type)
 
   def __ne__(self, other):
     # TODO(BEAM-5949): Needed for Python 2 compatibility.
@@ -75,6 +74,7 @@ globals()['INT64_MIN'] = -2**_63
 
 
 class CountAccumulator(object):
+
   def __init__(self):
     self.value = 0
 
@@ -90,6 +90,7 @@ class CountAccumulator(object):
 
 
 class SumInt64Accumulator(object):
+
   def __init__(self):
     self.value = 0
 
@@ -113,6 +114,7 @@ class SumInt64Accumulator(object):
 
 
 class MinInt64Accumulator(object):
+
   def __init__(self):
     self.value = INT64_MAX
 
@@ -133,6 +135,7 @@ class MinInt64Accumulator(object):
 
 
 class MaxInt64Accumulator(object):
+
   def __init__(self):
     self.value = INT64_MIN
 
@@ -153,6 +156,7 @@ class MaxInt64Accumulator(object):
 
 
 class MeanInt64Accumulator(object):
+
   def __init__(self):
     self.sum = 0
     self.count = 0
@@ -178,6 +182,7 @@ class MeanInt64Accumulator(object):
 
 
 class DistributionInt64Accumulator(object):
+
   def __init__(self):
     self.sum = 0
     self.count = 0
@@ -239,6 +244,7 @@ _NAN = float('nan')
 
 
 class SumDoubleAccumulator(object):
+
   def __init__(self):
     self.value = 0
 
@@ -255,6 +261,7 @@ class SumDoubleAccumulator(object):
 
 
 class MinDoubleAccumulator(object):
+
   def __init__(self):
     self.value = _POS_INF
 
@@ -273,6 +280,7 @@ class MinDoubleAccumulator(object):
 
 
 class MaxDoubleAccumulator(object):
+
   def __init__(self):
     self.value = _NEG_INF
 
@@ -291,6 +299,7 @@ class MaxDoubleAccumulator(object):
 
 
 class MeanDoubleAccumulator(object):
+
   def __init__(self):
     self.sum = 0
     self.count = 0
@@ -326,6 +335,7 @@ class MeanFloatFn(AccumulatorCombineFn):
 
 
 class AllAccumulator(object):
+
   def __init__(self):
     self.value = True
 
@@ -341,6 +351,7 @@ class AllAccumulator(object):
 
 
 class AnyAccumulator(object):
+
   def __init__(self):
     self.value = False
 
@@ -379,8 +390,8 @@ class DataflowDistributionCounterFn(AccumulatorCombineFn):
 class ComparableValue(object):
   """A way to allow comparing elements in a rich fashion."""
 
-  __slots__ = (
-      'value', '_less_than_fn', '_comparable_value', 'requires_hydration')
+  __slots__ = ('value', '_less_than_fn', '_comparable_value',
+               'requires_hydration')
 
   def __init__(self, value, less_than_fn, key_fn, _requires_hydration=False):
     self.value = value

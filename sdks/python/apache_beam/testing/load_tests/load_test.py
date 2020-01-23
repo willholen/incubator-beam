@@ -28,6 +28,7 @@ from apache_beam.testing.test_pipeline import TestPipeline
 
 
 class LoadTest(unittest.TestCase):
+
   def parseTestPipelineOptions(self, options=None):
     if not options:
       options = self.input_options
@@ -39,14 +40,10 @@ class LoadTest(unittest.TestCase):
         'hotKeyFraction': options.get('hot_key_fraction', 0),
         'numHotKeys': options.get('num_hot_keys', 0),
         'bundleSizeDistribution': {
-            'type': options.get(
-                'bundle_size_distribution_type', 'const'
-            ),
+            'type': options.get('bundle_size_distribution_type', 'const'),
             'param': options.get('bundle_size_distribution_param', 0)
         },
-        'forceNumInitialBundles': options.get(
-            'force_initial_num_bundles', 0
-        )
+        'forceNumInitialBundles': options.get('force_initial_num_bundles', 0)
     }
 
   def setUp(self, pipeline_options=None):
@@ -65,8 +62,7 @@ class LoadTest(unittest.TestCase):
         bq_table=self.metrics_namespace,
         bq_dataset=self.metrics_dataset,
         # Apply filter to prevent system metrics from being published
-        filters=MetricsFilter().with_namespace(self.metrics_namespace)
-    )
+        filters=MetricsFilter().with_namespace(self.metrics_namespace))
 
   def tearDown(self):
     if not hasattr(self, 'result'):

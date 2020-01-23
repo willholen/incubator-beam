@@ -27,18 +27,14 @@ def sample_fixed_size_globally(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    sample = (
-        pipeline
-        | 'Create produce' >> beam.Create([
-            '🍓 Strawberry',
-            '🥕 Carrot',
-            '🍆 Eggplant',
-            '🍅 Tomato',
-            '🥔 Potato',
-        ])
-        | 'Sample N elements' >> beam.combiners.Sample.FixedSizeGlobally(3)
-        | beam.Map(print)
-    )
+    sample = (pipeline | 'Create produce' >> beam.Create([
+        '🍓 Strawberry',
+        '🥕 Carrot',
+        '🍆 Eggplant',
+        '🍅 Tomato',
+        '🥔 Potato',
+    ]) | 'Sample N elements' >> beam.combiners.Sample.FixedSizeGlobally(3) |
+              beam.Map(print))
     # [END sample_fixed_size_globally]
     if test:
       test(sample)
@@ -49,23 +45,19 @@ def sample_fixed_size_per_key(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    samples_per_key = (
-        pipeline
-        | 'Create produce' >> beam.Create([
-            ('spring', '🍓'),
-            ('spring', '🥕'),
-            ('spring', '🍆'),
-            ('spring', '🍅'),
-            ('summer', '🥕'),
-            ('summer', '🍅'),
-            ('summer', '🌽'),
-            ('fall', '🥕'),
-            ('fall', '🍅'),
-            ('winter', '🍆'),
-        ])
-        | 'Samples per key' >> beam.combiners.Sample.FixedSizePerKey(3)
-        | beam.Map(print)
-    )
+    samples_per_key = (pipeline | 'Create produce' >> beam.Create([
+        ('spring', '🍓'),
+        ('spring', '🥕'),
+        ('spring', '🍆'),
+        ('spring', '🍅'),
+        ('summer', '🥕'),
+        ('summer', '🍅'),
+        ('summer', '🌽'),
+        ('fall', '🥕'),
+        ('fall', '🍅'),
+        ('winter', '🍆'),
+    ]) | 'Samples per key' >> beam.combiners.Sample.FixedSizePerKey(3) |
+                       beam.Map(print))
     # [END sample_fixed_size_per_key]
     if test:
       test(samples_per_key)

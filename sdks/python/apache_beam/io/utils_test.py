@@ -29,6 +29,7 @@ from apache_beam.io.utils import CountingSource
 
 
 class CountingSourceTest(unittest.TestCase):
+
   def setUp(self):
     self.source = CountingSource(10)
 

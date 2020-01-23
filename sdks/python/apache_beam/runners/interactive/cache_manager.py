@@ -126,16 +126,17 @@ class FileBasedCacheManager(CacheManager):
           cache_dir,
           datetime.datetime.now().strftime("cache-%y-%m-%d-%H_%M_%S"))
     else:
-      self._cache_dir = tempfile.mkdtemp(
-          prefix='interactive-temp-', dir=os.environ.get('TEST_TMPDIR', None))
+      self._cache_dir = tempfile.mkdtemp(prefix='interactive-temp-',
+                                         dir=os.environ.get(
+                                             'TEST_TMPDIR', None))
     self._versions = collections.defaultdict(lambda: self._CacheVersion())
 
     if cache_format not in self._available_formats:
       raise ValueError("Unsupported cache format: '%s'." % cache_format)
     self._reader_class, self._writer_class = self._available_formats[
         cache_format]
-    self._default_pcoder = (
-        SafeFastPrimitivesCoder() if cache_format == 'text' else None)
+    self._default_pcoder = (SafeFastPrimitivesCoder()
+                            if cache_format == 'text' else None)
 
     # List of saved pcoders keyed by PCollection path. It is OK to keep this
     # list in memory because once FileBasedCacheManager object is
@@ -177,12 +178,12 @@ class FileBasedCacheManager(CacheManager):
     return result, version
 
   def source(self, *labels):
-    return self._reader_class(
-        self._glob_path(*labels), coder=self.load_pcoder(*labels))._source
+    return self._reader_class(self._glob_path(*labels),
+                              coder=self.load_pcoder(*labels))._source
 
   def sink(self, *labels):
-    return self._writer_class(
-        self._path(*labels), coder=self.load_pcoder(*labels))._sink
+    return self._writer_class(self._path(*labels),
+                              coder=self.load_pcoder(*labels))._sink
 
   def cleanup(self):
     if filesystems.FileSystems.exists(self._cache_dir):
@@ -224,6 +225,7 @@ class FileBasedCacheManager(CacheManager):
 
 class ReadCache(beam.PTransform):
   """A PTransform that reads the PCollections from the cache."""
+
   def __init__(self, cache_manager, label):
     self._cache_manager = cache_manager
     self._label = label
@@ -236,6 +238,7 @@ class ReadCache(beam.PTransform):
 
 class WriteCache(beam.PTransform):
   """A PTransform that writes the PCollections to the cache."""
+
   def __init__(self, cache_manager, label, sample=False, sample_size=0):
     self._cache_manager = cache_manager
     self._label = label
@@ -249,13 +252,11 @@ class WriteCache(beam.PTransform):
     # cached PCollection. _cache_manager.sink(...) call below
     # should be using this saved pcoder.
     self._cache_manager.save_pcoder(
-        coders.registry.get_coder(pcoll.element_type),
-        prefix, self._label)
+        coders.registry.get_coder(pcoll.element_type), prefix, self._label)
 
     if self._sample:
-      pcoll |= 'Sample' >> (
-          combiners.Sample.FixedSizeGlobally(self._sample_size)
-          | beam.FlatMap(lambda sample: sample))
+      pcoll |= 'Sample' >> (combiners.Sample.FixedSizeGlobally(
+          self._sample_size) | beam.FlatMap(lambda sample: sample))
     # pylint: disable=expression-not-assigned
     return pcoll | 'Write' >> beam.io.Write(
         self._cache_manager.sink(prefix, self._label))
@@ -263,11 +264,12 @@ class WriteCache(beam.PTransform):
 
 class SafeFastPrimitivesCoder(coders.Coder):
   """This class add an quote/unquote step to escape special characters."""
+
   # pylint: disable=deprecated-urllib-function
 
   def encode(self, value):
-    return quote(coders.coders.FastPrimitivesCoder().encode(value)).encode(
-        'utf-8')
+    return quote(
+        coders.coders.FastPrimitivesCoder().encode(value)).encode('utf-8')
 
   def decode(self, value):
     return coders.coders.FastPrimitivesCoder().decode(unquote_to_bytes(value))

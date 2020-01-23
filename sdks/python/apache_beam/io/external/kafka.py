@@ -46,15 +46,12 @@ from past.builtins import unicode
 from apache_beam.transforms.external import ExternalTransform
 from apache_beam.transforms.external import NamedTupleBasedPayloadBuilder
 
-ReadFromKafkaSchema = typing.NamedTuple(
-    'ReadFromKafkaSchema',
-    [
-        ('consumer_config', typing.List[typing.Tuple[unicode, unicode]]),
-        ('topics', typing.List[unicode]),
-        ('key_deserializer', unicode),
-        ('value_deserializer', unicode),
-    ]
-)
+ReadFromKafkaSchema = typing.NamedTuple('ReadFromKafkaSchema', [
+    ('consumer_config', typing.List[typing.Tuple[unicode, unicode]]),
+    ('topics', typing.List[unicode]),
+    ('key_deserializer', unicode),
+    ('value_deserializer', unicode),
+])
 
 
 class ReadFromKafka(ExternalTransform):
@@ -76,7 +73,8 @@ class ReadFromKafka(ExternalTransform):
 
   URN = 'beam:external:java:kafka:read:v1'
 
-  def __init__(self, consumer_config,
+  def __init__(self,
+               consumer_config,
                topics,
                key_deserializer=byte_array_deserializer,
                value_deserializer=byte_array_deserializer,
@@ -108,21 +106,15 @@ class ReadFromKafka(ExternalTransform):
                 topics=topics,
                 key_deserializer=key_deserializer,
                 value_deserializer=value_deserializer,
-            )
-        ),
-        expansion_service
-    )
+            )), expansion_service)
 
 
-WriteToKafkaSchema = typing.NamedTuple(
-    'WriteToKafkaSchema',
-    [
-        ('producer_config', typing.List[typing.Tuple[unicode, unicode]]),
-        ('topic', unicode),
-        ('key_serializer', unicode),
-        ('value_serializer', unicode),
-    ]
-)
+WriteToKafkaSchema = typing.NamedTuple('WriteToKafkaSchema', [
+    ('producer_config', typing.List[typing.Tuple[unicode, unicode]]),
+    ('topic', unicode),
+    ('key_serializer', unicode),
+    ('value_serializer', unicode),
+])
 
 
 class WriteToKafka(ExternalTransform):
@@ -141,7 +133,8 @@ class WriteToKafka(ExternalTransform):
 
   URN = 'beam:external:java:kafka:write:v1'
 
-  def __init__(self, producer_config,
+  def __init__(self,
+               producer_config,
                topic,
                key_serializer=byte_array_serializer,
                value_serializer=byte_array_serializer,
@@ -173,7 +166,4 @@ class WriteToKafka(ExternalTransform):
                 topic=topic,
                 key_serializer=key_serializer,
                 value_serializer=value_serializer,
-            )
-        ),
-        expansion_service
-    )
+            )), expansion_service)

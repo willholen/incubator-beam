@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Test for the multiple_output_pardo example."""
 
 # pytype: skip-file
@@ -34,8 +33,8 @@ class MultipleOutputParDo(unittest.TestCase):
 
   SAMPLE_TEXT = 'A whole new world\nA new fantastic point of view'
   EXPECTED_SHORT_WORDS = [('A', 2), ('new', 2), ('of', 1)]
-  EXPECTED_WORDS = [
-      ('whole', 1), ('world', 1), ('fantastic', 1), ('point', 1), ('view', 1)]
+  EXPECTED_WORDS = [('whole', 1), ('world', 1), ('fantastic', 1), ('point', 1),
+                    ('view', 1)]
 
   def create_temp_file(self, contents):
     with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -65,8 +64,8 @@ class MultipleOutputParDo(unittest.TestCase):
       contents = f.read()
       self.assertEqual(expected_char_count, int(contents))
 
-    short_words = self.get_wordcount_results(
-        result_prefix + '-short-words-*-of-*')
+    short_words = self.get_wordcount_results(result_prefix +
+                                             '-short-words-*-of-*')
     self.assertEqual(sorted(short_words), sorted(self.EXPECTED_SHORT_WORDS))
 
     words = self.get_wordcount_results(result_prefix + '-words-*-of-*')

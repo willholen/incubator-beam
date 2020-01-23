@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Cross-platform utilities for creating subprocesses.
 
 For internal use only; no backwards-compatibility guarantees.

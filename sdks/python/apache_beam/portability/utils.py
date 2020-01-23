@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """For internal use only; no backwards-compatibility guarantees."""
 from __future__ import absolute_import
 
@@ -24,11 +23,9 @@ from typing import NamedTuple
 if TYPE_CHECKING:
   from apache_beam.portability.api import metrics_pb2
 
-
-PropertiesFromEnumValue = NamedTuple(
-    'PropertiesFromEnumValue', [
-        ('urn', str),
-        ('constant', str),
-        ('spec', 'metrics_pb2.MonitoringInfoSpec'),
-        ('label_props', 'metrics_pb2.MonitoringInfoLabelProps'),
-    ])
+PropertiesFromEnumValue = NamedTuple('PropertiesFromEnumValue', [
+    ('urn', str),
+    ('constant', str),
+    ('spec', 'metrics_pb2.MonitoringInfoSpec'),
+    ('label_props', 'metrics_pb2.MonitoringInfoLabelProps'),
+])

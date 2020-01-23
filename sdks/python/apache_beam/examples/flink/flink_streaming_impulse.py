@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A streaming workflow that uses a synthetic streaming source.
 
 This can only be used with the Flink portable runner.
@@ -53,9 +52,9 @@ def apply_timestamp(element):
 
 def run(argv=None):
   """Build and run the pipeline."""
-  args = ["--runner=PortableRunner",
-          "--job_endpoint=localhost:8099",
-          "--streaming"]
+  args = [
+      "--runner=PortableRunner", "--job_endpoint=localhost:8099", "--streaming"
+  ]
   if argv:
     args.extend(argv)
 
@@ -64,12 +63,12 @@ def run(argv=None):
                       dest='count',
                       default=0,
                       help='Number of triggers to generate '
-                           '(0 means emit forever).')
+                      '(0 means emit forever).')
   parser.add_argument('--interval_ms',
                       dest='interval_ms',
                       default=500,
                       help='Interval between records per parallel '
-                           'Flink subtask.')
+                      'Flink subtask.')
 
   known_args, pipeline_args = parser.parse_known_args(args)
 
@@ -77,20 +76,15 @@ def run(argv=None):
 
   with beam.Pipeline(options=pipeline_options) as p:
 
-    messages = (p | FlinkStreamingImpulseSource()
-                .set_message_count(known_args.count)
-                .set_interval_ms(known_args.interval_ms))
+    messages = (p | FlinkStreamingImpulseSource().set_message_count(
+        known_args.count).set_interval_ms(known_args.interval_ms))
 
-    _ = (messages | 'decode' >> beam.Map(lambda x: ('', 1))
-         | 'window' >> beam.WindowInto(window.GlobalWindows(),
-                                       trigger=Repeatedly(
-                                           AfterProcessingTime(5 * 1000)),
-                                       accumulation_mode=
-                                       AccumulationMode.DISCARDING)
-         | 'group' >> beam.GroupByKey()
-         | 'count' >> beam.Map(count)
-         | 'log' >> beam.Map(lambda x: logging.info("%d" % x[1])))
-
+    _ = (messages | 'decode' >> beam.Map(lambda x: ('', 1)) | 'window' >>
+         beam.WindowInto(window.GlobalWindows(),
+                         trigger=Repeatedly(AfterProcessingTime(5 * 1000)),
+                         accumulation_mode=AccumulationMode.DISCARDING) |
+         'group' >> beam.GroupByKey() | 'count' >> beam.Map(count) |
+         'log' >> beam.Map(lambda x: logging.info("%d" % x[1])))
 
 
 if __name__ == '__main__':

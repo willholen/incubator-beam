@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Module of the current Interactive Beam environment.
 
 For internal use only; no backwards-compatibility guarantees.

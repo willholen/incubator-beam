@@ -50,8 +50,10 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_READ_BUFFER_SIZE = 16 * 1024 * 1024
 
-__all__ = ['CompressionTypes', 'CompressedFile', 'FileMetadata', 'FileSystem',
-           'MatchResult']
+__all__ = [
+    'CompressionTypes', 'CompressedFile', 'FileMetadata', 'FileSystem',
+    'MatchResult'
+]
 
 
 class CompressionTypes(object):
@@ -82,11 +84,8 @@ class CompressionTypes(object):
   def is_valid_compression_type(cls, compression_type):
     """Returns True for valid compression types, False otherwise."""
     types = set([
-        CompressionTypes.AUTO,
-        CompressionTypes.BZIP2,
-        CompressionTypes.DEFLATE,
-        CompressionTypes.GZIP,
-        CompressionTypes.UNCOMPRESSED
+        CompressionTypes.AUTO, CompressionTypes.BZIP2, CompressionTypes.DEFLATE,
+        CompressionTypes.GZIP, CompressionTypes.UNCOMPRESSED
     ])
     return compression_type in types
 
@@ -102,8 +101,11 @@ class CompressionTypes(object):
   @classmethod
   def detect_compression_type(cls, file_path):
     """Returns the compression type of a file (based on its suffix)."""
-    compression_types_by_suffix = {'.bz2': cls.BZIP2, '.deflate': cls.DEFLATE,
-                                   '.gz': cls.GZIP}
+    compression_types_by_suffix = {
+        '.bz2': cls.BZIP2,
+        '.deflate': cls.DEFLATE,
+        '.gz': cls.GZIP
+    }
     lowercased_path = file_path.lower()
     for suffix, compression_type in compression_types_by_suffix.items():
       if lowercased_path.endswith(suffix):
@@ -129,8 +131,8 @@ class CompressedFile(object):
     if not CompressionTypes.is_valid_compression_type(compression_type):
       raise TypeError('compression_type must be CompressionType object but '
                       'was %s' % type(compression_type))
-    if compression_type in (CompressionTypes.AUTO, CompressionTypes.UNCOMPRESSED
-                           ):
+    if compression_type in (CompressionTypes.AUTO,
+                            CompressionTypes.UNCOMPRESSED):
       raise ValueError(
           'Cannot create object with unspecified or no compression')
 
@@ -207,8 +209,8 @@ class CompressedFile(object):
       self._clear_read_buffer()
       self._read_buffer.write(data)
 
-    while not self._read_eof and (self._read_buffer.tell() - self._read_position
-                                 ) < num_bytes:
+    while not self._read_eof and (self._read_buffer.tell() -
+                                  self._read_position) < num_bytes:
       # Continue reading from the underlying file object until enough bytes are
       # available, or EOF is reached.
       if not self._decompressor.unused_data:
@@ -363,9 +365,10 @@ class CompressedFile(object):
         while self.read(self._read_size):
           pass
         uncompress_end_time = time.time()
-        logger.warning("Full file decompression for seek "
-                       "from end took %.2f secs",
-                       (uncompress_end_time - uncompress_start_time))
+        logger.warning(
+            "Full file decompression for seek "
+            "from end took %.2f secs",
+            (uncompress_end_time - uncompress_start_time))
         self._uncompressed_size = self._uncompressed_position
       absolute_offset = self._uncompressed_size + offset
     else:
@@ -397,6 +400,7 @@ class CompressedFile(object):
 
 class FileMetadata(object):
   """Metadata about a file path that is the output of FileSystem.match."""
+
   def __init__(self, path, size_in_bytes):
     assert isinstance(path, (str, unicode)) and path, "Path should be a string"
     assert isinstance(size_in_bytes, (int, long)) and size_in_bytes >= 0, \
@@ -408,8 +412,7 @@ class FileMetadata(object):
   def __eq__(self, other):
     """Note: This is only used in tests where we verify that mock objects match.
     """
-    return (isinstance(other, FileMetadata) and
-            self.path == other.path and
+    return (isinstance(other, FileMetadata) and self.path == other.path and
             self.size_in_bytes == other.size_in_bytes)
 
   def __hash__(self):
@@ -427,12 +430,14 @@ class MatchResult(object):
   """Result from the ``FileSystem`` match operation which contains the list
    of matched ``FileMetadata``.
   """
+
   def __init__(self, pattern, metadata_list):
     self.metadata_list = metadata_list
     self.pattern = pattern
 
 
 class BeamIOError(IOError):
+
   def __init__(self, msg, exception_details=None):
     """Class representing the errors thrown in the batch file operations.
     Args:
@@ -693,8 +698,8 @@ class FileSystem(with_metaclass(abc.ABCMeta, BeamPlugin)):  # type: ignore[misc]
         if self.has_dirs():
           prefix_dirname = self._url_dirname(prefix_or_dir)
           if not prefix_dirname == prefix_or_dir:
-            logger.debug("Changed prefix_or_dir %r -> %r",
-                         prefix_or_dir, prefix_dirname)
+            logger.debug("Changed prefix_or_dir %r -> %r", prefix_or_dir,
+                         prefix_dirname)
             prefix_or_dir = prefix_dirname
 
         logger.debug("Listing files in %r", prefix_or_dir)
@@ -721,7 +726,9 @@ class FileSystem(with_metaclass(abc.ABCMeta, BeamPlugin)):  # type: ignore[misc]
     return result
 
   @abc.abstractmethod
-  def create(self, path, mime_type='application/octet-stream',
+  def create(self,
+             path,
+             mime_type='application/octet-stream',
              compression_type=CompressionTypes.AUTO):
     # type: (...) -> BinaryIO
     """Returns a write channel for the given file path.
@@ -736,7 +743,9 @@ class FileSystem(with_metaclass(abc.ABCMeta, BeamPlugin)):  # type: ignore[misc]
     raise NotImplementedError
 
   @abc.abstractmethod
-  def open(self, path, mime_type='application/octet-stream',
+  def open(self,
+           path,
+           mime_type='application/octet-stream',
            compression_type=CompressionTypes.AUTO):
     # type: (...) -> BinaryIO
     """Returns a read channel for the given file path.

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """An integration test for datastore_write_it_pipeline
 
 This test creates entities and writes them to Cloud Datastore. Subsequently,
@@ -58,14 +57,16 @@ class DatastoreWriteIT(unittest.TestCase):
     seed = random.randint(0, 100000)
     kind = 'testkind%s%d' % (current_time, seed)
     pipeline_verifiers = [PipelineStateMatcher()]
-    extra_opts = {'kind': kind,
-                  'num_entities': self.NUM_ENTITIES,
-                  'on_success_matcher': all_of(*pipeline_verifiers)}
+    extra_opts = {
+        'kind': kind,
+        'num_entities': self.NUM_ENTITIES,
+        'on_success_matcher': all_of(*pipeline_verifiers)
+    }
     if limit is not None:
       extra_opts['limit'] = limit
 
-    datastore_write_it_pipeline.run(test_pipeline.get_full_options_as_args(
-        **extra_opts))
+    datastore_write_it_pipeline.run(
+        test_pipeline.get_full_options_as_args(**extra_opts))
 
   @attr('IT')
   @unittest.skipIf(datastore_write_it_pipeline is None,

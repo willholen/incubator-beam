@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 :class:`DisplayData`, its classes, interfaces and methods.
 
@@ -96,10 +95,11 @@ class DisplayData(object):
   """ Static display data associated with a pipeline component.
   """
 
-  def __init__(self,
-               namespace,  # type: str
-               display_data_dict  # type: dict
-              ):
+  def __init__(
+      self,
+      namespace,  # type: str
+      display_data_dict  # type: dict
+  ):
     # type: (...) -> None
     self.namespace = namespace
     self.items = []  # type: List[DisplayDataItem]
@@ -126,9 +126,7 @@ class DisplayData(object):
       # If it's not a HasDisplayData element,
       # nor a dictionary, then it's a simple value
       self.items.append(
-          DisplayDataItem(element,
-                          namespace=self.namespace,
-                          key=key))
+          DisplayDataItem(element, namespace=self.namespace, key=key))
 
   @classmethod
   def create_from_options(cls, pipeline_options):
@@ -152,13 +150,13 @@ class DisplayData(object):
     from apache_beam.options.pipeline_options import PipelineOptions
     if not isinstance(pipeline_options, PipelineOptions):
       raise ValueError(
-          'Element of class {}.{} does not subclass PipelineOptions'
-          .format(pipeline_options.__module__,
-                  pipeline_options.__class__.__name__))
+          'Element of class {}.{} does not subclass PipelineOptions'.format(
+              pipeline_options.__module__, pipeline_options.__class__.__name__))
 
-    items = {k: (v if DisplayDataItem._get_value_type(v) is not None
-                 else str(v))
-             for k, v in pipeline_options.display_data().items()}
+    items = {
+        k: (v if DisplayDataItem._get_value_type(v) is not None else str(v))
+        for k, v in pipeline_options.display_data().items()
+    }
     return cls(pipeline_options._namespace(), items)
 
   @classmethod
@@ -176,9 +174,9 @@ class DisplayData(object):
         not an instance of :class:`HasDisplayData`.
     """
     if not isinstance(has_display_data, HasDisplayData):
-      raise ValueError('Element of class {}.{} does not subclass HasDisplayData'
-                       .format(has_display_data.__module__,
-                               has_display_data.__class__.__name__))
+      raise ValueError(
+          'Element of class {}.{} does not subclass HasDisplayData'.format(
+              has_display_data.__module__, has_display_data.__class__.__name__))
     return cls(has_display_data._namespace(), has_display_data.display_data())
 
 
@@ -188,16 +186,23 @@ class DisplayDataItem(object):
   Each item is identified by a key and the namespace of the component the
   display item belongs to.
   """
-  typeDict = {str:'STRING',
-              unicode:'STRING',
-              int:'INTEGER',
-              float:'FLOAT',
-              bool: 'BOOLEAN',
-              timedelta:'DURATION',
-              datetime:'TIMESTAMP'}
+  typeDict = {
+      str: 'STRING',
+      unicode: 'STRING',
+      int: 'INTEGER',
+      float: 'FLOAT',
+      bool: 'BOOLEAN',
+      timedelta: 'DURATION',
+      datetime: 'TIMESTAMP'
+  }
 
-  def __init__(self, value, url=None, label=None,
-               namespace=None, key=None, shortValue=None):
+  def __init__(self,
+               value,
+               url=None,
+               label=None,
+               namespace=None,
+               key=None,
+               shortValue=None):
     self.namespace = namespace
     self.key = key
     self.type = self._get_value_type(value)
@@ -255,23 +260,25 @@ class DisplayDataItem(object):
         value or type.
     """
     if self.key is None:
-      raise ValueError(
-          'Invalid DisplayDataItem %s. Key must not be None.' % self)
+      raise ValueError('Invalid DisplayDataItem %s. Key must not be None.' %
+                       self)
     if self.namespace is None:
       raise ValueError(
           'Invalid DisplayDataItem %s. Namespace must not be None' % self)
     if self.value is None:
-      raise ValueError(
-          'Invalid DisplayDataItem %s. Value must not be None' % self)
+      raise ValueError('Invalid DisplayDataItem %s. Value must not be None' %
+                       self)
     if self.type is None:
       raise ValueError(
-          'Invalid DisplayDataItem. Value {} is of an unsupported type.'
-          .format(self.value))
+          'Invalid DisplayDataItem. Value {} is of an unsupported type.'.format(
+              self.value))
 
   def _get_dict(self):
-    res = {'key': self.key,
-           'namespace': self.namespace,
-           'type': self.type if self.type != 'CLASS' else 'STRING'}
+    res = {
+        'key': self.key,
+        'namespace': self.namespace,
+        'type': self.type if self.type != 'CLASS' else 'STRING'
+    }
     # TODO: Python Class types should not be special-cased once
     # the Fn API is in.
     if self.url is not None:
@@ -328,9 +335,10 @@ class DisplayDataItem(object):
     if type_ == 'CLASS':
       res = '{}.{}'.format(value.__module__, value.__name__)
     elif type_ == 'DURATION':
-      res = value.total_seconds()*1000
+      res = value.total_seconds() * 1000
     elif type_ == 'TIMESTAMP':
-      res = calendar.timegm(value.timetuple())*1000 + value.microsecond//1000
+      res = calendar.timegm(
+          value.timetuple()) * 1000 + value.microsecond // 1000
     return res
 
   @classmethod

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for state sampler."""
 # pytype: skip-file
 
@@ -46,7 +45,8 @@ class StateSamplerTest(unittest.TestCase):
   def test_basic_sampler(self):
     # Set up state sampler.
     counter_factory = CounterFactory()
-    sampler = statesampler.StateSampler('basic', counter_factory,
+    sampler = statesampler.StateSampler('basic',
+                                        counter_factory,
                                         sampling_period_ms=1)
 
     # Duration of the fastest state. Total test duration is 6 times longer.
@@ -58,20 +58,18 @@ class StateSamplerTest(unittest.TestCase):
       time.sleep(state_duration_ms / 1000)
       self.assertEqual(
           sampler.current_state().name,
-          CounterName(
-              'statea-msecs', step_name='step1', stage_name='basic'))
+          CounterName('statea-msecs', step_name='step1', stage_name='basic'))
       with sampler.scoped_state('step1', 'stateb'):
         time.sleep(state_duration_ms / 1000)
         self.assertEqual(
             sampler.current_state().name,
-            CounterName(
-                'stateb-msecs', step_name='step1', stage_name='basic'))
+            CounterName('stateb-msecs', step_name='step1', stage_name='basic'))
         with sampler.scoped_state('step1', 'statec'):
           time.sleep(3 * state_duration_ms / 1000)
           self.assertEqual(
               sampler.current_state().name,
-              CounterName(
-                  'statec-msecs', step_name='step1', stage_name='basic'))
+              CounterName('statec-msecs', step_name='step1',
+                          stage_name='basic'))
         time.sleep(state_duration_ms / 1000)
 
     sampler.stop()
@@ -105,7 +103,8 @@ class StateSamplerTest(unittest.TestCase):
   def test_sampler_transition_overhead(self):
     # Set up state sampler.
     counter_factory = CounterFactory()
-    sampler = statesampler.StateSampler('overhead-', counter_factory,
+    sampler = statesampler.StateSampler('overhead-',
+                                        counter_factory,
                                         sampling_period_ms=10)
 
     # Run basic workload transitioning between 3 states.

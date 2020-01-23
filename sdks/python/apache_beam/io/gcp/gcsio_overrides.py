@@ -41,8 +41,8 @@ class GcsIOOverrides(object):
     # handling GCS download throttling errors (BEAM-7424)
     if (isinstance(retry_args.exc, exceptions.BadStatusCodeError) and
         retry_args.exc.status_code == http_wrapper.TOO_MANY_REQUESTS):
-      _LOGGER.debug(
-          'Caught GCS quota error (%s), retrying.', retry_args.exc.status_code)
+      _LOGGER.debug('Caught GCS quota error (%s), retrying.',
+                    retry_args.exc.status_code)
     else:
       return http_wrapper.HandleExceptionsAndRebuildHttpConnections(retry_args)
 

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A factory that creates UncommittedBundles."""
 
 # pytype: skip-file
@@ -128,7 +127,8 @@ class _Bundle(common.Receiver):
     # type: (Union[pvalue.PBegin, pvalue.PCollection], bool) -> None
     assert isinstance(pcollection, (pvalue.PBegin, pvalue.PCollection))
     self._pcollection = pcollection
-    self._elements = []  # type: List[Union[WindowedValue, _Bundle._StackedWindowedValues]]
+    self._elements = [
+    ]  # type: List[Union[WindowedValue, _Bundle._StackedWindowedValues]]
     self._stacked = stacked
     self._committed = False
     self._tag = None  # optional tag information for this bundle
@@ -193,8 +193,8 @@ class _Bundle(common.Receiver):
       self._elements.append(element)
       return
     if (self._elements and
-        (isinstance(self._elements[-1], (WindowedValue,
-                                         _Bundle._StackedWindowedValues))) and
+        (isinstance(self._elements[-1],
+                    (WindowedValue, _Bundle._StackedWindowedValues))) and
         self._elements[-1].timestamp == element.timestamp and
         self._elements[-1].windows == element.windows and
         self._elements[-1].pane_info == element.pane_info):

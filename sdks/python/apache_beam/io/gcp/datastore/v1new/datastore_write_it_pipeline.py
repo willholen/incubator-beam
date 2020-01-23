@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A job that write Entries into Datastore.
 
 The pipelines behave in the steps below.
@@ -75,7 +74,8 @@ class EntityWrapper(object):
 
   def make_entity(self, content):
     """Create entity from given string."""
-    key = Key([self._kind, hashlib.sha1(content.encode('utf-8')).hexdigest()],
+    key = Key([self._kind,
+               hashlib.sha1(content.encode('utf-8')).hexdigest()],
               parent=self._parent_key)
     entity = Entity(key)
     entity.set_properties({'content': str(content)})
@@ -114,11 +114,10 @@ def run(argv=None):
   ancestor_key = Key([kind, str(uuid.uuid4())], project=project)
   _LOGGER.info('Writing %s entities to %s', num_entities, project)
   p = new_pipeline_with_job_name(pipeline_options, job_name, '-write')
-  _ = (p
-       | 'Input' >> beam.Create(list(range(num_entities)))
-       | 'To String' >> beam.Map(str)
-       | 'To Entity' >> beam.Map(EntityWrapper(kind, ancestor_key).make_entity)
-       | 'Write to Datastore' >> WriteToDatastore(project))
+  _ = (p | 'Input' >> beam.Create(list(range(num_entities))) |
+       'To String' >> beam.Map(str) |
+       'To Entity' >> beam.Map(EntityWrapper(kind, ancestor_key).make_entity) |
+       'Write to Datastore' >> WriteToDatastore(project))
   p.run()
 
   query = Query(kind=kind, project=project, ancestor=ancestor_key)
@@ -130,9 +129,8 @@ def run(argv=None):
     p = new_pipeline_with_job_name(pipeline_options, job_name, '-verify-limit')
     query.limit = known_args.limit
     entities = p | 'read from datastore' >> ReadFromDatastore(query)
-    assert_that(
-        entities | beam.combiners.Count.Globally(),
-        equal_to([known_args.limit]))
+    assert_that(entities | beam.combiners.Count.Globally(),
+                equal_to([known_args.limit]))
 
     p.run()
     query.limit = None
@@ -142,9 +140,8 @@ def run(argv=None):
   p = new_pipeline_with_job_name(pipeline_options, job_name, '-verify')
   entities = p | 'read from datastore' >> ReadFromDatastore(query)
 
-  assert_that(
-      entities | beam.combiners.Count.Globally(),
-      equal_to([num_entities]))
+  assert_that(entities | beam.combiners.Count.Globally(),
+              equal_to([num_entities]))
 
   p.run()
 
@@ -152,9 +149,8 @@ def run(argv=None):
   _LOGGER.info('Deleting entities.')
   p = new_pipeline_with_job_name(pipeline_options, job_name, '-delete')
   entities = p | 'read from datastore' >> ReadFromDatastore(query)
-  _ = (entities
-       | 'To Keys' >> beam.Map(lambda entity: entity.key)
-       | 'delete entities' >> DeleteFromDatastore(project))
+  _ = (entities | 'To Keys' >> beam.Map(lambda entity: entity.key) |
+       'delete entities' >> DeleteFromDatastore(project))
 
   p.run()
 
@@ -163,9 +159,7 @@ def run(argv=None):
   p = new_pipeline_with_job_name(pipeline_options, job_name, '-verify-deleted')
   entities = p | 'read from datastore' >> ReadFromDatastore(query)
 
-  assert_that(
-      entities | beam.combiners.Count.Globally(),
-      equal_to([0]))
+  assert_that(entities | beam.combiners.Count.Globally(), equal_to([0]))
 
   p.run()
 

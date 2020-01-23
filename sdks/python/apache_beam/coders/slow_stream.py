@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A pure Python implementation of stream.pyx.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -151,7 +150,7 @@ class InputStream(object):
   def read(self, size):
     # type: (int) -> bytes
     self.pos += size
-    return self.data[self.pos - size : self.pos]
+    return self.data[self.pos - size:self.pos]
 
   def read_all(self, nested):
     # type: (bool) -> bytes

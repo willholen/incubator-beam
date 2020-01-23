@@ -27,8 +27,9 @@ from builtins import object
 
 from future.utils import with_metaclass
 
-__all__ = ['Downloader', 'Uploader', 'DownloaderStream', 'UploaderStream',
-           'PipeStream']
+__all__ = [
+    'Downloader', 'Uploader', 'DownloaderStream', 'UploaderStream', 'PipeStream'
+]
 
 
 class Downloader(with_metaclass(abc.ABCMeta, object)):  # type: ignore[misc]
@@ -299,8 +300,8 @@ class PipeStream(object):
         self.last_block = b''
         return
     raise NotImplementedError(
-        'offset: %s, whence: %s, position: %s, last: %s' % (
-            offset, whence, self.position, self.last_block_position))
+        'offset: %s, whence: %s, position: %s, last: %s' %
+        (offset, whence, self.position, self.last_block_position))
 
   def _check_open(self):
     if self.closed:

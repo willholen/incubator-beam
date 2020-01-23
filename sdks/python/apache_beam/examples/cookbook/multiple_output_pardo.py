@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
 """A workflow demonstrating a DoFn with multiple outputs.
 
 DoFns may produce multiple outputs. Outputs that are not the default ("main")
@@ -99,8 +97,7 @@ class SplitLinesToWordsFn(beam.DoFn):
     """
     # yield a count (integer) to the OUTPUT_TAG_CHARACTER_COUNT tagged
     # collection.
-    yield pvalue.TaggedOutput(
-        self.OUTPUT_TAG_CHARACTER_COUNT, len(element))
+    yield pvalue.TaggedOutput(self.OUTPUT_TAG_CHARACTER_COUNT, len(element))
 
     words = re.findall(r'[A-Za-z\']+', element)
     for word in words:
@@ -121,6 +118,7 @@ class CountWords(beam.PTransform):
   """
 
   def expand(self, pcoll):
+
     def count_ones(word_ones):
       (word, ones) = word_ones
       return (word, sum(ones))
@@ -129,11 +127,9 @@ class CountWords(beam.PTransform):
       (word, count) = word_count
       return '%s: %s' % (word, count)
 
-    return (pcoll
-            | 'pair_with_one' >> beam.Map(lambda x: (x, 1))
-            | 'group' >> beam.GroupByKey()
-            | 'count' >> beam.Map(count_ones)
-            | 'format' >> beam.Map(format_result))
+    return (pcoll | 'pair_with_one' >> beam.Map(lambda x: (x, 1)) |
+            'group' >> beam.GroupByKey() | 'count' >> beam.Map(count_ones) |
+            'format' >> beam.Map(format_result))
 
 
 def run(argv=None, save_main_session=True):
@@ -156,8 +152,8 @@ def run(argv=None, save_main_session=True):
     lines = p | ReadFromText(known_args.input)
 
     # with_outputs allows accessing the explicitly tagged outputs of a DoFn.
-    split_lines_result = (lines
-                          | beam.ParDo(SplitLinesToWordsFn()).with_outputs(
+    split_lines_result = (lines |
+                          beam.ParDo(SplitLinesToWordsFn()).with_outputs(
                               SplitLinesToWordsFn.OUTPUT_TAG_SHORT_WORDS,
                               SplitLinesToWordsFn.OUTPUT_TAG_CHARACTER_COUNT,
                               main='words'))
@@ -165,27 +161,23 @@ def run(argv=None, save_main_session=True):
     # split_lines_result is an object of type DoOutputsTuple. It supports
     # accessing result in alternative ways.
     words, _, _ = split_lines_result
-    short_words = split_lines_result[
-        SplitLinesToWordsFn.OUTPUT_TAG_SHORT_WORDS]
+    short_words = split_lines_result[SplitLinesToWordsFn.OUTPUT_TAG_SHORT_WORDS]
     character_count = split_lines_result.tag_character_count
 
     # pylint: disable=expression-not-assigned
-    (character_count
-     | 'pair_with_key' >> beam.Map(lambda x: ('chars_temp_key', x))
-     | beam.GroupByKey()
-     | 'count chars' >> beam.Map(lambda char_counts: sum(char_counts[1]))
-     | 'write chars' >> WriteToText(known_args.output + '-chars'))
+    (character_count |
+     'pair_with_key' >> beam.Map(lambda x: ('chars_temp_key', x)) |
+     beam.GroupByKey() |
+     'count chars' >> beam.Map(lambda char_counts: sum(char_counts[1])) |
+     'write chars' >> WriteToText(known_args.output + '-chars'))
 
     # pylint: disable=expression-not-assigned
-    (short_words
-     | 'count short words' >> CountWords()
-     | 'write short words' >> WriteToText(
-         known_args.output + '-short-words'))
+    (short_words | 'count short words' >> CountWords() |
+     'write short words' >> WriteToText(known_args.output + '-short-words'))
 
     # pylint: disable=expression-not-assigned
-    (words
-     | 'count words' >> CountWords()
-     | 'write words' >> WriteToText(known_args.output + '-words'))
+    (words | 'count words' >> CountWords() |
+     'write words' >> WriteToText(known_args.output + '-words'))
 
 
 if __name__ == '__main__':

@@ -62,8 +62,7 @@ def process_tfma(schema_file,
   """
 
   if big_query_table is None:
-    raise ValueError(
-        '--big_query_table should be provided.')
+    raise ValueError('--big_query_table should be provided.')
 
   slice_spec = [
       tfma.slicer.SingleSliceSpec(),
@@ -87,45 +86,35 @@ def process_tfma(schema_file,
         project_name=project,
         bq_table=metrics_table,
         bq_dataset=metrics_dataset,
-        filters=MetricsFilter().with_namespace(metrics_namespace)
-    )
+        filters=MetricsFilter().with_namespace(metrics_namespace))
 
   pipeline = beam.Pipeline(argv=pipeline_args)
 
   query = taxi.make_sql(big_query_table, max_eval_rows, for_eval=True)
   raw_feature_spec = taxi.get_raw_feature_spec(schema)
   raw_data = (
-      pipeline
-      | 'ReadBigQuery' >> ReadFromBigQuery(query=query, project=project,
-                                           use_standard_sql=True)
-      | 'Measure time: Start' >> beam.ParDo(MeasureTime(metrics_namespace))
-      | 'CleanData' >> beam.Map(lambda x: (
-          taxi.clean_raw_data_dict(x, raw_feature_spec))))
+      pipeline | 'ReadBigQuery' >> ReadFromBigQuery(
+          query=query, project=project, use_standard_sql=True) |
+      'Measure time: Start' >> beam.ParDo(MeasureTime(metrics_namespace)) |
+      'CleanData' >> beam.Map(lambda x:
+                              (taxi.clean_raw_data_dict(x, raw_feature_spec))))
 
   # Examples must be in clean tf-example format.
   coder = taxi.make_proto_coder(schema)
   # Prepare arguments for Extract, Evaluate and Write steps
-  extractors = tfma.default_extractors(
-      eval_shared_model=eval_shared_model,
-      slice_spec=slice_spec,
-      desired_batch_size=None,
-      materialize=False)
+  extractors = tfma.default_extractors(eval_shared_model=eval_shared_model,
+                                       slice_spec=slice_spec,
+                                       desired_batch_size=None,
+                                       materialize=False)
 
-  evaluators = tfma.default_evaluators(
-      eval_shared_model=eval_shared_model,
-      desired_batch_size=None,
-      num_bootstrap_samples=1)
-  _ = (
-      raw_data
-      | 'ToSerializedTFExample' >> beam.Map(coder.encode)
-      | 'Extract Results' >> tfma.InputsToExtracts()
-      | 'Extract and evaluate' >> tfma.ExtractAndEvaluate(
-          extractors=extractors,
-          evaluators=evaluators)
-      | 'Map Evaluations to PCollection' >> MapEvalToPCollection()
-      | 'Measure time: End' >> beam.ParDo(
-          MeasureTime(metrics_namespace))
-  )
+  evaluators = tfma.default_evaluators(eval_shared_model=eval_shared_model,
+                                       desired_batch_size=None,
+                                       num_bootstrap_samples=1)
+  _ = (raw_data | 'ToSerializedTFExample' >> beam.Map(coder.encode) |
+       'Extract Results' >> tfma.InputsToExtracts() | 'Extract and evaluate' >>
+       tfma.ExtractAndEvaluate(extractors=extractors, evaluators=evaluators) |
+       'Map Evaluations to PCollection' >> MapEvalToPCollection() |
+       'Measure time: End' >> beam.ParDo(MeasureTime(metrics_namespace)))
   result = pipeline.run()
   result.wait_until_finish()
   if metrics_monitor:
@@ -145,52 +134,45 @@ def main():
 
   parser = argparse.ArgumentParser()
 
-  parser.add_argument(
-      '--eval_model_dir',
-      help='Input path to the model which will be evaluated.')
+  parser.add_argument('--eval_model_dir',
+                      help='Input path to the model which will be evaluated.')
   parser.add_argument(
       '--big_query_table',
       help='BigQuery path to input examples which will be evaluated.')
-  parser.add_argument(
-      '--max_eval_rows',
-      help='Maximum number of rows to evaluate on.',
-      default=None,
-      type=int)
-  parser.add_argument(
-      '--schema_file', help='File holding the schema for the input data')
-  parser.add_argument(
-      '--publish_to_big_query',
-      help='Whether to publish to BQ',
-      default=None,
-      type=bool)
-  parser.add_argument(
-      '--metrics_dataset',
-      help='BQ dataset',
-      default=None,
-      type=str)
-  parser.add_argument(
-      '--metrics_table',
-      help='BQ table for storing metrics',
-      default=None,
-      type=str)
-  parser.add_argument(
-      '--metric_reporting_project',
-      help='BQ table project',
-      default=None,
-      type=str)
+  parser.add_argument('--max_eval_rows',
+                      help='Maximum number of rows to evaluate on.',
+                      default=None,
+                      type=int)
+  parser.add_argument('--schema_file',
+                      help='File holding the schema for the input data')
+  parser.add_argument('--publish_to_big_query',
+                      help='Whether to publish to BQ',
+                      default=None,
+                      type=bool)
+  parser.add_argument('--metrics_dataset',
+                      help='BQ dataset',
+                      default=None,
+                      type=str)
+  parser.add_argument('--metrics_table',
+                      help='BQ table for storing metrics',
+                      default=None,
+                      type=str)
+  parser.add_argument('--metric_reporting_project',
+                      help='BQ table project',
+                      default=None,
+                      type=str)
 
   known_args, pipeline_args = parser.parse_known_args()
 
-  process_tfma(
-      big_query_table=known_args.big_query_table,
-      eval_model_dir=known_args.eval_model_dir,
-      max_eval_rows=known_args.max_eval_rows,
-      schema_file=known_args.schema_file,
-      pipeline_args=pipeline_args,
-      publish_to_bq=known_args.publish_to_big_query,
-      metrics_table=known_args.metrics_table,
-      metrics_dataset=known_args.metrics_dataset,
-      project=known_args.metric_reporting_project)
+  process_tfma(big_query_table=known_args.big_query_table,
+               eval_model_dir=known_args.eval_model_dir,
+               max_eval_rows=known_args.max_eval_rows,
+               schema_file=known_args.schema_file,
+               pipeline_args=pipeline_args,
+               publish_to_bq=known_args.publish_to_big_query,
+               metrics_table=known_args.metrics_table,
+               metrics_dataset=known_args.metrics_dataset,
+               project=known_args.metric_reporting_project)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """An example that reads Wikipedia edit data and computes strings of edits.
 
 An example that reads Wikipedia edit data from Cloud Storage and computes the
@@ -79,23 +78,23 @@ class ComputeSessions(beam.PTransform):
   A session is defined as a string of edits where each is separated from the
   next by less than an hour.
   """
+
   def expand(self, pcoll):
-    return (pcoll
-            | 'ComputeSessionsWindow' >> beam.WindowInto(
-                Sessions(gap_size=ONE_HOUR_IN_SECONDS))
-            | combiners.Count.PerElement())
+    return (pcoll | 'ComputeSessionsWindow' >> beam.WindowInto(
+        Sessions(gap_size=ONE_HOUR_IN_SECONDS)) | combiners.Count.PerElement())
 
 
 class TopPerMonth(beam.PTransform):
   """Computes the longest session ending in each month."""
+
   def expand(self, pcoll):
-    return (pcoll
-            | 'TopPerMonthWindow' >> beam.WindowInto(
-                FixedWindows(size=THIRTY_DAYS_IN_SECONDS))
-            | 'Top' >> combiners.core.CombineGlobally(
-                combiners.TopCombineFn(
-                    10, lambda first, second: first[1] < second[1]))
-            .without_defaults())
+    return (
+        pcoll | 'TopPerMonthWindow' >> beam.WindowInto(
+            FixedWindows(size=THIRTY_DAYS_IN_SECONDS)) |
+        'Top' >> combiners.core.CombineGlobally(
+            combiners.TopCombineFn(
+                10,
+                lambda first, second: first[1] < second[1])).without_defaults())
 
 
 class SessionsToStringsDoFn(beam.DoFn):
@@ -125,15 +124,14 @@ class ComputeTopSessions(beam.PTransform):
     self.sampling_threshold = sampling_threshold
 
   def expand(self, pcoll):
-    return (pcoll
-            | 'ExtractUserAndTimestamp' >> beam.ParDo(
-                ExtractUserAndTimestampDoFn())
-            | beam.Filter(lambda x: (abs(hash(x)) <=
-                                     MAX_TIMESTAMP * self.sampling_threshold))
-            | ComputeSessions()
-            | 'SessionsToStrings' >> beam.ParDo(SessionsToStringsDoFn())
-            | TopPerMonth()
-            | 'FormatOutput' >> beam.ParDo(FormatOutputDoFn()))
+    return (
+        pcoll |
+        'ExtractUserAndTimestamp' >> beam.ParDo(ExtractUserAndTimestampDoFn()) |
+        beam.Filter(lambda x:
+                    (abs(hash(x)) <= MAX_TIMESTAMP * self.sampling_threshold)) |
+        ComputeSessions() |
+        'SessionsToStrings' >> beam.ParDo(SessionsToStringsDoFn()) |
+        TopPerMonth() | 'FormatOutput' >> beam.ParDo(FormatOutputDoFn()))
 
 
 def run(argv=None):
@@ -165,9 +163,9 @@ def run(argv=None):
   with beam.Pipeline(options=pipeline_options) as p:
 
     (p  # pylint: disable=expression-not-assigned
-     | ReadFromText(known_args.input)
-     | ComputeTopSessions(known_args.sampling_threshold)
-     | WriteToText(known_args.output))
+     | ReadFromText(known_args.input) |
+     ComputeTopSessions(known_args.sampling_threshold) |
+     WriteToText(known_args.output))
 
 
 if __name__ == '__main__':

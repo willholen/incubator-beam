@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for all code snippets used in public docs."""
 # pytype: skip-file
 
@@ -100,8 +99,10 @@ class ParDoTest(unittest.TestCase):
 
     # [START model_pardo_pardo]
     class ComputeWordLengthFn(beam.DoFn):
+
       def process(self, element):
         return [len(element)]
+
     # [END model_pardo_pardo]
 
     # [START model_pardo_apply]
@@ -115,8 +116,10 @@ class ParDoTest(unittest.TestCase):
 
     # [START model_pardo_yield]
     class ComputeWordLengthFn(beam.DoFn):
+
       def process(self, element):
         yield len(element)
+
     # [END model_pardo_yield]
 
     word_lengths = words | beam.ParDo(ComputeWordLengthFn())
@@ -146,6 +149,7 @@ class ParDoTest(unittest.TestCase):
       for letter in word:
         if 'A' <= letter <= 'Z':
           yield letter
+
     all_capitals = words | beam.FlatMap(capitals)
     # [END model_pardo_using_flatmap_yield]
 
@@ -172,17 +176,15 @@ class ParDoTest(unittest.TestCase):
           yield word
 
       # Construct a deferred side input.
-      avg_word_len = (words
-                      | beam.Map(len)
-                      | beam.CombineGlobally(beam.combiners.MeanCombineFn()))
+      avg_word_len = (words | beam.Map(len) |
+                      beam.CombineGlobally(beam.combiners.MeanCombineFn()))
 
       # Call with explicit side inputs.
       small_words = words | 'small' >> beam.FlatMap(filter_using_length, 0, 3)
 
       # A single deferred side input.
       larger_than_average = (words | 'large' >> beam.FlatMap(
-          filter_using_length,
-          lower_bound=pvalue.AsSingleton(avg_word_len)))
+          filter_using_length, lower_bound=pvalue.AsSingleton(avg_word_len)))
 
       # Mix and match.
       small_but_nontrivial = words | beam.FlatMap(
@@ -192,9 +194,11 @@ class ParDoTest(unittest.TestCase):
       # [END model_pardo_side_input]
 
       assert_that(small_words, equal_to(['a', 'bb', 'ccc']))
-      assert_that(larger_than_average, equal_to(['ccc', 'dddd']),
+      assert_that(larger_than_average,
+                  equal_to(['ccc', 'dddd']),
                   label='larger_than_average')
-      assert_that(small_but_nontrivial, equal_to(['bb']),
+      assert_that(small_but_nontrivial,
+                  equal_to(['bb']),
                   label='small_but_not_trivial')
 
   def test_pardo_side_input_dofn(self):
@@ -202,6 +206,7 @@ class ParDoTest(unittest.TestCase):
 
     # [START model_pardo_side_input_dofn]
     class FilterUsingLength(beam.DoFn):
+
       def process(self, element, lower_bound, upper_bound=float('inf')):
         if lower_bound <= len(element) <= upper_bound:
           yield element
@@ -220,19 +225,21 @@ class ParDoTest(unittest.TestCase):
           yield element
         else:
           # Emit this word's long length to the 'above_cutoff_lengths' output.
-          yield pvalue.TaggedOutput(
-              'above_cutoff_lengths', len(element))
+          yield pvalue.TaggedOutput('above_cutoff_lengths', len(element))
         if element.startswith(marker):
           # Emit this word to a different output with the 'marked strings' tag.
           yield pvalue.TaggedOutput('marked strings', element)
+
     # [END model_pardo_emitting_values_on_tagged_outputs]
 
     words = ['a', 'an', 'the', 'music', 'xyz']
 
     # [START model_pardo_with_tagged_outputs]
-    results = (words | beam.ParDo(ProcessWords(), cutoff_length=2, marker='x')
-               .with_outputs('above_cutoff_lengths', 'marked strings',
-                             main='below_cutoff_strings'))
+    results = (words |
+               beam.ParDo(ProcessWords(), cutoff_length=2,
+                          marker='x').with_outputs('above_cutoff_lengths',
+                                                   'marked strings',
+                                                   main='below_cutoff_strings'))
     below = results.below_cutoff_strings
     above = results.above_cutoff_lengths
     marked = results['marked strings']  # indexing works as well
@@ -243,12 +250,11 @@ class ParDoTest(unittest.TestCase):
     self.assertEqual({'xyz'}, set(marked))
 
     # [START model_pardo_with_tagged_outputs_iter]
-    below, above, marked = (words
-                            | beam.ParDo(
-                                ProcessWords(), cutoff_length=2, marker='x')
-                            .with_outputs('above_cutoff_lengths',
-                                          'marked strings',
-                                          main='below_cutoff_strings'))
+    below, above, marked = (words | beam.ParDo(
+        ProcessWords(), cutoff_length=2, marker='x').with_outputs(
+            'above_cutoff_lengths',
+            'marked strings',
+            main='below_cutoff_strings'))
     # [END model_pardo_with_tagged_outputs_iter]
 
     self.assertEqual({'a', 'an'}, set(below))
@@ -314,9 +320,11 @@ class TypeHintsTest(unittest.TestCase):
       # [START type_hints_do_fn]
       @beam.typehints.with_input_types(int)
       class FilterEvensDoFn(beam.DoFn):
+
         def process(self, element):
           if element % 2 == 0:
             yield element
+
       evens = numbers | beam.ParDo(FilterEvensDoFn())
       # [END type_hints_do_fn]
 
@@ -329,6 +337,7 @@ class TypeHintsTest(unittest.TestCase):
     @beam.typehints.with_input_types(T)
     @beam.typehints.with_output_types(typing.Tuple[int, T])
     class MyTransform(beam.PTransform):
+
       def expand(self, pcoll):
         return pcoll | beam.Map(lambda x: (len(x), x))
 
@@ -370,11 +379,13 @@ class TypeHintsTest(unittest.TestCase):
 
       # [START type_hints_deterministic_key]
       class Player(object):
+
         def __init__(self, team, name):
           self.team = team
           self.name = name
 
       class PlayerCoder(beam.coders.Coder):
+
         def encode(self, player):
           return ('%s:%s' % (player.team, player.name)).encode('utf-8')
 
@@ -390,16 +401,13 @@ class TypeHintsTest(unittest.TestCase):
         name, team, score = csv.split(',')
         return Player(team, name), int(score)
 
-      totals = (
-          lines
-          | beam.Map(parse_player_and_score)
-          | beam.CombinePerKey(sum).with_input_types(
-              typing.Tuple[Player, int]))
+      totals = (lines | beam.Map(parse_player_and_score) |
+                beam.CombinePerKey(sum).with_input_types(typing.Tuple[Player,
+                                                                      int]))
       # [END type_hints_deterministic_key]
 
-      assert_that(
-          totals | beam.Map(lambda k_v: (k_v[0].name, k_v[1])),
-          equal_to([('banana', 3), ('kiwi', 4), ('zucchini', 3)]))
+      assert_that(totals | beam.Map(lambda k_v: (k_v[0].name, k_v[1])),
+                  equal_to([('banana', 3), ('kiwi', 4), ('zucchini', 3)]))
 
 
 class SnippetsTest(unittest.TestCase):
@@ -443,8 +451,8 @@ class SnippetsTest(unittest.TestCase):
 
     def expand(self, pcoll):
       return pcoll | beam.Create([None]) | 'DummyReadForTesting' >> beam.ParDo(
-          SnippetsTest.DummyReadTransform.ReadDoFn(
-              self.file_to_read, self.compression_type))
+          SnippetsTest.DummyReadTransform.ReadDoFn(self.file_to_read,
+                                                   self.compression_type))
 
   class DummyWriteTransform(beam.PTransform):
     """A transform that will replace iobase.WriteToText.
@@ -456,6 +464,7 @@ class SnippetsTest(unittest.TestCase):
       self.file_to_write = file_to_write
 
     class WriteDoFn(beam.DoFn):
+
       def __init__(self, file_to_write):
         self.file_to_write = file_to_write
         self.file_obj = None
@@ -520,12 +529,11 @@ class SnippetsTest(unittest.TestCase):
   def test_model_pipelines(self):
     temp_path = self.create_temp_file('aa bb cc\n bb cc\n cc')
     result_path = temp_path + '.result'
-    snippets.model_pipelines([
-        '--input=%s*' % temp_path,
-        '--output=%s' % result_path])
-    self.assertEqual(
-        self.get_output(result_path),
-        [str(s) for s in [(u'aa', 1), (u'bb', 2), (u'cc', 3)]])
+    snippets.model_pipelines(
+        ['--input=%s*' % temp_path,
+         '--output=%s' % result_path])
+    self.assertEqual(self.get_output(result_path),
+                     [str(s) for s in [(u'aa', 1), (u'bb', 2), (u'cc', 3)]])
 
   def test_model_pcollection(self):
     temp_path = self.create_temp_file()
@@ -538,8 +546,7 @@ class SnippetsTest(unittest.TestCase):
     ])
 
   def test_construct_pipeline(self):
-    temp_path = self.create_temp_file(
-        'abc def ghi\n jkl mno pqr\n stu vwx yz')
+    temp_path = self.create_temp_file('abc def ghi\n jkl mno pqr\n stu vwx yz')
     result_path = self.create_temp_file()
     snippets.construct_pipeline({'read': temp_path, 'write': result_path})
     self.assertEqual(
@@ -591,7 +598,8 @@ class SnippetsTest(unittest.TestCase):
         'final_table_no_ptransform', 'final_table_with_ptransform')
 
     expected_output = [
-        'key' + str(i) + ':' + 'value' + str(i) for i in range(100)]
+        'key' + str(i) + ':' + 'value' + str(i) for i in range(100)
+    ]
 
     glob_pattern = tempdir_name + os.sep + 'final_table_no_ptransform*'
     output_files = glob.glob(glob_pattern)
@@ -621,9 +629,8 @@ class SnippetsTest(unittest.TestCase):
     temp_path = self.create_temp_file('aa bb cc\n bb cc\n cc')
     result_path = temp_path + '.result'
     snippets.model_textio({'read': temp_path, 'write': result_path})
-    self.assertEqual(
-        ['aa', 'bb', 'bb', 'cc', 'cc', 'cc'],
-        self.get_output(result_path, suffix='.csv'))
+    self.assertEqual(['aa', 'bb', 'bb', 'cc', 'cc', 'cc'],
+                     self.get_output(result_path, suffix='.csv'))
 
   def test_model_textio_compressed(self):
     temp_path = self.create_temp_file('aa\nbb\ncc')
@@ -632,8 +639,8 @@ class SnippetsTest(unittest.TestCase):
       dst.writelines(src)
       # Add the temporary gzip file to be cleaned up as well.
       self.temp_files.append(gzip_file_name)
-    snippets.model_textio_compressed(
-        {'read': gzip_file_name}, ['aa', 'bb', 'cc'])
+    snippets.model_textio_compressed({'read': gzip_file_name},
+                                     ['aa', 'bb', 'cc'])
 
   @unittest.skipIf(sys.version_info[0] == 3 and
                    os.environ.get('RUN_SKIPPED_PY3_TESTS') != '1',
@@ -673,12 +680,8 @@ class SnippetsTest(unittest.TestCase):
   def _run_test_pipeline_for_options(self, fn):
     temp_path = self.create_temp_file('aa\nbb\ncc')
     result_path = temp_path + '.result'
-    fn([
-        '--input=%s*' % temp_path,
-        '--output=%s' % result_path])
-    self.assertEqual(
-        ['aa', 'bb', 'cc'],
-        self.get_output(result_path))
+    fn(['--input=%s*' % temp_path, '--output=%s' % result_path])
+    self.assertEqual(['aa', 'bb', 'cc'], self.get_output(result_path))
 
   def test_pipeline_options_local(self):
     self._run_test_pipeline_for_options(snippets.pipeline_options_local)
@@ -691,28 +694,28 @@ class SnippetsTest(unittest.TestCase):
 
   def test_pipeline_logging(self):
     result_path = self.create_temp_file()
-    lines = ['we found love right where we are',
-             'we found love right from the start',
-             'we found love in a hopeless place']
+    lines = [
+        'we found love right where we are',
+        'we found love right from the start',
+        'we found love in a hopeless place'
+    ]
     snippets.pipeline_logging(lines, result_path)
-    self.assertEqual(
-        sorted(' '.join(lines).split(' ')),
-        self.get_output(result_path))
+    self.assertEqual(sorted(' '.join(lines).split(' ')),
+                     self.get_output(result_path))
 
   def test_examples_wordcount(self):
-    pipelines = [snippets.examples_wordcount_minimal,
-                 snippets.examples_wordcount_wordcount,
-                 snippets.pipeline_monitoring,
-                 snippets.examples_wordcount_templated]
+    pipelines = [
+        snippets.examples_wordcount_minimal,
+        snippets.examples_wordcount_wordcount, snippets.pipeline_monitoring,
+        snippets.examples_wordcount_templated
+    ]
 
     for pipeline in pipelines:
-      temp_path = self.create_temp_file(
-          'abc def ghi\n abc jkl')
+      temp_path = self.create_temp_file('abc def ghi\n abc jkl')
       result_path = self.create_temp_file()
       pipeline({'read': temp_path, 'write': result_path})
-      self.assertEqual(
-          self.get_output(result_path),
-          ['abc: 2', 'def: 1', 'ghi: 1', 'jkl: 1'])
+      self.assertEqual(self.get_output(result_path),
+                       ['abc: 2', 'def: 1', 'ghi: 1', 'jkl: 1'])
 
   def test_examples_ptransforms_templated(self):
     pipelines = [snippets.examples_ptransforms_templated]
@@ -721,24 +724,24 @@ class SnippetsTest(unittest.TestCase):
       temp_path = self.create_temp_file('1\n 2\n 3')
       result_path = self.create_temp_file()
       pipeline({'read': temp_path, 'write': result_path})
-      self.assertEqual(
-          self.get_output(result_path),
-          ['11', '12', '13'])
+      self.assertEqual(self.get_output(result_path), ['11', '12', '13'])
 
   def test_examples_wordcount_debugging(self):
     temp_path = self.create_temp_file(
         'Flourish Flourish Flourish stomach abc def')
     result_path = self.create_temp_file()
-    snippets.examples_wordcount_debugging(
-        {'read': temp_path, 'write': result_path})
-    self.assertEqual(
-        self.get_output(result_path),
-        ['Flourish: 3', 'stomach: 1'])
+    snippets.examples_wordcount_debugging({
+        'read': temp_path,
+        'write': result_path
+    })
+    self.assertEqual(self.get_output(result_path),
+                     ['Flourish: 3', 'stomach: 1'])
 
   @unittest.skipIf(pubsub is None, 'GCP dependencies are not installed')
   @mock.patch('apache_beam.io.ReadFromPubSub')
   @mock.patch('apache_beam.io.WriteStringsToPubSub')
   def test_examples_wordcount_streaming(self, *unused_mocks):
+
     def FakeReadFromPubSub(topic=None, subscription=None, values=None):
       expected_topic = topic
       expected_subscription = subscription
@@ -747,9 +750,11 @@ class SnippetsTest(unittest.TestCase):
         assert topic == expected_topic
         assert subscription == expected_subscription
         return TestStream().add_elements(values)
+
       return _inner
 
     class AssertTransform(beam.PTransform):
+
       def __init__(self, matcher):
         self.matcher = matcher
 
@@ -762,22 +767,26 @@ class SnippetsTest(unittest.TestCase):
       def _inner(topic=None, subscription=None):
         assert topic == expected_topic
         return AssertTransform(equal_to(values))
+
       return _inner
 
     # Test basic execution.
     input_topic = 'projects/fake-beam-test-project/topic/intopic'
-    input_values = [TimestampedValue(b'a a b', 1),
-                    TimestampedValue(u'🤷 ¯\\_(ツ)_/¯ b b '.encode('utf-8'), 12),
-                    TimestampedValue(b'a b c c c', 20)]
+    input_values = [
+        TimestampedValue(b'a a b', 1),
+        TimestampedValue(u'🤷 ¯\\_(ツ)_/¯ b b '.encode('utf-8'), 12),
+        TimestampedValue(b'a b c c c', 20)
+    ]
     output_topic = 'projects/fake-beam-test-project/topic/outtopic'
     output_values = ['a: 1', 'a: 2', 'b: 1', 'b: 3', 'c: 3']
-    beam.io.ReadFromPubSub = (
-        FakeReadFromPubSub(topic=input_topic, values=input_values))
-    beam.io.WriteStringsToPubSub = (
-        FakeWriteStringsToPubSub(topic=output_topic, values=output_values))
+    beam.io.ReadFromPubSub = (FakeReadFromPubSub(topic=input_topic,
+                                                 values=input_values))
+    beam.io.WriteStringsToPubSub = (FakeWriteStringsToPubSub(
+        topic=output_topic, values=output_values))
     snippets.examples_wordcount_streaming([
         '--input_topic', 'projects/fake-beam-test-project/topic/intopic',
-        '--output_topic', 'projects/fake-beam-test-project/topic/outtopic'])
+        '--output_topic', 'projects/fake-beam-test-project/topic/outtopic'
+    ])
 
     # Test with custom subscription.
     input_sub = 'projects/fake-beam-test-project/subscriptions/insub'
@@ -785,8 +794,9 @@ class SnippetsTest(unittest.TestCase):
                                                 values=input_values)
     snippets.examples_wordcount_streaming([
         '--input_subscription',
-        'projects/fake-beam-test-project/subscriptions/insub',
-        '--output_topic', 'projects/fake-beam-test-project/topic/outtopic'])
+        'projects/fake-beam-test-project/subscriptions/insub', '--output_topic',
+        'projects/fake-beam-test-project/topic/outtopic'
+    ])
 
   def test_model_composite_transform_example(self):
     contents = ['aa bb cc', 'bb cc', 'cc']
@@ -841,16 +851,20 @@ class SnippetsTest(unittest.TestCase):
     results = [
         ('amy', {
             'emails': ['amy@example.com'],
-            'phones': ['111-222-3333', '333-444-5555']}),
+            'phones': ['111-222-3333', '333-444-5555']
+        }),
         ('carl', {
             'emails': ['carl@email.com', 'carl@example.com'],
-            'phones': ['444-555-6666']}),
+            'phones': ['444-555-6666']
+        }),
         ('james', {
             'emails': [],
-            'phones': ['222-333-4444']}),
+            'phones': ['222-333-4444']
+        }),
         ('julia', {
             'emails': ['julia@example.com'],
-            'phones': []}),
+            'phones': []
+        }),
     ]
     # [END model_group_by_key_cogroupbykey_tuple_outputs]
     # [START model_group_by_key_cogroupbykey_tuple_formatted_outputs]
@@ -861,8 +875,10 @@ class SnippetsTest(unittest.TestCase):
         "julia; ['julia@example.com']; []",
     ]
     # [END model_group_by_key_cogroupbykey_tuple_formatted_outputs]
-    expected_results = ['%s; %s; %s' % (name, info['emails'], info['phones'])
-                        for name, info in results]
+    expected_results = [
+        '%s; %s; %s' % (name, info['emails'], info['phones'])
+        for name, info in results
+    ]
     self.assertEqual(expected_results, formatted_results)
     self.assertEqual(formatted_results, self.get_output(result_path))
 
@@ -872,8 +888,8 @@ class SnippetsTest(unittest.TestCase):
     import re
 
     p = TestPipeline()  # Use TestPipeline for testing.
-    words = p | beam.Create(['albert', 'sam', 'mark', 'sarah',
-                             'swati', 'daniel', 'andrea'])
+    words = p | beam.Create(
+        ['albert', 'sam', 'mark', 'sarah', 'swati', 'daniel', 'andrea'])
 
     # pylint: disable=unused-variable
     # [START metrics_usage_example]
@@ -898,8 +914,7 @@ class SnippetsTest(unittest.TestCase):
         else:
           self.unmatched_words.inc()
 
-    filtered_words = (
-        words | 'FilterText' >> beam.ParDo(FilterTextFn('s.*')))
+    filtered_words = (words | 'FilterText' >> beam.ParDo(FilterTextFn('s.*')))
     # [END metrics_usage_example]
     # pylint: enable=unused-variable
 
@@ -931,8 +946,8 @@ class SnippetsTest(unittest.TestCase):
     email_list = [['a', 'a@example.com'], ['b', 'b@example.com']]
     phone_list = [['a', 'x4312'], ['b', 'x8452']]
     result_path = self.create_temp_file()
-    snippets.model_join_using_side_inputs(
-        name_list, email_list, phone_list, result_path)
+    snippets.model_join_using_side_inputs(name_list, email_list, phone_list,
+                                          result_path)
     expect = ['a; a@example.com; x4312', 'b; b@example.com; x8452']
     self.assertEqual(expect, self.get_output(result_path))
 
@@ -941,30 +956,25 @@ class SnippetsTest(unittest.TestCase):
     pipeline_options.view_as(StandardOptions).streaming = True
 
     with TestPipeline(options=pipeline_options) as p:
-      test_stream = (TestStream()
-                     .advance_watermark_to(10)
-                     .add_elements(['a', 'a', 'a', 'b', 'b'])
-                     .add_elements([TimestampedValue('a', 10)])
-                     .advance_watermark_to(20)
-                     .advance_processing_time(60)
-                     .add_elements([TimestampedValue('a', 10)]))
+      test_stream = (TestStream().advance_watermark_to(10).add_elements(
+          ['a', 'a', 'a', 'b', 'b']).add_elements([
+              TimestampedValue('a', 10)
+          ]).advance_watermark_to(20).advance_processing_time(60).add_elements(
+              [TimestampedValue('a', 10)]))
       trigger = (
           # [START model_early_late_triggers]
-          AfterWatermark(
-              early=AfterProcessingTime(delay=1 * 60),
-              late=AfterCount(1))
+          AfterWatermark(early=AfterProcessingTime(delay=1 * 60),
+                         late=AfterCount(1))
           # [END model_early_late_triggers]
-          )
-      counts = (p
-                | test_stream
-                | 'pair_with_one' >> beam.Map(lambda x: (x, 1))
-                | WindowInto(FixedWindows(15),
-                             trigger=trigger,
-                             allowed_lateness=20,
-                             accumulation_mode=AccumulationMode.DISCARDING)
-                | 'group' >> beam.GroupByKey()
-                | 'count' >> beam.Map(
-                    lambda word_ones: (word_ones[0], sum(word_ones[1]))))
+      )
+      counts = (p | test_stream |
+                'pair_with_one' >> beam.Map(lambda x: (x, 1)) |
+                WindowInto(FixedWindows(15),
+                           trigger=trigger,
+                           allowed_lateness=20,
+                           accumulation_mode=AccumulationMode.DISCARDING) |
+                'group' >> beam.GroupByKey() | 'count' >>
+                beam.Map(lambda word_ones: (word_ones[0], sum(word_ones[1]))))
       assert_that(counts, equal_to([('a', 4), ('b', 2), ('a', 1)]))
 
   def test_model_setting_trigger(self):
@@ -972,25 +982,21 @@ class SnippetsTest(unittest.TestCase):
     pipeline_options.view_as(StandardOptions).streaming = True
 
     with TestPipeline(options=pipeline_options) as p:
-      test_stream = (TestStream()
-                     .advance_watermark_to(10)
-                     .add_elements(['a', 'a', 'a', 'b', 'b'])
-                     .advance_watermark_to(70)
-                     .advance_processing_time(600))
-      pcollection = (p
-                     | test_stream
-                     | 'pair_with_one' >> beam.Map(lambda x: (x, 1)))
+      test_stream = (TestStream().advance_watermark_to(10).add_elements(
+          ['a', 'a', 'a', 'b',
+           'b']).advance_watermark_to(70).advance_processing_time(600))
+      pcollection = (p | test_stream |
+                     'pair_with_one' >> beam.Map(lambda x: (x, 1)))
 
       counts = (
           # [START model_setting_trigger]
-          pcollection | WindowInto(
-              FixedWindows(1 * 60),
-              trigger=AfterProcessingTime(10 * 60),
-              accumulation_mode=AccumulationMode.DISCARDING)
+          pcollection |
+          WindowInto(FixedWindows(1 * 60),
+                     trigger=AfterProcessingTime(10 * 60),
+                     accumulation_mode=AccumulationMode.DISCARDING)
           # [END model_setting_trigger]
-          | 'group' >> beam.GroupByKey()
-          | 'count' >> beam.Map(
-              lambda word_ones: (word_ones[0], sum(word_ones[1]))))
+          | 'group' >> beam.GroupByKey() | 'count' >>
+          beam.Map(lambda word_ones: (word_ones[0], sum(word_ones[1]))))
       assert_that(counts, equal_to([('a', 3), ('b', 2)]))
 
   def test_model_composite_triggers(self):
@@ -998,31 +1004,26 @@ class SnippetsTest(unittest.TestCase):
     pipeline_options.view_as(StandardOptions).streaming = True
 
     with TestPipeline(options=pipeline_options) as p:
-      test_stream = (TestStream()
-                     .advance_watermark_to(10)
-                     .add_elements(['a', 'a', 'a', 'b', 'b'])
-                     .advance_watermark_to(70)
-                     .add_elements([TimestampedValue('a', 10),
-                                    TimestampedValue('a', 10),
-                                    TimestampedValue('c', 10),
-                                    TimestampedValue('c', 10)])
-                     .advance_processing_time(600))
-      pcollection = (p
-                     | test_stream
-                     | 'pair_with_one' >> beam.Map(lambda x: (x, 1)))
+      test_stream = (TestStream().advance_watermark_to(10).add_elements(
+          ['a', 'a', 'a', 'b', 'b']).advance_watermark_to(70).add_elements([
+              TimestampedValue('a', 10),
+              TimestampedValue('a', 10),
+              TimestampedValue('c', 10),
+              TimestampedValue('c', 10)
+          ]).advance_processing_time(600))
+      pcollection = (p | test_stream |
+                     'pair_with_one' >> beam.Map(lambda x: (x, 1)))
 
       counts = (
           # [START model_composite_triggers]
-          pcollection | WindowInto(
-              FixedWindows(1 * 60),
-              trigger=AfterWatermark(
-                  late=AfterProcessingTime(10 * 60)),
-              allowed_lateness=10,
-              accumulation_mode=AccumulationMode.DISCARDING)
+          pcollection |
+          WindowInto(FixedWindows(1 * 60),
+                     trigger=AfterWatermark(late=AfterProcessingTime(10 * 60)),
+                     allowed_lateness=10,
+                     accumulation_mode=AccumulationMode.DISCARDING)
           # [END model_composite_triggers]
-          | 'group' >> beam.GroupByKey()
-          | 'count' >> beam.Map(
-              lambda word_ones: (word_ones[0], sum(word_ones[1]))))
+          | 'group' >> beam.GroupByKey() | 'count' >>
+          beam.Map(lambda word_ones: (word_ones[0], sum(word_ones[1]))))
       assert_that(counts, equal_to([('a', 3), ('b', 2), ('a', 2), ('c', 2)]))
 
   def test_model_other_composite_triggers(self):
@@ -1030,29 +1031,23 @@ class SnippetsTest(unittest.TestCase):
     pipeline_options.view_as(StandardOptions).streaming = True
 
     with TestPipeline(options=pipeline_options) as p:
-      test_stream = (TestStream()
-                     .advance_watermark_to(10)
-                     .add_elements(['a', 'a'])
-                     .add_elements(['a', 'b', 'b'])
-                     .advance_processing_time(60)
-                     .add_elements(['a'] * 100))
-      pcollection = (p
-                     | test_stream
-                     | 'pair_with_one' >> beam.Map(lambda x: (x, 1)))
+      test_stream = (TestStream().advance_watermark_to(10).add_elements([
+          'a', 'a'
+      ]).add_elements(['a', 'b', 'b'
+                      ]).advance_processing_time(60).add_elements(['a'] * 100))
+      pcollection = (p | test_stream |
+                     'pair_with_one' >> beam.Map(lambda x: (x, 1)))
 
       counts = (
           # [START model_other_composite_triggers]
           pcollection | WindowInto(
               FixedWindows(1 * 60),
               trigger=Repeatedly(
-                  AfterAny(
-                      AfterCount(100),
-                      AfterProcessingTime(1 * 60))),
+                  AfterAny(AfterCount(100), AfterProcessingTime(1 * 60))),
               accumulation_mode=AccumulationMode.DISCARDING)
           # [END model_other_composite_triggers]
-          | 'group' >> beam.GroupByKey()
-          | 'count' >> beam.Map(
-              lambda word_ones: (word_ones[0], sum(word_ones[1]))))
+          | 'group' >> beam.GroupByKey() | 'count' >>
+          beam.Map(lambda word_ones: (word_ones[0], sum(word_ones[1]))))
       assert_that(counts, equal_to([('a', 3), ('b', 2), ('a', 100)]))
 
 
@@ -1074,13 +1069,11 @@ class CombineTest(unittest.TestCase):
     self.assertEqual({('cat', 1), ('dog', 2)}, set(first_occurences))
 
   def test_combine_per_key(self):
-    player_accuracies = [
-        ('cat', 1), ('cat', 5), ('cat', 9), ('cat', 1),
-        ('dog', 5), ('dog', 2)]
+    player_accuracies = [('cat', 1), ('cat', 5), ('cat', 9), ('cat', 1),
+                         ('dog', 5), ('dog', 2)]
     # [START combine_per_key]
-    avg_accuracy_per_player = (player_accuracies
-                               | beam.CombinePerKey(
-                                   beam.combiners.MeanCombineFn()))
+    avg_accuracy_per_player = (player_accuracies | beam.CombinePerKey(
+        beam.combiners.MeanCombineFn()))
     # [END combine_per_key]
     self.assertEqual({('cat', 4.0), ('dog', 3.5)}, set(avg_accuracy_per_player))
 
@@ -1090,6 +1083,7 @@ class CombineTest(unittest.TestCase):
     # [START combine_concat]
     def concat(values, separator=', '):
       return separator.join(values)
+
     with_commas = pc | beam.CombineGlobally(concat)
     with_dashes = pc | beam.CombineGlobally(concat, separator='-')
     # [END combine_concat]
@@ -1104,7 +1098,8 @@ class CombineTest(unittest.TestCase):
 
     def bounded_sum(values, bound=500):
       return min(sum(values), bound)
-    small_sum = pc | beam.CombineGlobally(bounded_sum)              # [500]
+
+    small_sum = pc | beam.CombineGlobally(bounded_sum)  # [500]
     large_sum = pc | beam.CombineGlobally(bounded_sum, bound=5000)  # [1111]
     # [END combine_bounded_sum]
     self.assertEqual([500], small_sum)
@@ -1125,6 +1120,7 @@ class CombineTest(unittest.TestCase):
 
     # [START combine_custom_average_define]
     class AverageFn(beam.CombineFn):
+
       def create_accumulator(self):
         return (0.0, 0)
 
@@ -1139,6 +1135,7 @@ class CombineTest(unittest.TestCase):
       def extract_output(self, sum_count):
         (sum, count) = sum_count
         return sum / count if count else float('NaN')
+
     # [END combine_custom_average_define]
     # [START combine_custom_average_execute]
     average = pc | beam.CombineGlobally(AverageFn())
@@ -1158,69 +1155,61 @@ class CombineTest(unittest.TestCase):
   def test_setting_fixed_windows(self):
     with TestPipeline() as p:
       unkeyed_items = p | beam.Create([22, 33, 55, 100, 115, 120])
-      items = (unkeyed_items
-               | 'key' >> beam.Map(
-                   lambda x: beam.window.TimestampedValue(('k', x), x)))
+      items = (unkeyed_items | 'key' >>
+               beam.Map(lambda x: beam.window.TimestampedValue(('k', x), x)))
       # [START setting_fixed_windows]
       from apache_beam import window
       fixed_windowed_items = (
           items | 'window' >> beam.WindowInto(window.FixedWindows(60)))
       # [END setting_fixed_windows]
-      summed = (fixed_windowed_items
-                | 'group' >> beam.GroupByKey()
-                | 'combine' >> beam.CombineValues(sum))
+      summed = (fixed_windowed_items | 'group' >> beam.GroupByKey() |
+                'combine' >> beam.CombineValues(sum))
       unkeyed = summed | 'unkey' >> beam.Map(lambda x: x[1])
       assert_that(unkeyed, equal_to([110, 215, 120]))
 
   def test_setting_sliding_windows(self):
     with TestPipeline() as p:
       unkeyed_items = p | beam.Create([2, 16, 23])
-      items = (unkeyed_items
-               | 'key' >> beam.Map(
-                   lambda x: beam.window.TimestampedValue(('k', x), x)))
+      items = (unkeyed_items | 'key' >>
+               beam.Map(lambda x: beam.window.TimestampedValue(('k', x), x)))
       # [START setting_sliding_windows]
       from apache_beam import window
       sliding_windowed_items = (
           items | 'window' >> beam.WindowInto(window.SlidingWindows(30, 5)))
       # [END setting_sliding_windows]
-      summed = (sliding_windowed_items
-                | 'group' >> beam.GroupByKey()
-                | 'combine' >> beam.CombineValues(sum))
+      summed = (sliding_windowed_items | 'group' >> beam.GroupByKey() |
+                'combine' >> beam.CombineValues(sum))
       unkeyed = summed | 'unkey' >> beam.Map(lambda x: x[1])
-      assert_that(unkeyed,
-                  equal_to([2, 2, 2, 18, 23, 39, 39, 39, 41, 41]))
+      assert_that(unkeyed, equal_to([2, 2, 2, 18, 23, 39, 39, 39, 41, 41]))
 
   def test_setting_session_windows(self):
     with TestPipeline() as p:
       unkeyed_items = p | beam.Create([2, 11, 16, 27])
-      items = (unkeyed_items
-               | 'key' >> beam.Map(
-                   lambda x: beam.window.TimestampedValue(('k', x), x * 60)))
+      items = (unkeyed_items |
+               'key' >> beam.Map(lambda x: beam.window.TimestampedValue(
+                   ('k', x), x * 60)))
       # [START setting_session_windows]
       from apache_beam import window
       session_windowed_items = (
           items | 'window' >> beam.WindowInto(window.Sessions(10 * 60)))
       # [END setting_session_windows]
-      summed = (session_windowed_items
-                | 'group' >> beam.GroupByKey()
-                | 'combine' >> beam.CombineValues(sum))
+      summed = (session_windowed_items | 'group' >> beam.GroupByKey() |
+                'combine' >> beam.CombineValues(sum))
       unkeyed = summed | 'unkey' >> beam.Map(lambda x: x[1])
       assert_that(unkeyed, equal_to([29, 27]))
 
   def test_setting_global_window(self):
     with TestPipeline() as p:
       unkeyed_items = p | beam.Create([2, 11, 16, 27])
-      items = (unkeyed_items
-               | 'key' >> beam.Map(
-                   lambda x: beam.window.TimestampedValue(('k', x), x)))
+      items = (unkeyed_items | 'key' >>
+               beam.Map(lambda x: beam.window.TimestampedValue(('k', x), x)))
       # [START setting_global_window]
       from apache_beam import window
       session_windowed_items = (
           items | 'window' >> beam.WindowInto(window.GlobalWindows()))
       # [END setting_global_window]
-      summed = (session_windowed_items
-                | 'group' >> beam.GroupByKey()
-                | 'combine' >> beam.CombineValues(sum))
+      summed = (session_windowed_items | 'group' >> beam.GroupByKey() |
+                'combine' >> beam.CombineValues(sum))
       unkeyed = summed | 'unkey' >> beam.Map(lambda x: x[1])
       assert_that(unkeyed, equal_to([56]))
 
@@ -1246,11 +1235,10 @@ class CombineTest(unittest.TestCase):
       timestamped_items = items | 'timestamp' >> beam.ParDo(AddTimestampDoFn())
       # [END setting_timestamp]
       fixed_windowed_items = (
-          timestamped_items | 'window' >> beam.WindowInto(
-              beam.window.FixedWindows(60)))
-      summed = (fixed_windowed_items
-                | 'group' >> beam.GroupByKey()
-                | 'combine' >> beam.CombineValues(sum))
+          timestamped_items |
+          'window' >> beam.WindowInto(beam.window.FixedWindows(60)))
+      summed = (fixed_windowed_items | 'group' >> beam.GroupByKey() |
+                'combine' >> beam.CombineValues(sum))
       unkeyed = summed | 'unkey' >> beam.Map(lambda x: x[1])
       assert_that(unkeyed, equal_to([42, 187]))
 
@@ -1262,9 +1250,11 @@ class PTransformTest(unittest.TestCase):
 
     # [START model_composite_transform]
     class ComputeWordLengths(beam.PTransform):
+
       def expand(self, pcoll):
         # Transform logic goes here.
         return pcoll | beam.Map(lambda x: len(x))
+
     # [END model_composite_transform]
 
     with TestPipeline() as p:

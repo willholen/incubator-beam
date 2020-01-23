@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Common imports for generated bigquery client library."""
 # pylint:disable=wildcard-import
 

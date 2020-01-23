@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for apache_beam.runners.interactive.display.pipeline_graph."""
 # pytype: skip-file
 
@@ -59,39 +58,39 @@ class PipelineGraphTest(unittest.TestCase):
     ib.watch(locals())
 
     self.assertEqual(
-        ('digraph G {\n'
-         'node [color=blue, fontcolor=blue, shape=box];\n'
-         # The py string literal from `\\\\\\"` is `\\\"` in dot and will be
-         # rendered as `\"` because they are enclosed by `"`.
-         '"\\"Cell 1\\": \\"Create\\\\\\"";\n'
-         'pcoll [shape=circle];\n'
-         '"\\"Cell 1\\": \\"Create\\\\\\"" -> pcoll;\n'
-         '}\n'),
+        (
+            'digraph G {\n'
+            'node [color=blue, fontcolor=blue, shape=box];\n'
+            # The py string literal from `\\\\\\"` is `\\\"` in dot and will be
+            # rendered as `\"` because they are enclosed by `"`.
+            '"\\"Cell 1\\": \\"Create\\\\\\"";\n'
+            'pcoll [shape=circle];\n'
+            '"\\"Cell 1\\": \\"Create\\\\\\"" -> pcoll;\n'
+            '}\n'),
         pipeline_graph.PipelineGraph(p).get_dot())
 
   def test_get_dot(self):
     p = beam.Pipeline(ir.InteractiveRunner())
     init_pcoll = p | 'Init' >> beam.Create(range(10))
     squares = init_pcoll | 'Square' >> beam.Map(lambda x: x * x)
-    cubes = init_pcoll | 'Cube' >> beam.Map(lambda x: x ** 3)
+    cubes = init_pcoll | 'Cube' >> beam.Map(lambda x: x**3)
     ib.watch(locals())
 
-    self.assertEqual(
-        ('digraph G {\n'
-         'node [color=blue, fontcolor=blue, shape=box];\n'
-         '"Init";\n'
-         'init_pcoll [shape=circle];\n'
-         '"Square";\n'
-         'squares [shape=circle];\n'
-         '"Cube";\n'
-         'cubes [shape=circle];\n'
-         '"Init" -> init_pcoll;\n'
-         'init_pcoll -> "Square";\n'
-         'init_pcoll -> "Cube";\n'
-         '"Square" -> squares;\n'
-         '"Cube" -> cubes;\n'
-         '}\n'),
-        pipeline_graph.PipelineGraph(p).get_dot())
+    self.assertEqual(('digraph G {\n'
+                      'node [color=blue, fontcolor=blue, shape=box];\n'
+                      '"Init";\n'
+                      'init_pcoll [shape=circle];\n'
+                      '"Square";\n'
+                      'squares [shape=circle];\n'
+                      '"Cube";\n'
+                      'cubes [shape=circle];\n'
+                      '"Init" -> init_pcoll;\n'
+                      'init_pcoll -> "Square";\n'
+                      'init_pcoll -> "Cube";\n'
+                      '"Square" -> squares;\n'
+                      '"Cube" -> cubes;\n'
+                      '}\n'),
+                     pipeline_graph.PipelineGraph(p).get_dot())
 
   @patch('IPython.get_ipython', new_callable=mock_get_ipython)
   def test_get_dot_within_notebook(self, cell):
@@ -111,26 +110,25 @@ class PipelineGraphTest(unittest.TestCase):
       squares = init_pcoll | 'Square' >> beam.Map(lambda x: x * x)
 
     with cell:  # Cell 4
-      cubes = init_pcoll | 'Cube' >> beam.Map(lambda x: x ** 3)
+      cubes = init_pcoll | 'Cube' >> beam.Map(lambda x: x**3)
 
     # Tracks all PCollections defined so far.
     ib.watch(locals())
-    self.assertEqual(
-        ('digraph G {\n'
-         'node [color=blue, fontcolor=blue, shape=box];\n'
-         '"Cell 2: Init";\n'
-         'init_pcoll [shape=circle];\n'
-         '"Cell 3: Square";\n'
-         'squares [shape=circle];\n'
-         '"Cell 4: Cube";\n'
-         'cubes [shape=circle];\n'
-         '"Cell 2: Init" -> init_pcoll;\n'
-         'init_pcoll -> "Cell 3: Square";\n'
-         'init_pcoll -> "Cell 4: Cube";\n'
-         '"Cell 3: Square" -> squares;\n'
-         '"Cell 4: Cube" -> cubes;\n'
-         '}\n'),
-        pipeline_graph.PipelineGraph(p).get_dot())
+    self.assertEqual(('digraph G {\n'
+                      'node [color=blue, fontcolor=blue, shape=box];\n'
+                      '"Cell 2: Init";\n'
+                      'init_pcoll [shape=circle];\n'
+                      '"Cell 3: Square";\n'
+                      'squares [shape=circle];\n'
+                      '"Cell 4: Cube";\n'
+                      'cubes [shape=circle];\n'
+                      '"Cell 2: Init" -> init_pcoll;\n'
+                      'init_pcoll -> "Cell 3: Square";\n'
+                      'init_pcoll -> "Cell 4: Cube";\n'
+                      '"Cell 3: Square" -> squares;\n'
+                      '"Cell 4: Cube" -> cubes;\n'
+                      '}\n'),
+                     pipeline_graph.PipelineGraph(p).get_dot())
 
 
 if __name__ == '__main__':

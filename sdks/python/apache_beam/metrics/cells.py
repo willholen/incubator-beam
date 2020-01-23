@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 This file contains metric cell classes. A metric cell is used to accumulate
 in-memory changes to a metric. It represents a specific metric in a single
@@ -38,8 +37,10 @@ from apache_beam.utils import proto_utils
 try:
   import cython
 except ImportError:
+
   class fake_cython:
     compiled = False
+
   globals()['cython'] = fake_cython
 
 __all__ = ['DistributionResult', 'GaugeResult']
@@ -55,6 +56,7 @@ class MetricCell(object):
   and may be subject to parallel/concurrent updates. Cells should only be used
   directly within a runner.
   """
+
   def __init__(self):
     self._lock = threading.Lock()
 
@@ -79,6 +81,7 @@ class CounterCell(MetricCell):
 
   This class is thread safe.
   """
+
   def __init__(self, *args):
     super(CounterCell, self).__init__(*args)
     self.value = CounterAggregator.identity_element()
@@ -115,16 +118,15 @@ class CounterCell(MetricCell):
   def to_runner_api_user_metric(self, metric_name):
     return beam_fn_api_pb2.Metrics.User(
         metric_name=metric_name.to_runner_api(),
-        counter_data=beam_fn_api_pb2.Metrics.User.CounterData(
-            value=self.value))
+        counter_data=beam_fn_api_pb2.Metrics.User.CounterData(value=self.value))
 
   def to_runner_api_monitoring_info(self, name, transform_id):
     from apache_beam.metrics import monitoring_infos
     return monitoring_infos.int64_user_counter(
-        name.namespace, name.name,
-        metrics_pb2.Metric(
-            counter_data=metrics_pb2.CounterData(
-                int64_value=self.get_cumulative())),
+        name.namespace,
+        name.name,
+        metrics_pb2.Metric(counter_data=metrics_pb2.CounterData(
+            int64_value=self.get_cumulative())),
         ptransform=transform_id)
 
 
@@ -139,6 +141,7 @@ class DistributionCell(MetricCell):
 
   This class is thread safe.
   """
+
   def __init__(self, *args):
     super(DistributionCell, self).__init__(*args)
     self.data = DistributionAggregator.identity_element()
@@ -185,7 +188,8 @@ class DistributionCell(MetricCell):
   def to_runner_api_monitoring_info(self, name, transform_id):
     from apache_beam.metrics import monitoring_infos
     return monitoring_infos.int64_user_distribution(
-        name.namespace, name.name,
+        name.namespace,
+        name.name,
         self.get_cumulative().to_runner_api_monitoring_info(),
         ptransform=transform_id)
 
@@ -201,6 +205,7 @@ class GaugeCell(MetricCell):
 
   This class is thread safe.
   """
+
   def __init__(self, *args):
     super(GaugeCell, self).__init__(*args)
     self.data = GaugeAggregator.identity_element()
@@ -238,13 +243,15 @@ class GaugeCell(MetricCell):
   def to_runner_api_monitoring_info(self, name, transform_id):
     from apache_beam.metrics import monitoring_infos
     return monitoring_infos.int64_user_gauge(
-        name.namespace, name.name,
+        name.namespace,
+        name.name,
         self.get_cumulative().to_runner_api_monitoring_info(),
         ptransform=transform_id)
 
 
 class DistributionResult(object):
   """The result of a Distribution metric."""
+
   def __init__(self, data):
     # type: (DistributionData) -> None
     self.data = data
@@ -264,10 +271,7 @@ class DistributionResult(object):
 
   def __repr__(self):
     return 'DistributionResult(sum={}, count={}, min={}, max={})'.format(
-        self.sum,
-        self.count,
-        self.min,
-        self.max)
+        self.sum, self.count, self.min, self.max)
 
   @property
   def max(self):
@@ -297,6 +301,7 @@ class DistributionResult(object):
 
 
 class GaugeResult(object):
+
   def __init__(self, data):
     # type: (GaugeData) -> None
     self.data = data
@@ -316,8 +321,7 @@ class GaugeResult(object):
 
   def __repr__(self):
     return '<GaugeResult(value={}, timestamp={})>'.format(
-        self.value,
-        self.timestamp)
+        self.value, self.timestamp)
 
   @property
   def value(self):
@@ -338,6 +342,7 @@ class GaugeData(object):
   This object is not thread safe, so it's not supposed to be modified
   by other than the GaugeCell that contains it.
   """
+
   def __init__(self, value, timestamp=None):
     self.value = value
     self.timestamp = timestamp if timestamp is not None else 0
@@ -353,9 +358,8 @@ class GaugeData(object):
     return not self == other
 
   def __repr__(self):
-    return '<GaugeData(value={}, timestamp={})>'.format(
-        self.value,
-        self.timestamp)
+    return '<GaugeData(value={}, timestamp={})>'.format(self.value,
+                                                        self.timestamp)
 
   def get_cumulative(self):
     # type: () -> GaugeData
@@ -389,11 +393,8 @@ class GaugeData(object):
 
   def to_runner_api_monitoring_info(self):
     """Returns a Metric with this value for use in a MonitoringInfo."""
-    return metrics_pb2.Metric(
-        counter_data=metrics_pb2.CounterData(
-            int64_value=self.value
-        )
-    )
+    return metrics_pb2.Metric(counter_data=metrics_pb2.CounterData(
+        int64_value=self.value))
 
 
 class DistributionData(object):
@@ -406,6 +407,7 @@ class DistributionData(object):
   This object is not thread safe, so it's not supposed to be modified
   by other than the DistributionCell that contains it.
   """
+
   def __init__(self, sum, count, min, max):
     if count:
       self.sum = sum
@@ -419,10 +421,8 @@ class DistributionData(object):
       self.max = -self.min - 1
 
   def __eq__(self, other):
-    return (self.sum == other.sum and
-            self.count == other.count and
-            self.min == other.min and
-            self.max == other.max)
+    return (self.sum == other.sum and self.count == other.count and
+            self.min == other.min and self.max == other.max)
 
   def __hash__(self):
     return hash((self.sum, self.count, self.min, self.max))
@@ -433,10 +433,7 @@ class DistributionData(object):
 
   def __repr__(self):
     return 'DistributionData(sum={}, count={}, min={}, max={})'.format(
-        self.sum,
-        self.count,
-        self.min,
-        self.max)
+        self.sum, self.count, self.min, self.max)
 
   def get_cumulative(self):
     # type: () -> DistributionData
@@ -447,11 +444,9 @@ class DistributionData(object):
     if other is None:
       return self
 
-    return DistributionData(
-        self.sum + other.sum,
-        self.count + other.count,
-        self.min if self.min < other.min else other.min,
-        self.max if self.max > other.max else other.max)
+    return DistributionData(self.sum + other.sum, self.count + other.count,
+                            self.min if self.min < other.min else other.min,
+                            self.max if self.max > other.max else other.max)
 
   @staticmethod
   def singleton(value):
@@ -459,8 +454,10 @@ class DistributionData(object):
 
   def to_runner_api(self):
     # type: () -> beam_fn_api_pb2.Metrics.User.DistributionData
-    return beam_fn_api_pb2.Metrics.User.DistributionData(
-        count=self.count, sum=self.sum, min=self.min, max=self.max)
+    return beam_fn_api_pb2.Metrics.User.DistributionData(count=self.count,
+                                                         sum=self.sum,
+                                                         min=self.min,
+                                                         max=self.max)
 
   @staticmethod
   def from_runner_api(proto):
@@ -469,10 +466,9 @@ class DistributionData(object):
 
   def to_runner_api_monitoring_info(self):
     """Returns a Metric with this value for use in a MonitoringInfo."""
-    return metrics_pb2.Metric(
-        distribution_data=metrics_pb2.DistributionData(
-            int_distribution_data=metrics_pb2.IntDistributionData(
-                count=self.count, sum=self.sum, min=self.min, max=self.max)))
+    return metrics_pb2.Metric(distribution_data=metrics_pb2.DistributionData(
+        int_distribution_data=metrics_pb2.IntDistributionData(
+            count=self.count, sum=self.sum, min=self.min, max=self.max)))
 
 
 class MetricAggregator(object):
@@ -502,6 +498,7 @@ class CounterAggregator(MetricAggregator):
 
   Values aggregated should be ``int`` objects.
   """
+
   @staticmethod
   def identity_element():
     # type: () -> int
@@ -523,6 +520,7 @@ class DistributionAggregator(MetricAggregator):
 
   Values aggregated should be ``DistributionData`` objects.
   """
+
   @staticmethod
   def identity_element():
     # type: () -> DistributionData
@@ -544,6 +542,7 @@ class GaugeAggregator(MetricAggregator):
 
   Values aggregated should be ``GaugeData`` objects.
   """
+
   @staticmethod
   def identity_element():
     # type: () -> GaugeData

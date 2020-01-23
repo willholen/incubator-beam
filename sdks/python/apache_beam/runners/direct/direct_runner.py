@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """DirectRunner, executing on the local machine.
 
 The DirectRunner is a runner implementation that executes the entire
@@ -57,10 +56,7 @@ from apache_beam.transforms.ptransform import PTransform
 
 # Note that the BundleBasedDirectRunner and SwitchingDirectRunner names are
 # experimental and have no backwards compatibility guarantees.
-__all__ = ['BundleBasedDirectRunner',
-           'DirectRunner',
-           'SwitchingDirectRunner']
-
+__all__ = ['BundleBasedDirectRunner', 'DirectRunner', 'SwitchingDirectRunner']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,9 +87,9 @@ class SwitchingDirectRunner(PipelineRunner):
 
     # If there is only one tag there is no need to add the multiplexer.
     if len(transform.output_tags) == 1:
-      return (pbegin
-              | _TestStream(transform.output_tags, events=transform._events)
-              | _WatermarkController())
+      return (pbegin |
+              _TestStream(transform.output_tags, events=transform._events) |
+              _WatermarkController())
 
     # This multiplexing the  multiple output PCollections.
     def mux(event):
@@ -101,9 +97,10 @@ class SwitchingDirectRunner(PipelineRunner):
         yield pvalue.TaggedOutput(event.tag, event)
       else:
         yield event
-    mux_output = (pbegin
-                  | _TestStream(transform.output_tags, events=transform._events)
-                  | 'TestStream Multiplexer' >> beam.ParDo(mux).with_outputs())
+
+    mux_output = (pbegin |
+                  _TestStream(transform.output_tags, events=transform._events) |
+                  'TestStream Multiplexer' >> beam.ParDo(mux).with_outputs())
 
     # Apply a way to control the watermark per output. It is necessary to
     # have an individual _WatermarkController per PCollection because the
@@ -155,16 +152,14 @@ class SwitchingDirectRunner(PipelineRunner):
           # deferred side inputs.
           if isinstance(dofn, CombineValuesDoFn):
             args, kwargs = transform.raw_side_inputs
-            args_to_check = itertools.chain(args,
-                                            kwargs.values())
-            if any(isinstance(arg, ArgumentPlaceholder)
-                   for arg in args_to_check):
+            args_to_check = itertools.chain(args, kwargs.values())
+            if any(
+                isinstance(arg, ArgumentPlaceholder) for arg in args_to_check):
               self.supported_by_fnapi_runner = False
 
     # Check whether all transforms used in the pipeline are supported by the
     # FnApiRunner, and the pipeline was not meant to be run as streaming.
-    use_fnapi_runner = (
-        _FnApiRunnerSupportVisitor().accept(pipeline))
+    use_fnapi_runner = (_FnApiRunnerSupportVisitor().accept(pipeline))
 
     # Also ensure grpc is available.
     try:
@@ -210,10 +205,9 @@ class _StreamingGroupAlsoByWindow(_GroupAlsoByWindow):
 
   # These are needed due to apply overloads.
   def to_runner_api_parameter(self, context):
-    return (
-        _StreamingGroupAlsoByWindow.urn,
-        wrappers_pb2.BytesValue(value=context.windowing_strategies.get_id(
-            self.windowing)))
+    return (_StreamingGroupAlsoByWindow.urn,
+            wrappers_pb2.BytesValue(
+                value=context.windowing_strategies.get_id(self.windowing)))
 
   @PTransform.register_urn(urn, wrappers_pb2.BytesValue)
   def from_runner_api_parameter(payload, context):
@@ -235,6 +229,7 @@ def _get_transform_overrides(pipeline_options):
   from apache_beam.runners.direct.sdf_direct_runner import SplittableParDoOverride
 
   class CombinePerKeyOverride(PTransformOverride):
+
     def matches(self, applied_ptransform):
       if isinstance(applied_ptransform.transform, CombinePerKey):
         return applied_ptransform.inputs[0].windowing.is_default()
@@ -250,6 +245,7 @@ def _get_transform_overrides(pipeline_options):
         return transform
 
   class StreamingGroupByKeyOverride(PTransformOverride):
+
     def matches(self, applied_ptransform):
       # Note: we match the exact class, since we replace it with a subclass.
       return applied_ptransform.transform.__class__ == _GroupByKeyOnly
@@ -260,6 +256,7 @@ def _get_transform_overrides(pipeline_options):
       return transform
 
   class StreamingGroupAlsoByWindowOverride(PTransformOverride):
+
     def matches(self, applied_ptransform):
       # Note: we match the exact class, since we replace it with a subclass.
       transform = applied_ptransform.transform
@@ -272,9 +269,11 @@ def _get_transform_overrides(pipeline_options):
       transform = _StreamingGroupAlsoByWindow(transform.dofn.windowing)
       return transform
 
-  overrides = [SplittableParDoOverride(),
-               ProcessKeyedElementsViaKeyedWorkItemsOverride(),
-               CombinePerKeyOverride()]
+  overrides = [
+      SplittableParDoOverride(),
+      ProcessKeyedElementsViaKeyedWorkItemsOverride(),
+      CombinePerKeyOverride()
+  ]
 
   # Add streaming overrides, if necessary.
   if pipeline_options.view_as(StandardOptions).streaming:
@@ -292,10 +291,12 @@ def _get_transform_overrides(pipeline_options):
 
 
 class _DirectReadFromPubSub(PTransform):
+
   def __init__(self, source):
     self._source = source
 
-  def _infer_output_coder(self, unused_input_type=None,
+  def _infer_output_coder(self,
+                          unused_input_type=None,
                           unused_input_coder=None):
     # type: (...) -> typing.Optional[coders.Coder]
     return coders.BytesCoder()
@@ -344,11 +345,12 @@ class _DirectWriteToPubSubFn(DoFn):
     topic = pub_client.topic_path(self.project, self.short_topic_name)
 
     if self.with_attributes:
-      futures = [pub_client.publish(topic, elem.data, **elem.attributes)
-                 for elem in self._buffer]
+      futures = [
+          pub_client.publish(topic, elem.data, **elem.attributes)
+          for elem in self._buffer
+      ]
     else:
-      futures = [pub_client.publish(topic, elem)
-                 for elem in self._buffer]
+      futures = [pub_client.publish(topic, elem) for elem in self._buffer]
 
     timer_start = time.time()
     for future in futures:
@@ -362,6 +364,7 @@ def _get_pubsub_transform_overrides(pipeline_options):
   from apache_beam.pipeline import PTransformOverride
 
   class ReadFromPubSubOverride(PTransformOverride):
+
     def matches(self, applied_ptransform):
       return isinstance(applied_ptransform.transform,
                         beam_pubsub.ReadFromPubSub)
@@ -373,6 +376,7 @@ def _get_pubsub_transform_overrides(pipeline_options):
       return _DirectReadFromPubSub(transform._source)
 
   class WriteToPubSubOverride(PTransformOverride):
+
     def matches(self, applied_ptransform):
       return isinstance(
           applied_ptransform.transform,
@@ -433,13 +437,12 @@ class BundleBasedDirectRunner(PipelineRunner):
 
     evaluation_context = EvaluationContext(
         options,
-        BundleFactory(stacked=options.view_as(DirectOptions)
-                      .direct_runner_use_stacked_bundle),
+        BundleFactory(stacked=options.view_as(
+            DirectOptions).direct_runner_use_stacked_bundle),
         self.consumer_tracking_visitor.root_transforms,
         self.consumer_tracking_visitor.value_to_consumers,
         self.consumer_tracking_visitor.step_names,
-        self.consumer_tracking_visitor.views,
-        clock)
+        self.consumer_tracking_visitor.views, clock)
 
     executor = Executor(self.consumer_tracking_visitor.value_to_consumers,
                         TransformEvaluatorRegistry(evaluation_context),

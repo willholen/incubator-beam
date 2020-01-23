@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Provides TestStream for verifying streaming runner semantics.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -47,7 +46,7 @@ __all__ = [
     'WatermarkEvent',
     'ProcessingTimeEvent',
     'TestStream',
-    ]
+]
 
 
 @total_ordering
@@ -77,20 +76,22 @@ class Event(with_metaclass(ABCMeta, object)):  # type: ignore[misc]
   @staticmethod
   def from_runner_api(proto, element_coder):
     if proto.HasField('element_event'):
-      return ElementEvent(
-          [TimestampedValue(
-              element_coder.decode(tv.encoded_element),
-              timestamp.Timestamp(micros=1000 * tv.timestamp))
-           for tv in proto.element_event.elements])
+      return ElementEvent([
+          TimestampedValue(element_coder.decode(tv.encoded_element),
+                           timestamp.Timestamp(micros=1000 * tv.timestamp))
+          for tv in proto.element_event.elements
+      ])
     elif proto.HasField('watermark_event'):
-      return WatermarkEvent(timestamp.Timestamp(
-          micros=1000 * proto.watermark_event.new_watermark))
+      return WatermarkEvent(
+          timestamp.Timestamp(micros=1000 *
+                              proto.watermark_event.new_watermark))
     elif proto.HasField('processing_time_event'):
-      return ProcessingTimeEvent(timestamp.Duration(
-          micros=1000 * proto.processing_time_event.advance_duration))
+      return ProcessingTimeEvent(
+          timestamp.Duration(micros=1000 *
+                             proto.processing_time_event.advance_duration))
     else:
-      raise ValueError(
-          'Unknown TestStream Event type: %s' % proto.WhichOneof('event'))
+      raise ValueError('Unknown TestStream Event type: %s' %
+                       proto.WhichOneof('event'))
 
 
 class ElementEvent(Event):
@@ -117,7 +118,8 @@ class ElementEvent(Event):
                 beam_runner_api_pb2.TestStreamPayload.TimestampedElement(
                     encoded_element=element_coder.encode(tv.value),
                     timestamp=tv.timestamp.micros // 1000)
-                for tv in self.timestamped_values]))
+                for tv in self.timestamped_values
+            ]))
 
 
 class WatermarkEvent(Event):
@@ -138,9 +140,9 @@ class WatermarkEvent(Event):
 
   def to_runner_api(self, unused_element_coder):
     return beam_runner_api_pb2.TestStreamPayload.Event(
-        watermark_event
-        =beam_runner_api_pb2.TestStreamPayload.Event.AdvanceWatermark(
-            new_watermark=self.new_watermark.micros // 1000))
+        watermark_event=beam_runner_api_pb2.TestStreamPayload.Event.
+        AdvanceWatermark(new_watermark=self.new_watermark.micros // 1000))
+
 
 class ProcessingTimeEvent(Event):
   """Processing time-advancing test stream event."""
@@ -159,9 +161,8 @@ class ProcessingTimeEvent(Event):
 
   def to_runner_api(self, unused_element_coder):
     return beam_runner_api_pb2.TestStreamPayload.Event(
-        processing_time_event
-        =beam_runner_api_pb2.TestStreamPayload.Event.AdvanceProcessingTime(
-            advance_duration=self.advance_by.micros // 1000))
+        processing_time_event=beam_runner_api_pb2.TestStreamPayload.Event.
+        AdvanceProcessingTime(advance_duration=self.advance_by.micros // 1000))
 
 
 class TestStream(PTransform):
@@ -267,15 +268,13 @@ class TestStream(PTransform):
     return self
 
   def to_runner_api_parameter(self, context):
-    return (
-        common_urns.primitives.TEST_STREAM.urn,
-        beam_runner_api_pb2.TestStreamPayload(
-            coder_id=context.coders.get_id(self.coder),
-            events=[e.to_runner_api(self.coder) for e in self._events]))
+    return (common_urns.primitives.TEST_STREAM.urn,
+            beam_runner_api_pb2.TestStreamPayload(
+                coder_id=context.coders.get_id(self.coder),
+                events=[e.to_runner_api(self.coder) for e in self._events]))
 
-  @PTransform.register_urn(
-      common_urns.primitives.TEST_STREAM.urn,
-      beam_runner_api_pb2.TestStreamPayload)
+  @PTransform.register_urn(common_urns.primitives.TEST_STREAM.urn,
+                           beam_runner_api_pb2.TestStreamPayload)
   def from_runner_api_parameter(payload, context):
     coder = context.coders.get_by_id(payload.coder_id)
     return TestStream(

@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A workflow that uses a simple Monte Carlo method to estimate π.
 
 The algorithm computes the fraction of points drawn uniformly within the unit
@@ -94,16 +93,16 @@ class JsonCoder(object):
 
 class EstimatePiTransform(beam.PTransform):
   """Runs 10M trials, and combine the results to estimate pi."""
+
   def __init__(self, tries_per_work_item=100000):
     self.tries_per_work_item = tries_per_work_item
 
   def expand(self, pcoll):
     # A hundred work items of a hundred thousand tries each.
-    return (pcoll
-            | 'Initialize' >> beam.Create(
-                [self.tries_per_work_item] * 100).with_output_types(int)
-            | 'Run trials' >> beam.Map(run_trials)
-            | 'Sum' >> beam.CombineGlobally(combine_results).without_defaults())
+    return (pcoll | 'Initialize' >> beam.Create(
+        [self.tries_per_work_item] * 100).with_output_types(int) |
+            'Run trials' >> beam.Map(run_trials) |
+            'Sum' >> beam.CombineGlobally(combine_results).without_defaults())
 
 
 def run(argv=None):
@@ -120,8 +119,8 @@ def run(argv=None):
   with beam.Pipeline(options=pipeline_options) as p:
 
     (p  # pylint: disable=expression-not-assigned
-     | EstimatePiTransform()
-     | WriteToText(known_args.output, coder=JsonCoder()))
+     | EstimatePiTransform() |
+     WriteToText(known_args.output, coder=JsonCoder()))
 
 
 if __name__ == '__main__':

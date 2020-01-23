@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """EvaluationContext tracks global state, triggers and watermarks."""
 
 # pytype: skip-file
@@ -57,10 +56,10 @@ class _ExecutionContext(object):
   It holds the watermarks for that transform, as well as keyed states.
   """
 
-  def __init__(self,
-               watermarks,  # type: _TransformWatermarks
-               keyed_states
-              ):
+  def __init__(
+      self,
+      watermarks,  # type: _TransformWatermarks
+      keyed_states):
     self.watermarks = watermarks
     self.keyed_states = keyed_states
 
@@ -85,8 +84,8 @@ class _SideInputView(object):
     self.watermark = None
 
   def __repr__(self):
-    elements_string = (', '.join(str(elm) for elm in self.elements)
-                       if self.elements else '[]')
+    elements_string = (', '.join(
+        str(elm) for elm in self.elements) if self.elements else '[]')
     return '_SideInputView(elements=%s)' % elements_string
 
 
@@ -101,23 +100,27 @@ class _SideInputsContainer(object):
     # type: (Iterable[pvalue.AsSideInput]) -> None
     self._lock = threading.Lock()
     self._views = {}  # type: Dict[pvalue.AsSideInput, _SideInputView]
-    self._transform_to_side_inputs = collections.defaultdict(list)  # type: DefaultDict[Optional[AppliedPTransform], List[pvalue.AsSideInput]]
-    self._side_input_to_blocked_tasks = collections.defaultdict(list)  # type: ignore  # usused?
+    self._transform_to_side_inputs = collections.defaultdict(
+        list
+    )  # type: DefaultDict[Optional[AppliedPTransform], List[pvalue.AsSideInput]]
+    self._side_input_to_blocked_tasks = collections.defaultdict(
+        list)  # type: ignore  # usused?
 
     for side in side_inputs:
       self._views[side] = _SideInputView(side)
       self._transform_to_side_inputs[side.pvalue.producer].append(side)
 
   def __repr__(self):
-    views_string = (', '.join(str(elm) for elm in self._views.values())
-                    if self._views else '[]')
+    views_string = (', '.join(
+        str(elm) for elm in self._views.values()) if self._views else '[]')
     return '_SideInputsContainer(_views=%s)' % views_string
 
-  def get_value_or_block_until_ready(self,
-                                     side_input,
-                                     task,  # type: TransformExecutor
-                                     block_until  # type: Timestamp
-                                    ):
+  def get_value_or_block_until_ready(
+      self,
+      side_input,
+      task,  # type: TransformExecutor
+      block_until  # type: Timestamp
+  ):
     # type: (...) -> Any
     """Returns the value of a view whose task is unblocked or blocks its task.
 
@@ -147,8 +150,7 @@ class _SideInputsContainer(object):
       view = self._views[side_input]
       view.elements.extend(values)
 
-  def update_watermarks_for_transform_and_unblock_tasks(self,
-                                                        ptransform,
+  def update_watermarks_for_transform_and_unblock_tasks(self, ptransform,
                                                         watermark):
     # type: (...) -> List[Tuple[TransformExecutor, Timestamp]]
     """Updates _SideInputsContainer after a watermark update and unbloks tasks.
@@ -170,9 +172,8 @@ class _SideInputsContainer(object):
               side, watermark))
     return unblocked_tasks
 
-  def _update_watermarks_for_side_input_and_unblock_tasks(self,
-                                                          side_input,
-                                                          watermark):
+  def _update_watermarks_for_side_input_and_unblock_tasks(
+      self, side_input, watermark):
     # type: (...) -> List[Tuple[TransformExecutor, Timestamp]]
     """Helps update _SideInputsContainer after a watermark update.
 
@@ -215,8 +216,7 @@ class _SideInputsContainer(object):
     Raises:
       ValueError: If values cannot be converted into the requested form.
     """
-    return sideinputs.SideInputMap(type(side_input),
-                                   side_input._view_options(),
+    return sideinputs.SideInputMap(type(side_input), side_input._view_options(),
                                    values)
 
 
@@ -241,31 +241,33 @@ class EvaluationContext(object):
   global watermarks, and executing any callbacks that can be executed.
   """
 
-  def __init__(self,
-               pipeline_options,
-               bundle_factory,  # type: BundleFactory
-               root_transforms,
-               value_to_consumers,
-               step_names,
-               views,  # type: Iterable[pvalue.AsSideInput]
-               clock
-              ):
+  def __init__(
+      self,
+      pipeline_options,
+      bundle_factory,  # type: BundleFactory
+      root_transforms,
+      value_to_consumers,
+      step_names,
+      views,  # type: Iterable[pvalue.AsSideInput]
+      clock):
     self.pipeline_options = pipeline_options
     self._bundle_factory = bundle_factory
     self._root_transforms = root_transforms
     self._value_to_consumers = value_to_consumers
     self._step_names = step_names
     self.views = views
-    self._pcollection_to_views = collections.defaultdict(list)  # type: DefaultDict[pvalue.PCollection, List[pvalue.AsSideInput]]
+    self._pcollection_to_views = collections.defaultdict(
+        list)  # type: DefaultDict[pvalue.PCollection, List[pvalue.AsSideInput]]
     for view in views:
       self._pcollection_to_views[view.pvalue].append(view)
     self._transform_keyed_states = self._initialize_keyed_states(
         root_transforms, value_to_consumers)
     self._side_inputs_container = _SideInputsContainer(views)
-    self._watermark_manager = WatermarkManager(
-        clock, root_transforms, value_to_consumers,
-        self._transform_keyed_states)
-    self._pending_unblocked_tasks = []  # type: List[Tuple[TransformExecutor, Timestamp]]
+    self._watermark_manager = WatermarkManager(clock, root_transforms,
+                                               value_to_consumers,
+                                               self._transform_keyed_states)
+    self._pending_unblocked_tasks = [
+    ]  # type: List[Tuple[TransformExecutor, Timestamp]]
     self._counter_factory = counters.CounterFactory()
     self._metrics = DirectMetrics()
 
@@ -292,12 +294,12 @@ class EvaluationContext(object):
     # type: (AppliedPTransform) -> bool
     return applied_ptransform in self._root_transforms
 
-  def handle_result(self,
-                    completed_bundle,  # type: _Bundle
-                    completed_timers,
-                    result  # type: TransformResult
-                   ):
-
+  def handle_result(
+      self,
+      completed_bundle,  # type: _Bundle
+      completed_timers,
+      result  # type: TransformResult
+  ):
     """Handle the provided result produced after evaluating the input bundle.
 
     Handle the provided TransformResult, produced after evaluating
@@ -318,8 +320,7 @@ class EvaluationContext(object):
     """
     with self._lock:
       committed_bundles, unprocessed_bundles = self._commit_bundles(
-          result.uncommitted_output_bundles,
-          result.unprocessed_bundles)
+          result.uncommitted_output_bundles, result.unprocessed_bundles)
 
       self._metrics.commit_logical(completed_bundle,
                                    result.logical_metric_updates)
@@ -346,25 +347,25 @@ class EvaluationContext(object):
         existing_keyed_state[k] = v
       return committed_bundles
 
-  def _update_side_inputs_container(self,
-                                    committed_bundles,  # type: Iterable[_Bundle]
-                                    result  # type: TransformResult
-                                   ):
+  def _update_side_inputs_container(
+      self,
+      committed_bundles,  # type: Iterable[_Bundle]
+      result  # type: TransformResult
+  ):
     """Update the side inputs container if we are outputting into a side input.
 
     Look at the result, and if it's outputing into a PCollection that we have
     registered as a PCollectionView, we add the result to the PCollectionView.
     """
-    if (result.uncommitted_output_bundles
-        and result.uncommitted_output_bundles[0].pcollection
-        in self._pcollection_to_views):
+    if (result.uncommitted_output_bundles and
+        result.uncommitted_output_bundles[0].pcollection in
+        self._pcollection_to_views):
       for view in self._pcollection_to_views[
           result.uncommitted_output_bundles[0].pcollection]:
         for committed_bundle in committed_bundles:
           # side_input must be materialized.
           self._side_inputs_container.add_values(
-              view,
-              committed_bundle.get_elements_iterable(make_copy=True))
+              view, committed_bundle.get_elements_iterable(make_copy=True))
 
   def get_aggregator_values(self, aggregator_or_name):
     return self._counter_factory.get_aggregator_values(aggregator_or_name)
@@ -376,10 +377,11 @@ class EvaluationContext(object):
           executor_service.submit(task)
         self._pending_unblocked_tasks = []
 
-  def _commit_bundles(self,
-                      uncommitted_bundles,  # type: Iterable[_Bundle]
-                      unprocessed_bundles  # type: Iterable[_Bundle]
-                     ):
+  def _commit_bundles(
+      self,
+      uncommitted_bundles,  # type: Iterable[_Bundle]
+      unprocessed_bundles  # type: Iterable[_Bundle]
+  ):
     # type: (...) -> Tuple[Tuple[_Bundle, ...], Tuple[_Bundle, ...]]
     """Commits bundles and returns a immutable set of committed bundles."""
     for in_progress_bundle in uncommitted_bundles:

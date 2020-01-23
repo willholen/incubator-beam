@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for cross-language generate sequence."""
 
 # pytype: skip-file
@@ -36,21 +35,18 @@ from apache_beam.testing.util import equal_to
 
 
 @attr('UsesCrossLanguageTransforms')
-@unittest.skipUnless(
-    os.environ.get('EXPANSION_PORT'),
-    "EXPANSION_PORT environment var is not provided.")
+@unittest.skipUnless(os.environ.get('EXPANSION_PORT'),
+                     "EXPANSION_PORT environment var is not provided.")
 class XlangGenerateSequenceTest(unittest.TestCase):
+
   def test_generate_sequence(self):
     port = os.environ.get('EXPANSION_PORT')
     address = 'localhost:%s' % port
 
     try:
       with TestPipeline() as p:
-        res = (
-            p
-            | GenerateSequence(start=1, stop=10,
-                               expansion_service=address)
-        )
+        res = (p |
+               GenerateSequence(start=1, stop=10, expansion_service=address))
 
         assert_that(res, equal_to([i for i in range(1, 10)]))
     except RuntimeError as e:

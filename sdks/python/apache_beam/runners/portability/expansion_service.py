@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A PipelineExpansion service.
 """
 # pytype: skip-file
@@ -55,9 +54,8 @@ class ExpansionServiceServicer(
 
       context = pipeline_context.PipelineContext(
           request.components,
-          default_environment=
-          portable_runner.PortableRunner._create_environment(
-              self._options),
+          default_environment=portable_runner.PortableRunner.
+          _create_environment(self._options),
           namespace=request.namespace)
       producers = {
           pcoll_id: (context.transforms.get_by_id(t_id), pcoll_tag)
@@ -65,8 +63,8 @@ class ExpansionServiceServicer(
           for pcoll_tag, pcoll_id in t_proto.outputs.items()
       }
       transform = with_pipeline(
-          ptransform.PTransform.from_runner_api(
-              request.transform.spec, context))
+          ptransform.PTransform.from_runner_api(request.transform.spec,
+                                                context))
       inputs = transform._pvaluish_from_dict({
           tag: with_pipeline(context.pcollections.get_by_id(pcoll_id), pcoll_id)
           for tag, pcoll_id in request.transform.inputs.items()
@@ -74,8 +72,8 @@ class ExpansionServiceServicer(
       if not inputs:
         inputs = pipeline
       with external.ExternalTransform.outer_namespace(request.namespace):
-        result = pipeline.apply(
-            transform, inputs, request.transform.unique_name)
+        result = pipeline.apply(transform, inputs,
+                                request.transform.unique_name)
       expanded_transform = pipeline._root_transform().parts[-1]
       # TODO(BEAM-1833): Use named outputs internally.
       if isinstance(result, dict):

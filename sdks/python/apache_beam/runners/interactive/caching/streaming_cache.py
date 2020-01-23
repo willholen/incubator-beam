@@ -27,6 +27,7 @@ from apache_beam.utils.timestamp import Timestamp
 class StreamingCache(object):
   """Abstraction that holds the logic for reading and writing to cache.
   """
+
   def __init__(self, readers):
     self._readers = readers
 
@@ -39,6 +40,7 @@ class StreamingCache(object):
     This class is also responsible for holding the state of the clock, injecting
     clock advancement events, and watermark advancement events.
     """
+
     def __init__(self, readers):
       # This timestamp is used as the monotonic clock to order events in the
       # replay.
@@ -50,15 +52,16 @@ class StreamingCache(object):
       # The file headers that are metadata for that particular PCollection.
       # The header allows for metadata about an entire stream, so that the data
       # isn't copied per record.
-      self._headers = {r.header().tag : r.header() for r in readers}
-      self._readers = {r.header().tag : r.read() for r in readers}
+      self._headers = {r.header().tag: r.header() for r in readers}
+      self._readers = {r.header().tag: r.read() for r in readers}
 
       # The watermarks per tag. Useful for introspection in the stream.
       self._watermarks = {tag: timestamp.MIN_TIMESTAMP for tag in self._headers}
 
       # The most recently read timestamp per tag.
-      self._stream_times = {tag: timestamp.MIN_TIMESTAMP
-                            for tag in self._headers}
+      self._stream_times = {
+          tag: timestamp.MIN_TIMESTAMP for tag in self._headers
+      }
 
     def _test_stream_events_before_target(self, target_timestamp):
       """Reads the next iteration of elements from each stream.
@@ -86,8 +89,7 @@ class StreamingCache(object):
 
     def _merge_sort(self, previous_events, new_events):
       return sorted(previous_events + new_events,
-                    key=lambda x: Timestamp.from_proto(
-                        x[1].processing_time),
+                    key=lambda x: Timestamp.from_proto(x[1].processing_time),
                     reverse=True)
 
     def _min_timestamp_of(self, events):
@@ -125,8 +127,8 @@ class StreamingCache(object):
         target_timestamp = self._min_timestamp_of(events_to_send)
 
         # Loop through the elements with the correct timestamp.
-        while not self._event_stream_caught_up_to_target(events_to_send,
-                                                         target_timestamp):
+        while not self._event_stream_caught_up_to_target(
+            events_to_send, target_timestamp):
           tag, r = events_to_send.pop()
 
           # First advance the clock to match the time of the stream. This has
@@ -147,8 +149,8 @@ class StreamingCache(object):
       """Constructs an AddElement event for the specified element and tag.
       """
       return TestStreamPayload.Event(
-          element_event=TestStreamPayload.Event.AddElements(
-              elements=[element], tag=tag))
+          element_event=TestStreamPayload.Event.AddElements(elements=[element],
+                                                            tag=tag))
 
     def _advance_processing_time(self, new_timestamp):
       """Advances the internal clock and returns an AdvanceProcessingTime event.

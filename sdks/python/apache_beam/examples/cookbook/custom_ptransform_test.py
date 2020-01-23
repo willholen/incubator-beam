@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for the various custom Count implementation examples."""
 
 # pytype: skip-file
@@ -47,8 +46,8 @@ class CustomCountTest(unittest.TestCase):
     with TestPipeline() as p:
       words = p | beam.Create(['CAT', 'DOG', 'CAT', 'CAT', 'DOG'])
       result = words | count_implementation
-      assert_that(
-          result, equal_to([('CAT', (3 * factor)), ('DOG', (2 * factor))]))
+      assert_that(result,
+                  equal_to([('CAT', (3 * factor)), ('DOG', (2 * factor))]))
 
 
 if __name__ == '__main__':

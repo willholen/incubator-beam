@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Defines the actions various bytecodes have on the frame.
 
 Each function here corresponds to a bytecode documented in
@@ -158,8 +157,8 @@ def binary_subscr(state, unused_arg):
   base = Const.unwrap(state.stack.pop())
   if base in (str, unicode):
     out = base
-  elif (isinstance(index, Const) and isinstance(index.value, int)
-        and isinstance(base, typehints.IndexableTypeConstraint)):
+  elif (isinstance(index, Const) and isinstance(index.value, int) and
+        isinstance(base, typehints.IndexableTypeConstraint)):
     try:
       out = base._constraint_for_index(index.value)
     except IndexError:
@@ -197,9 +196,8 @@ def list_append(state, arg):
 def map_add(state, arg):
   new_key_type = Const.unwrap(state.stack.pop())
   new_value_type = Const.unwrap(state.stack.pop())
-  state.stack[-arg] = Dict[
-      Union[state.stack[-arg].key_type, new_key_type],
-      Union[state.stack[-arg].value_type, new_value_type]]
+  state.stack[-arg] = Dict[Union[state.stack[-arg].key_type, new_key_type],
+                           Union[state.stack[-arg].value_type, new_value_type]]
 
 
 load_locals = push_value(Dict[str, Any])
@@ -216,8 +214,8 @@ def unpack_sequence(state, arg):
         unpacked = [Any] * arg
     except TypeError:
       unpacked = [Any] * arg
-  elif (isinstance(t, typehints.TupleHint.TupleConstraint)
-        and len(t.tuple_types) == arg):
+  elif (isinstance(t, typehints.TupleHint.TupleConstraint) and
+        len(t.tuple_types) == arg):
     unpacked = list(t.tuple_types)
   else:
     unpacked = [element_type(t)] * arg
@@ -275,7 +273,7 @@ def load_attr(state, arg):
     if sys.version_info[0] == 2:
       func = getattr(o, name).__func__
     else:
-      func = getattr(o, name) # Python 3 has no unbound methods
+      func = getattr(o, name)  # Python 3 has no unbound methods
     state.stack.append(Const(BoundMethod(func, o)))
   else:
     state.stack.append(Any)
@@ -338,7 +336,7 @@ def make_function(state, arg):
   """Creates a function with the arguments at the top of the stack.
   """
   # TODO(luke-zhu): Handle default argument types
-  globals = state.f.__globals__ # Inherits globals from the current frame
+  globals = state.f.__globals__  # Inherits globals from the current frame
   if sys.version_info[0] == 2:
     func_code = state.stack[-1].value
     func = types.FunctionType(func_code, globals)
@@ -363,11 +361,12 @@ def make_function(state, arg):
       if arg & 0x08:
         # Convert types in Tuple constraint to a tuple of CPython cells.
         # https://stackoverflow.com/a/44670295
-        closure = tuple(
-            (lambda _: lambda: _)(t).__closure__[0]
-            for t in state.stack[-3].tuple_types)
+        closure = tuple((lambda _: lambda: _)(t).__closure__[0]
+                        for t in state.stack[-3].tuple_types)
 
-    func = types.FunctionType(func_code, globals, name=func_name,
+    func = types.FunctionType(func_code,
+                              globals,
+                              name=func_name,
                               closure=closure)
 
   assert pop_count <= len(state.stack)

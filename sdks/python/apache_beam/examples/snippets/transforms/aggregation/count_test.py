@@ -60,9 +60,10 @@ def check_total_unique_elements(actual):
 
 
 @mock.patch('apache_beam.Pipeline', TestPipeline)
-@mock.patch(
-    'apache_beam.examples.snippets.transforms.aggregation.count.print', str)
+@mock.patch('apache_beam.examples.snippets.transforms.aggregation.count.print',
+            str)
 class CountTest(unittest.TestCase):
+
   def test_count_globally(self):
     count.count_globally(check_total_elements)
 

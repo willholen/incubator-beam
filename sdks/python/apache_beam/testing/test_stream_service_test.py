@@ -39,6 +39,7 @@ TestStreamFileRecord.__test__ = False
 
 
 class TestStreamServiceTest(unittest.TestCase):
+
   def events(self):
     events = []
     for i in range(10):

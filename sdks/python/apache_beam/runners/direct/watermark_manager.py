@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Manages watermarks of PCollections and AppliedPTransforms."""
 
 # pytype: skip-file
@@ -58,7 +57,8 @@ class WatermarkManager(object):
     self._value_to_consumers = value_to_consumers
     self._transform_keyed_states = transform_keyed_states
     # AppliedPTransform -> TransformWatermarks
-    self._transform_to_watermarks = {}  # type: Dict[AppliedPTransform, _TransformWatermarks]
+    self._transform_to_watermarks = {
+    }  # type: Dict[AppliedPTransform, _TransformWatermarks]
 
     for root_transform in root_transforms:
       self._transform_to_watermarks[root_transform] = _TransformWatermarks(
@@ -108,30 +108,30 @@ class WatermarkManager(object):
 
     return self._transform_to_watermarks[applied_ptransform]
 
-  def update_watermarks(self,
-                        completed_committed_bundle,  # type: _Bundle
-                        applied_ptransform,  # type: AppliedPTransform
-                        completed_timers,
-                        outputs,
-                        unprocessed_bundles,
-                        keyed_earliest_holds,
-                        side_inputs_container
-                       ):
+  def update_watermarks(
+      self,
+      completed_committed_bundle,  # type: _Bundle
+      applied_ptransform,  # type: AppliedPTransform
+      completed_timers,
+      outputs,
+      unprocessed_bundles,
+      keyed_earliest_holds,
+      side_inputs_container):
     assert isinstance(applied_ptransform, pipeline.AppliedPTransform)
-    self._update_pending(
-        completed_committed_bundle, applied_ptransform, completed_timers,
-        outputs, unprocessed_bundles)
+    self._update_pending(completed_committed_bundle, applied_ptransform,
+                         completed_timers, outputs, unprocessed_bundles)
     tw = self.get_watermarks(applied_ptransform)
     tw.hold(keyed_earliest_holds)
     return self._refresh_watermarks(applied_ptransform, side_inputs_container)
 
-  def _update_pending(self,
-                      input_committed_bundle,
-                      applied_ptransform,  # type: AppliedPTransform
-                      completed_timers,
-                      output_committed_bundles,  # type: Iterable[_Bundle]
-                      unprocessed_bundles  # type: Iterable[_Bundle]
-                     ):
+  def _update_pending(
+      self,
+      input_committed_bundle,
+      applied_ptransform,  # type: AppliedPTransform
+      completed_timers,
+      output_committed_bundles,  # type: Iterable[_Bundle]
+      unprocessed_bundles  # type: Iterable[_Bundle]
+  ):
     """Updated list of pending bundles for the given AppliedPTransform."""
 
     # Update pending elements. Filter out empty bundles. They do not impact
@@ -172,8 +172,8 @@ class WatermarkManager(object):
                   self._refresh_watermarks(consumer, side_inputs_container))
       # Notify the side_inputs_container.
       unblocked_tasks.extend(
-          side_inputs_container
-          .update_watermarks_for_transform_and_unblock_tasks(
+          side_inputs_container.
+          update_watermarks_for_transform_and_unblock_tasks(
               applied_ptransform, tw))
     return unblocked_tasks
 
@@ -189,8 +189,8 @@ class WatermarkManager(object):
         # We should sort the timer firings, so they are fired in order.
         fired_timers.sort(key=lambda ft: ft.timestamp)
         all_timers.append((applied_ptransform, fired_timers))
-      if (had_realtime_timer
-          and tw.output_watermark < WatermarkManager.WATERMARK_POS_INF):
+      if (had_realtime_timer and
+          tw.output_watermark < WatermarkManager.WATERMARK_POS_INF):
         has_realtime_timer = True
     return all_timers, has_realtime_timer
 
@@ -284,7 +284,8 @@ class _TransformWatermarks(object):
         pending_holder = min_pending_timestamp - TIME_GRANULARITY
 
       input_watermarks = [
-          tw.output_watermark for tw in self._input_transform_watermarks]
+          tw.output_watermark for tw in self._input_transform_watermarks
+      ]
       input_watermarks.append(WatermarkManager.WATERMARK_POS_INF)
       producer_watermark = min(input_watermarks)
 
@@ -312,8 +313,7 @@ class _TransformWatermarks(object):
       has_realtime_timer = False
       for encoded_key, state in self._keyed_states.items():
         timers, had_realtime_timer = state.get_timers(
-            watermark=self._input_watermark,
-            processing_time=self._clock.time())
+            watermark=self._input_watermark, processing_time=self._clock.time())
         if had_realtime_timer:
           has_realtime_timer = True
         for expired in timers:

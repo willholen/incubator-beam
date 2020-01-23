@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Retry decorators for calls raising exceptions.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -59,7 +58,6 @@ except ImportError:
   S3ClientError = None
 # pylint: enable=wrong-import-order, wrong-import-position
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -88,7 +86,11 @@ class FuzzedExponentialIntervals(object):
       the time. Defaults to 1 hour.
   """
 
-  def __init__(self, initial_delay_secs, num_retries, factor=2, fuzz=0.5,
+  def __init__(self,
+               initial_delay_secs,
+               num_retries,
+               factor=2,
+               fuzz=0.5,
                max_delay_secs=60 * 60 * 1):
     self._initial_delay_secs = initial_delay_secs
     if num_retries > 10000:
@@ -105,8 +107,8 @@ class FuzzedExponentialIntervals(object):
     for _ in range(self._num_retries):
       fuzz_multiplier = 1 - self._fuzz + random.random() * self._fuzz
       yield current_delay_secs * fuzz_multiplier
-      current_delay_secs = min(
-          self._max_delay_secs, current_delay_secs * self._factor)
+      current_delay_secs = min(self._max_delay_secs,
+                               current_delay_secs * self._factor)
 
 
 def retry_on_server_errors_filter(exception):
@@ -168,14 +170,17 @@ class Clock(object):
 
 def no_retries(fun):
   """A retry decorator for places where we do not want retries."""
-  return with_exponential_backoff(
-      retry_filter=lambda _: False, clock=None)(fun)
+  return with_exponential_backoff(retry_filter=lambda _: False, clock=None)(fun)
 
 
-def with_exponential_backoff(
-    num_retries=7, initial_delay_secs=5.0, logger=_LOGGER.warning,
-    retry_filter=retry_on_server_errors_filter,
-    clock=Clock(), fuzz=True, factor=2, max_delay_secs=60 * 60):
+def with_exponential_backoff(num_retries=7,
+                             initial_delay_secs=5.0,
+                             logger=_LOGGER.warning,
+                             retry_filter=retry_on_server_errors_filter,
+                             clock=Clock(),
+                             fuzz=True,
+                             factor=2,
+                             max_delay_secs=60 * 60):
   """Decorator with arguments that control the retry logic.
 
   Args:
@@ -215,12 +220,15 @@ def with_exponential_backoff(
 
   def real_decorator(fun):
     """The real decorator whose purpose is to return the wrapped function."""
+
     @functools.wraps(fun)
     def wrapper(*args, **kwargs):
       retry_intervals = iter(
-          FuzzedExponentialIntervals(
-              initial_delay_secs, num_retries, factor,
-              fuzz=0.5 if fuzz else 0, max_delay_secs=max_delay_secs))
+          FuzzedExponentialIntervals(initial_delay_secs,
+                                     num_retries,
+                                     factor,
+                                     fuzz=0.5 if fuzz else 0,
+                                     max_delay_secs=max_delay_secs))
       while True:
         try:
           return fun(*args, **kwargs)
@@ -242,8 +250,7 @@ def with_exponential_backoff(
                 'Retry with exponential backoff: waiting for %s seconds before '
                 'retrying %s because we caught exception: %s '
                 'Traceback for above exception (most recent call last):\n%s',
-                sleep_interval,
-                getattr(fun, '__name__', str(fun)),
+                sleep_interval, getattr(fun, '__name__', str(fun)),
                 ''.join(traceback.format_exception_only(exn.__class__, exn)),
                 ''.join(traceback.format_tb(exn_traceback)))
             clock.sleep(sleep_interval)

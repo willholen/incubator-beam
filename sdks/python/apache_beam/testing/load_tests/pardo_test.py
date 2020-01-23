@@ -138,6 +138,7 @@ if os.environ.get('LOAD_TEST_ENABLED') == 'true':
 
 @unittest.skipIf(not load_test_enabled, 'Enabled only for phrase triggering.')
 class ParDoTest(LoadTest):
+
   def setUp(self):
     super(ParDoTest, self).setUp()
     self.iterations = self.get_option_or_default('iterations')
@@ -146,13 +147,15 @@ class ParDoTest(LoadTest):
         'number_of_counter_operations')
 
   def testParDo(self):
+
     class CounterOperation(beam.DoFn):
+
       def __init__(self, number_of_counters, number_of_operations):
         self.number_of_operations = number_of_operations
         self.counters = []
         for i in range(number_of_counters):
-          self.counters.append(Metrics.counter('do-not-publish',
-                                               'name-{}'.format(i)))
+          self.counters.append(
+              Metrics.counter('do-not-publish', 'name-{}'.format(i)))
 
       def process(self, element):
         for _ in range(self.number_of_operations):
@@ -160,26 +163,18 @@ class ParDoTest(LoadTest):
             counter.inc()
         yield element
 
-    pc = (self.pipeline
-          | 'Read synthetic' >> beam.io.Read(
-              synthetic_pipeline.SyntheticSource(
-                  self.parseTestPipelineOptions()
-              ))
-          | 'Measure time: Start' >> beam.ParDo(
-              MeasureTime(self.metrics_namespace))
-         )
+    pc = (self.pipeline | 'Read synthetic' >> beam.io.Read(
+        synthetic_pipeline.SyntheticSource(self.parseTestPipelineOptions())) |
+          'Measure time: Start' >> beam.ParDo(
+              MeasureTime(self.metrics_namespace)))
 
     for i in range(self.iterations):
-      pc = (pc
-            | 'Step: %d' % i >> beam.ParDo(
-                CounterOperation(self.number_of_counters,
-                                 self.number_of_operations))
-           )
+      pc = (pc | 'Step: %d' % i >> beam.ParDo(
+          CounterOperation(self.number_of_counters, self.number_of_operations)))
 
     # pylint: disable=expression-not-assigned
-    (pc
-     | 'Measure time: End' >> beam.ParDo(MeasureTime(self.metrics_namespace))
-    )
+    (pc |
+     'Measure time: End' >> beam.ParDo(MeasureTime(self.metrics_namespace)))
 
 
 if __name__ == '__main__':

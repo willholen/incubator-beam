@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Implements a Cloud Datastore query splitter."""
 # pytype: skip-file
 
@@ -34,14 +33,13 @@ try:
   from google.cloud.proto.datastore.v1.query_pb2 import PropertyFilter
   from google.cloud.proto.datastore.v1.query_pb2 import CompositeFilter
   from googledatastore import helper as datastore_helper
-  UNSUPPORTED_OPERATORS = [PropertyFilter.LESS_THAN,
-                           PropertyFilter.LESS_THAN_OR_EQUAL,
-                           PropertyFilter.GREATER_THAN,
-                           PropertyFilter.GREATER_THAN_OR_EQUAL]
+  UNSUPPORTED_OPERATORS = [
+      PropertyFilter.LESS_THAN, PropertyFilter.LESS_THAN_OR_EQUAL,
+      PropertyFilter.GREATER_THAN, PropertyFilter.GREATER_THAN_OR_EQUAL
+  ]
 except ImportError:
   UNSUPPORTED_OPERATORS = None  # type: ignore
 # pylint: enable=wrong-import-order, wrong-import-position
-
 
 __all__ = [
     'get_splits',

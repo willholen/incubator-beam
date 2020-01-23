@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Tests for decorators module with Python 3 syntax not supported by 2.7."""
 
 # pytype: skip-file
@@ -43,25 +42,37 @@ T_typing = typing.TypeVar('T')
 class IOTypeHintsTest(unittest.TestCase):
 
   def test_from_callable(self):
-    def fn(a: int, b: str = '', *args: Tuple[T], foo: List[int],
+
+    def fn(a: int,
+           b: str = '',
+           *args: Tuple[T],
+           foo: List[int],
            **kwargs: Dict[str, str]) -> Tuple[Any, ...]:
       return a, b, args, foo, kwargs
+
     th = decorators.IOTypeHints.from_callable(fn)
-    self.assertEqual(th.input_types, (
-        (int, str, Tuple[T]), {'foo': List[int], 'kwargs': Dict[str, str]}))
+    self.assertEqual(th.input_types, ((int, str, Tuple[T]), {
+        'foo': List[int],
+        'kwargs': Dict[str, str]
+    }))
     self.assertEqual(th.output_types, ((Tuple[Any, ...],), {}))
 
   def test_from_callable_partial_annotations(self):
+
     def fn(a: int, b=None, *args, foo: List[int], **kwargs):
       return a, b, args, foo, kwargs
+
     th = decorators.IOTypeHints.from_callable(fn)
-    self.assertEqual(th.input_types,
-                     ((int, Any, Tuple[Any, ...]),
-                      {'foo': List[int], 'kwargs': Dict[Any, Any]}))
+    self.assertEqual(th.input_types, ((int, Any, Tuple[Any, ...]), {
+        'foo': List[int],
+        'kwargs': Dict[Any, Any]
+    }))
     self.assertEqual(th.output_types, ((Any,), {}))
 
   def test_from_callable_class(self):
+
     class Class(object):
+
       def __init__(self, unused_arg: int):
         pass
 
@@ -70,7 +81,9 @@ class IOTypeHintsTest(unittest.TestCase):
     self.assertEqual(th.output_types, ((Class,), {}))
 
   def test_from_callable_method(self):
+
     class Class(object):
+
       def method(self, arg: T = None) -> None:
         pass
 
@@ -83,43 +96,57 @@ class IOTypeHintsTest(unittest.TestCase):
     self.assertEqual(th.output_types, ((None,), {}))
 
   def test_from_callable_convert_to_beam_types(self):
+
     def fn(a: typing.List[int],
            b: str = None,
            *args: typing.Tuple[T_typing],
            foo: typing.List[int],
            **kwargs: typing.Dict[str, str]) -> typing.Tuple[typing.Any, ...]:
       return a, b, args, foo, kwargs
+
     th = decorators.IOTypeHints.from_callable(fn)
-    self.assertEqual(th.input_types, (
-        (List[int], str, Tuple[T]),
-        {'foo': List[int], 'kwargs': Dict[str, str]}))
+    self.assertEqual(th.input_types, ((List[int], str, Tuple[T]), {
+        'foo': List[int],
+        'kwargs': Dict[str, str]
+    }))
     self.assertEqual(th.output_types, ((Tuple[Any, ...],), {}))
 
   def test_getcallargs_forhints(self):
-    def fn(a: int, b: str = '', *args: Tuple[T], foo: List[int],
+
+    def fn(a: int,
+           b: str = '',
+           *args: Tuple[T],
+           foo: List[int],
            **kwargs: Dict[str, str]) -> Tuple[Any, ...]:
       return a, b, args, foo, kwargs
+
     callargs = decorators.getcallargs_forhints(fn, float, foo=List[str])
-    self.assertDictEqual(callargs,
-                         {'a': float,
-                          'b': str,
-                          'args': Tuple[T],
-                          'foo': List[str],
-                          'kwargs': Dict[str, str]})
+    self.assertDictEqual(
+        callargs, {
+            'a': float,
+            'b': str,
+            'args': Tuple[T],
+            'foo': List[str],
+            'kwargs': Dict[str, str]
+        })
 
   def test_getcallargs_forhints_default_arg(self):
     # Default args are not necessarily types, so they should be ignored.
     def fn(a=List[int], b=None, *args, foo=(), **kwargs) -> Tuple[Any, ...]:
       return a, b, args, foo, kwargs
+
     callargs = decorators.getcallargs_forhints(fn)
-    self.assertDictEqual(callargs,
-                         {'a': Any,
-                          'b': Any,
-                          'args': Tuple[Any, ...],
-                          'foo': Any,
-                          'kwargs': Dict[Any, Any]})
+    self.assertDictEqual(
+        callargs, {
+            'a': Any,
+            'b': Any,
+            'args': Tuple[Any, ...],
+            'foo': Any,
+            'kwargs': Dict[Any, Any]
+        })
 
   def test_getcallargs_forhints_missing_arg(self):
+
     def fn(a, b=None, *args, foo, **kwargs):
       return a, b, args, foo, kwargs
 

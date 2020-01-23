@@ -49,9 +49,10 @@ def check_latest_elements_per_key(actual):
 
 
 @mock.patch('apache_beam.Pipeline', TestPipeline)
-@mock.patch(
-    'apache_beam.examples.snippets.transforms.aggregation.latest.print', str)
+@mock.patch('apache_beam.examples.snippets.transforms.aggregation.latest.print',
+            str)
 class LatestTest(unittest.TestCase):
+
   def test_latest_globally(self):
     latest.latest_globally(check_latest_element)
 

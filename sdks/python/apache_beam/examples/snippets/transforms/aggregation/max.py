@@ -28,12 +28,10 @@ def max_globally(test=None):
 
   with beam.Pipeline() as pipeline:
     max_element = (
-        pipeline
-        | 'Create numbers' >> beam.Create([3, 4, 1, 2])
-        | 'Get max value' >> beam.CombineGlobally(
-            lambda elements: max(elements or [None]))
-        | beam.Map(print)
-    )
+        pipeline | 'Create numbers' >> beam.Create([3, 4, 1, 2]) |
+        'Get max value' >>
+        beam.CombineGlobally(lambda elements: max(elements or [None])) |
+        beam.Map(print))
     # [END max_globally]
     if test:
       test(max_element)
@@ -45,18 +43,15 @@ def max_per_key(test=None):
 
   with beam.Pipeline() as pipeline:
     elements_with_max_value_per_key = (
-        pipeline
-        | 'Create produce' >> beam.Create([
+        pipeline | 'Create produce' >> beam.Create([
             ('🥕', 3),
             ('🥕', 2),
             ('🍆', 1),
             ('🍅', 4),
             ('🍅', 5),
             ('🍅', 3),
-        ])
-        | 'Get max value per key' >> beam.CombinePerKey(max)
-        | beam.Map(print)
-    )
+        ]) | 'Get max value per key' >> beam.CombinePerKey(max) |
+        beam.Map(print))
     # [END max_per_key]
     if test:
       test(elements_with_max_value_per_key)

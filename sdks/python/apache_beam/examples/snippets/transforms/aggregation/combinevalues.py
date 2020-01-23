@@ -28,16 +28,11 @@ def combinevalues_simple(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    total = (
-        pipeline
-        | 'Create produce counts' >> beam.Create([
-            ('🥕', [3, 2]),
-            ('🍆', [1]),
-            ('🍅', [4, 5, 3]),
-        ])
-        | 'Sum' >> beam.CombineValues(sum)
-        | beam.Map(print)
-    )
+    total = (pipeline | 'Create produce counts' >> beam.Create([
+        ('🥕', [3, 2]),
+        ('🍆', [1]),
+        ('🍅', [4, 5, 3]),
+    ]) | 'Sum' >> beam.CombineValues(sum) | beam.Map(print))
     # [END combinevalues_simple]
     if test:
       test(total)
@@ -52,16 +47,11 @@ def combinevalues_function(test=None):
     return min(sum(values), max_value)
 
   with beam.Pipeline() as pipeline:
-    saturated_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', [3, 2]),
-            ('🍆', [1]),
-            ('🍅', [4, 5, 3]),
-        ])
-        | 'Saturated sum' >> beam.CombineValues(saturated_sum)
-        | beam.Map(print)
-    )
+    saturated_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', [3, 2]),
+        ('🍆', [1]),
+        ('🍅', [4, 5, 3]),
+    ]) | 'Saturated sum' >> beam.CombineValues(saturated_sum) | beam.Map(print))
     # [END combinevalues_function]
     if test:
       test(saturated_total)
@@ -72,17 +62,13 @@ def combinevalues_lambda(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    saturated_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', [3, 2]),
-            ('🍆', [1]),
-            ('🍅', [4, 5, 3]),
-        ])
-        | 'Saturated sum' >> beam.CombineValues(
-            lambda values: min(sum(values), 8))
-        | beam.Map(print)
-    )
+    saturated_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', [3, 2]),
+        ('🍆', [1]),
+        ('🍅', [4, 5, 3]),
+    ]) | 'Saturated sum' >>
+                       beam.CombineValues(lambda values: min(sum(values), 8)) |
+                       beam.Map(print))
     # [END combinevalues_lambda]
     if test:
       test(saturated_total)
@@ -93,18 +79,13 @@ def combinevalues_multiple_arguments(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    saturated_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', [3, 2]),
-            ('🍆', [1]),
-            ('🍅', [4, 5, 3]),
-        ])
-        | 'Saturated sum' >> beam.CombineValues(
-            lambda values, max_value: min(sum(values), max_value),
-            max_value=8)
-        | beam.Map(print)
-    )
+    saturated_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', [3, 2]),
+        ('🍆', [1]),
+        ('🍅', [4, 5, 3]),
+    ]) | 'Saturated sum' >> beam.CombineValues(
+        lambda values, max_value: min(sum(values), max_value), max_value=8) |
+                       beam.Map(print))
     # [END combinevalues_multiple_arguments]
     if test:
       test(saturated_total)
@@ -117,18 +98,13 @@ def combinevalues_side_inputs_singleton(test=None):
   with beam.Pipeline() as pipeline:
     max_value = pipeline | 'Create max_value' >> beam.Create([8])
 
-    saturated_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', [3, 2]),
-            ('🍆', [1]),
-            ('🍅', [4, 5, 3]),
-        ])
-        | 'Saturated sum' >> beam.CombineValues(
-            lambda values, max_value: min(sum(values), max_value),
-            max_value=beam.pvalue.AsSingleton(max_value))
-        | beam.Map(print)
-    )
+    saturated_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', [3, 2]),
+        ('🍆', [1]),
+        ('🍅', [4, 5, 3]),
+    ]) | 'Saturated sum' >> beam.CombineValues(
+        lambda values, max_value: min(sum(values), max_value),
+        max_value=beam.pvalue.AsSingleton(max_value)) | beam.Map(print))
     # [END combinevalues_side_inputs_singleton]
     if test:
       test(saturated_total)
@@ -151,18 +127,13 @@ def combinevalues_side_inputs_iter(test=None):
   with beam.Pipeline() as pipeline:
     data_range = pipeline | 'Create data_range' >> beam.Create([2, 4, 8])
 
-    bounded_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', [3, 2]),
-            ('🍆', [1]),
-            ('🍅', [4, 5, 3]),
-        ])
-        | 'Bounded sum' >> beam.CombineValues(
-            bounded_sum,
-            data_range=beam.pvalue.AsIter(data_range))
-        | beam.Map(print)
-    )
+    bounded_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', [3, 2]),
+        ('🍆', [1]),
+        ('🍅', [4, 5, 3]),
+    ]) | 'Bounded sum' >> beam.CombineValues(
+        bounded_sum, data_range=beam.pvalue.AsIter(data_range)) |
+                     beam.Map(print))
     # [END combinevalues_side_inputs_iter]
     if test:
       test(bounded_total)
@@ -188,27 +159,24 @@ def combinevalues_side_inputs_dict(test=None):
         ('max', 8),
     ])
 
-    bounded_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', [3, 2]),
-            ('🍆', [1]),
-            ('🍅', [4, 5, 3]),
-        ])
-        | 'Bounded sum' >> beam.CombineValues(
-            bounded_sum,
-            data_range=beam.pvalue.AsDict(data_range))
-        | beam.Map(print)
-    )
+    bounded_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', [3, 2]),
+        ('🍆', [1]),
+        ('🍅', [4, 5, 3]),
+    ]) | 'Bounded sum' >> beam.CombineValues(
+        bounded_sum, data_range=beam.pvalue.AsDict(data_range)) |
+                     beam.Map(print))
     # [END combinevalues_side_inputs_dict]
     if test:
       test(bounded_total)
+
 
 def combinevalues_combinefn(test=None):
   # [START combinevalues_combinefn]
   import apache_beam as beam
 
   class AverageFn(beam.CombineFn):
+
     def create_accumulator(self):
       return {}
 
@@ -217,7 +185,7 @@ def combinevalues_combinefn(test=None):
       # input == '🥕'
       if input not in accumulator:
         accumulator[input] = 0  # {'🥕': 0}
-      accumulator[input] += 1   # {'🥕': 1}
+      accumulator[input] += 1  # {'🥕': 1}
       return accumulator
 
     def merge_accumulators(self, accumulators):
@@ -242,17 +210,12 @@ def combinevalues_combinefn(test=None):
       return percentages
 
   with beam.Pipeline() as pipeline:
-    percentages_per_season = (
-        pipeline
-        | 'Create produce' >> beam.Create([
-            ('spring', ['🥕', '🍅', '🥕', '🍅', '🍆']),
-            ('summer', ['🥕', '🍅', '🌽', '🍅', '🍅']),
-            ('fall', ['🥕', '🥕', '🍅', '🍅']),
-            ('winter', ['🍆', '🍆']),
-        ])
-        | 'Average' >> beam.CombineValues(AverageFn())
-        | beam.Map(print)
-    )
+    percentages_per_season = (pipeline | 'Create produce' >> beam.Create([
+        ('spring', ['🥕', '🍅', '🥕', '🍅', '🍆']),
+        ('summer', ['🥕', '🍅', '🌽', '🍅', '🍅']),
+        ('fall', ['🥕', '🥕', '🍅', '🍅']),
+        ('winter', ['🍆', '🍆']),
+    ]) | 'Average' >> beam.CombineValues(AverageFn()) | beam.Map(print))
     # [END combinevalues_combinefn]
     if test:
       test(percentages_per_season)

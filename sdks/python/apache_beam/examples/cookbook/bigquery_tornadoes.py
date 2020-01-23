@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A workflow using BigQuery sources and sinks.
 
 The workflow will read from a table that has the 'month' and 'tornado' fields as
@@ -55,12 +54,13 @@ def count_tornadoes(input_data):
     Months without tornadoes are skipped.
   """
 
-  return (input_data
-          | 'months with tornadoes' >> beam.FlatMap(
-              lambda row: [(int(row['month']), 1)] if row['tornado'] else [])
-          | 'monthly count' >> beam.CombinePerKey(sum)
-          | 'format' >> beam.Map(
-              lambda k_v: {'month': k_v[0], 'tornado_count': k_v[1]}))
+  return (input_data | 'months with tornadoes' >> beam.FlatMap(
+      lambda row: [(int(row['month']), 1)] if row['tornado'] else []) |
+          'monthly count' >> beam.CombinePerKey(sum) |
+          'format' >> beam.Map(lambda k_v: {
+              'month': k_v[0],
+              'tornado_count': k_v[1]
+          }))
 
 
 def run(argv=None):

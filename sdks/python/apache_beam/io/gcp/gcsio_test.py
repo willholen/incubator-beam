@@ -61,7 +61,12 @@ class FakeGcsClient(object):
 
 class FakeFile(object):
 
-  def __init__(self, bucket, obj, contents, generation, crc32c=None,
+  def __init__(self,
+               bucket,
+               obj,
+               contents,
+               generation,
+               crc32c=None,
                last_updated=None):
     self.bucket = bucket
     self.object = obj
@@ -76,13 +81,12 @@ class FakeFile(object):
       last_updated_datetime = datetime.datetime.utcfromtimestamp(
           self.last_updated)
 
-    return storage.Object(
-        bucket=self.bucket,
-        name=self.object,
-        generation=self.generation,
-        size=len(self.contents),
-        crc32c=self.crc32c,
-        updated=last_updated_datetime)
+    return storage.Object(bucket=self.bucket,
+                          name=self.object,
+                          generation=self.generation,
+                          size=len(self.contents),
+                          crc32c=self.crc32c,
+                          updated=last_updated_datetime)
 
 
 class FakeGcsObjects(object):
@@ -119,8 +123,8 @@ class FakeGcsObjects(object):
 
       def get_range_callback(start, end):
         if not (start >= 0 and end >= start and end < len(f.contents)):
-          raise ValueError(
-              'start=%d end=%d len=%s' % (start, end, len(f.contents)))
+          raise ValueError('start=%d end=%d len=%s' %
+                           (start, end, len(f.contents)))
         stream.write(f.contents[start:end + 1])
 
       download.GetRange = get_range_callback
@@ -148,16 +152,16 @@ class FakeGcsObjects(object):
   def Rewrite(self, rewrite_request):  # pylint: disable=invalid-name
     if rewrite_request.rewriteToken == self.REWRITE_TOKEN:
       dest_object = storage.Object()
-      return storage.RewriteResponse(
-          done=True, objectSize=100, resource=dest_object,
-          totalBytesRewritten=100)
+      return storage.RewriteResponse(done=True,
+                                     objectSize=100,
+                                     resource=dest_object,
+                                     totalBytesRewritten=100)
 
     src_file = self.get_file(rewrite_request.sourceBucket,
                              rewrite_request.sourceObject)
     if not src_file:
-      raise HttpError(
-          httplib2.Response({'status': '404'}), '404 Not Found',
-          'https://fake/url')
+      raise HttpError(httplib2.Response({'status': '404'}), '404 Not Found',
+                      'https://fake/url')
     generation = self.get_last_generation(rewrite_request.destinationBucket,
                                           rewrite_request.destinationObject) + 1
     dest_file = FakeFile(rewrite_request.destinationBucket,
@@ -165,9 +169,10 @@ class FakeGcsObjects(object):
                          generation)
     self.add_file(dest_file)
     time.sleep(10)  # time.sleep and time.time are mocked below.
-    return storage.RewriteResponse(
-        done=False, objectSize=100, rewriteToken=self.REWRITE_TOKEN,
-        totalBytesRewritten=5)
+    return storage.RewriteResponse(done=False,
+                                   objectSize=100,
+                                   rewriteToken=self.REWRITE_TOKEN,
+                                   totalBytesRewritten=5)
 
   def Delete(self, delete_request):  # pylint: disable=invalid-name
     # Here, we emulate the behavior of the GCS service in raising a 404 error
@@ -175,9 +180,8 @@ class FakeGcsObjects(object):
     if self.get_file(delete_request.bucket, delete_request.object):
       self.delete_file(delete_request.bucket, delete_request.object)
     else:
-      raise HttpError(
-          httplib2.Response({'status': '404'}), '404 Not Found',
-          'https://fake/url')
+      raise HttpError(httplib2.Response({'status': '404'}), '404 Not Found',
+                      'https://fake/url')
 
   def List(self, list_request):  # pylint: disable=invalid-name
     bucket = list_request.bucket
@@ -198,8 +202,8 @@ class FakeGcsObjects(object):
       range_start = self.list_page_tokens[list_request.pageToken]
       del self.list_page_tokens[list_request.pageToken]
 
-    result = storage.Objects(
-        items=matching_files[range_start:range_start + items_per_page])
+    result = storage.Objects(items=matching_files[range_start:range_start +
+                                                  items_per_page])
     if range_start + items_per_page < len(matching_files):
       next_range_start = range_start + items_per_page
       next_page_token = '_page_token_%s_%s_%d' % (bucket, prefix,
@@ -251,10 +255,10 @@ class TestGCSPathParser(unittest.TestCase):
   ]
 
   def test_gcs_path(self):
-    self.assertEqual(
-        gcsio.parse_gcs_path('gs://bucket/name'), ('bucket', 'name'))
-    self.assertEqual(
-        gcsio.parse_gcs_path('gs://bucket/name/sub'), ('bucket', 'name/sub'))
+    self.assertEqual(gcsio.parse_gcs_path('gs://bucket/name'),
+                     ('bucket', 'name'))
+    self.assertEqual(gcsio.parse_gcs_path('gs://bucket/name/sub'),
+                     ('bucket', 'name/sub'))
 
   def test_bad_gcs_path(self):
     for path in self.BAD_GCS_PATHS:
@@ -265,9 +269,8 @@ class TestGCSPathParser(unittest.TestCase):
     self.assertEqual(
         gcsio.parse_gcs_path('gs://bucket/name', object_optional=True),
         ('bucket', 'name'))
-    self.assertEqual(
-        gcsio.parse_gcs_path('gs://bucket/', object_optional=True),
-        ('bucket', ''))
+    self.assertEqual(gcsio.parse_gcs_path('gs://bucket/', object_optional=True),
+                     ('bucket', ''))
 
   def test_bad_gcs_path_object_optional(self):
     for path in self.BAD_GCS_PATHS:
@@ -280,10 +283,19 @@ class TestGCSPathParser(unittest.TestCase):
                      sleep=mock.MagicMock())
 class TestGCSIO(unittest.TestCase):
 
-  def _insert_random_file(self, client, path, size, generation=1, crc32c=None,
+  def _insert_random_file(self,
+                          client,
+                          path,
+                          size,
+                          generation=1,
+                          crc32c=None,
                           last_updated=None):
     bucket, name = gcsio.parse_gcs_path(path)
-    f = FakeFile(bucket, name, os.urandom(size), generation, crc32c=crc32c,
+    f = FakeFile(bucket,
+                 name,
+                 os.urandom(size),
+                 generation,
+                 crc32c=crc32c,
                  last_updated=last_updated)
     client.objects.add_file(f)
     return f
@@ -342,7 +354,9 @@ class TestGCSIO(unittest.TestCase):
     file_size = 1234
     last_updated = 123456.78
 
-    self._insert_random_file(self.client, file_name, file_size,
+    self._insert_random_file(self.client,
+                             file_name,
+                             file_size,
                              last_updated=last_updated)
     self.assertTrue(self.gcs.exists(file_name))
     self.assertEqual(last_updated, self.gcs.last_updated(file_name))
@@ -442,10 +456,10 @@ class TestGCSIO(unittest.TestCase):
     file_size = 1024
     num_files = 10
 
-    result = self.gcs.copy_batch(
-        [(from_name_pattern % i, to_name_pattern % i)
-         for i in range(num_files)],
-        dest_kms_key_name='kms_key')
+    result = self.gcs.copy_batch([
+        (from_name_pattern % i, to_name_pattern % i) for i in range(num_files)
+    ],
+                                 dest_kms_key_name='kms_key')
     self.assertTrue(result)
     for i, (src, dest, exception) in enumerate(result):
       self.assertEqual(src, from_name_pattern % i)
@@ -464,8 +478,9 @@ class TestGCSIO(unittest.TestCase):
       self.assertTrue(self.gcs.exists(from_name_pattern % i))
 
     # Execute batch copy.
-    self.gcs.copy_batch([(from_name_pattern % i, to_name_pattern % i)
-                         for i in range(num_files)])
+    self.gcs.copy_batch([
+        (from_name_pattern % i, to_name_pattern % i) for i in range(num_files)
+    ])
 
     # Check files copied properly.
     for i in range(num_files):
@@ -538,8 +553,8 @@ class TestGCSIO(unittest.TestCase):
       start, end = min(a, b), max(a, b)
       f.seek(start)
       self.assertEqual(f.tell(), start)
-      self.assertEqual(
-          f.read(end - start + 1), random_file.contents[start:end + 1])
+      self.assertEqual(f.read(end - start + 1),
+                       random_file.contents[start:end + 1])
       self.assertEqual(f.tell(), end + 1)
 
   def test_file_iterator(self):
@@ -707,9 +722,8 @@ class TestGCSIO(unittest.TestCase):
     for file_pattern, expected_object_names in test_cases:
       expected_file_names = [('gs://%s/%s' % (bucket_name, object_name), size)
                              for (object_name, size) in expected_object_names]
-      self.assertEqual(
-          set(self.gcs.list_prefix(file_pattern).items()),
-          set(expected_file_names))
+      self.assertEqual(set(self.gcs.list_prefix(file_pattern).items()),
+                       set(expected_file_names))
 
   def test_mime_binary_encoding(self):
     # This test verifies that the MIME email_generator library works properly

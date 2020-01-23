@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 Apache Beam SDK for Python
 ==========================
@@ -71,25 +70,22 @@ has some examples.
 
 """
 
-
 from __future__ import absolute_import
 
 import os
 import sys
 import warnings
 
-
 if sys.version_info[0] == 2 and sys.version_info[1] == 7:
-  warnings.warn(
-      'You are using Apache Beam with Python 2. '
-      'New releases of Apache Beam will soon support Python 3 only.')
+  warnings.warn('You are using Apache Beam with Python 2. '
+                'New releases of Apache Beam will soon support Python 3 only.')
 elif sys.version_info[0] == 3:
   pass
 else:
   raise RuntimeError(
       'The Apache Beam SDK for Python is only supported on Python 2.7 or '
-      'Python 3. It is not supported on Python [' +
-      str(sys.version_info) + '].')
+      'Python 3. It is not supported on Python [' + str(sys.version_info) +
+      '].')
 
 # pylint: disable=wrong-import-position
 import apache_beam.internal.pickler

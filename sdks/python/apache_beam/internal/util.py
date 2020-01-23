@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Utility functions used throughout the package.
 
 For internal use only. No backwards compatibility guarantees.
@@ -74,10 +73,11 @@ class ArgumentPlaceholder(object):
     return hash(type(self))
 
 
-def remove_objects_from_args(args,  # type: Iterable[Any]
-                             kwargs,  # type: Dict[str, Any]
-                             pvalue_class  # type: Union[Type[T], Tuple[Type[T], ...]]
-                            ):
+def remove_objects_from_args(
+    args,  # type: Iterable[Any]
+    kwargs,  # type: Dict[str, Any]
+    pvalue_class  # type: Union[Type[T], Tuple[Type[T], ...]]
+):
   # type: (...) -> Tuple[List[Any], Dict[str, Any], List[T]]
   """For internal use only; no backwards-compatibility guarantees.
 
@@ -99,6 +99,7 @@ def remove_objects_from_args(args,  # type: Iterable[Any]
   def swapper(value):
     pvals.append(value)
     return ArgumentPlaceholder()
+
   new_args = [swapper(v) if isinstance(v, pvalue_class) else v for v in args]
   # Make sure the order in which we process the dictionary keys is predictable
   # by sorting the entries first. This will be important when putting back
@@ -126,7 +127,8 @@ def insert_values_in_args(args, kwargs, values):
   v_iter = iter(values)
   new_args = [
       next(v_iter) if isinstance(arg, ArgumentPlaceholder) else arg
-      for arg in args]
+      for arg in args
+  ]
   new_kwargs = dict(
       (k, next(v_iter)) if isinstance(v, ArgumentPlaceholder) else (k, v)
       for k, v in sorted(kwargs.items()))

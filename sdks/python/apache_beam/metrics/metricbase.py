@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 The classes in this file are interfaces for metrics. They are not intended
 to be subclassed or created directly by users. To work with and access metrics,
@@ -50,6 +49,7 @@ class MetricName(object):
   allows grouping related metrics together and also prevents collisions
   between multiple metrics of the same name.
   """
+
   def __init__(self, namespace, name):
     """Initializes ``MetricName``.
 
@@ -65,24 +65,22 @@ class MetricName(object):
     self.name = name
 
   def __eq__(self, other):
-    return (self.namespace == other.namespace and
-            self.name == other.name)
+    return (self.namespace == other.namespace and self.name == other.name)
 
   def __ne__(self, other):
     # TODO(BEAM-5949): Needed for Python 2 compatibility.
     return not self == other
 
   def __str__(self):
-    return 'MetricName(namespace={}, name={})'.format(
-        self.namespace, self.name)
+    return 'MetricName(namespace={}, name={})'.format(self.namespace, self.name)
 
   def __hash__(self):
     return hash((self.namespace, self.name))
 
   # TODO: this proto structure is deprecated
   def to_runner_api(self):
-    return beam_fn_api_pb2.Metrics.User.MetricName(
-        namespace=self.namespace, name=self.name)
+    return beam_fn_api_pb2.Metrics.User.MetricName(namespace=self.namespace,
+                                                   name=self.name)
 
   @staticmethod
   def from_runner_api(proto):
@@ -97,6 +95,7 @@ class Metric(object):
 class Counter(Metric):
   """Counter metric interface. Allows a count to be incremented/decremented
   during pipeline execution."""
+
   def inc(self, n=1):
     raise NotImplementedError
 

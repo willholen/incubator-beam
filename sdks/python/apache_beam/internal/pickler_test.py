@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the pickler module."""
 
 # pytype: skip-file
@@ -44,30 +43,27 @@ class PicklerTest(unittest.TestCase):
 
     # The point of the test is that the lambda being called after unpickling
     # relies on having the re module being loaded.
-    self.assertEqual(
-        ['abc', 'def'],
-        loads(dumps(module_test.get_lambda_with_globals()))('abc def'))
+    self.assertEqual(['abc', 'def'],
+                     loads(dumps(
+                         module_test.get_lambda_with_globals()))('abc def'))
 
   def test_lambda_with_main_globals(self):
     self.assertEqual(unittest, loads(dumps(lambda: unittest))())
 
   def test_lambda_with_closure(self):
     """Tests that the closure of a function is preserved."""
-    self.assertEqual(
-        'closure: abc',
-        loads(dumps(module_test.get_lambda_with_closure('abc')))())
+    self.assertEqual('closure: abc',
+                     loads(dumps(module_test.get_lambda_with_closure('abc')))())
 
   def test_class(self):
     """Tests that a class object is pickled correctly."""
-    self.assertEqual(
-        ['abc', 'def'],
-        loads(dumps(module_test.Xyz))().foo('abc def'))
+    self.assertEqual(['abc', 'def'],
+                     loads(dumps(module_test.Xyz))().foo('abc def'))
 
   def test_object(self):
     """Tests that a class instance is pickled correctly."""
-    self.assertEqual(
-        ['abc', 'def'],
-        loads(dumps(module_test.XYZ_OBJECT)).foo('abc def'))
+    self.assertEqual(['abc', 'def'],
+                     loads(dumps(module_test.XYZ_OBJECT)).foo('abc def'))
 
   def test_nested_class(self):
     """Tests that a nested class object is pickled correctly."""
@@ -80,9 +76,8 @@ class PicklerTest(unittest.TestCase):
 
   def test_dynamic_class(self):
     """Tests that a nested class object is pickled correctly."""
-    self.assertEqual(
-        'Z:abc',
-        loads(dumps(module_test.create_class('abc'))).get())
+    self.assertEqual('Z:abc',
+                     loads(dumps(module_test.create_class('abc'))).get())
 
   def test_generators(self):
     with self.assertRaises(TypeError):
@@ -95,7 +90,8 @@ class PicklerTest(unittest.TestCase):
   @unittest.skipIf(NO_MAPPINGPROXYTYPE, 'test if MappingProxyType introduced')
   def test_dump_and_load_mapping_proxy(self):
     self.assertEqual(
-        'def', loads(dumps(types.MappingProxyType({'abc': 'def'})))['abc'])
+        'def',
+        loads(dumps(types.MappingProxyType({'abc': 'def'})))['abc'])
     self.assertEqual(types.MappingProxyType,
                      type(loads(dumps(types.MappingProxyType({})))))
 

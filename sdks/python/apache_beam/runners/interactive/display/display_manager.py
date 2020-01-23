@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Manages displaying pipeline graph and execution status on the frontend.
 
 This module is experimental. No backwards-compatibility guarantees.
@@ -41,8 +40,10 @@ try:
   _display_progress = ip_display
 
   if not TYPE_CHECKING:
+
     def _formatter(string, pp, cycle):  # pylint: disable=unused-argument
       pp.text(string)
+
     if get_ipython():
       plain = get_ipython().display_formatter.formatters['text/plain']  # pylint: disable=undefined-variable
       plain.for_type(str, _formatter)
@@ -85,14 +86,13 @@ class DisplayManager(object):
         'Using %s cached PCollections\nExecuting %s of %s '
         'transforms.') % (
             len(self._analyzer.caches_used()),
-            (len(self._analyzer.tl_required_trans_ids())
-             - len(self._analyzer.read_cache_ids())
-             - len(self._analyzer.write_cache_ids())),
+            (len(self._analyzer.tl_required_trans_ids()) -
+             len(self._analyzer.read_cache_ids()) -
+             len(self._analyzer.write_cache_ids())),
             len(pipeline_proto.components.transforms[
                 pipeline_proto.root_transform_ids[0]].subtransforms))
-    self._text_to_print.update({
-        pcoll_id: "" for pcoll_id
-        in self._analyzer.tl_referenced_pcoll_ids()})
+    self._text_to_print.update(
+        {pcoll_id: "" for pcoll_id in self._analyzer.tl_referenced_pcoll_ids()})
 
     # _pcollection_stats maps pcoll_id to
     # { 'cache_label': cache_label, version': version, 'sample': pcoll_in_list }
@@ -141,9 +141,9 @@ class DisplayManager(object):
 
           if pcoll_id in self._analyzer.tl_referenced_pcoll_ids():
             self._text_to_print[pcoll_id] = (str(
-                '%s produced %s' % (
-                    self._producers[pcoll_id],
-                    interactive_pipeline_graph.format_sample(pcoll_list, 5))))
+                '%s produced %s' %
+                (self._producers[pcoll_id],
+                 interactive_pipeline_graph.format_sample(pcoll_list, 5))))
 
       if force or stats_updated:
         self._pipeline_graph.update_pcollection_stats(self._pcollection_stats)

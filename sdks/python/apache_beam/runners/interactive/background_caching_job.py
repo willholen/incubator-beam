@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Module to build and run background caching job.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -59,12 +58,9 @@ def attempt_to_run_background_caching_job(runner, user_pipeline, options=None):
     # pipeline_instrument module to this module and aggregate tests.
     from apache_beam.runners.interactive import pipeline_instrument as instr
     runner_pipeline = beam.pipeline.Pipeline.from_runner_api(
-        user_pipeline.to_runner_api(use_fake_coders=True),
-        runner,
-        options)
+        user_pipeline.to_runner_api(use_fake_coders=True), runner, options)
     background_caching_job_result = beam.pipeline.Pipeline.from_runner_api(
-        instr.pin(runner_pipeline).background_caching_pipeline_proto(),
-        runner,
+        instr.pin(runner_pipeline).background_caching_pipeline_proto(), runner,
         options).run()
     ie.current_env().set_pipeline_result(user_pipeline,
                                          background_caching_job_result,
@@ -76,19 +72,21 @@ def is_background_caching_job_needed(user_pipeline):
   background_caching_job_result = ie.current_env().pipeline_result(
       user_pipeline, is_main_job=False)
   # Checks if the pipeline contains any source that needs to be cached.
-  return (has_source_to_cache(user_pipeline) and
-          # Checks if it's the first time running a job from the pipeline.
-          (not background_caching_job_result or
-           # Or checks if there is no previous job.
-           background_caching_job_result.state not in (
-               # DONE means a previous job has completed successfully and the
-               # cached events are still valid.
-               runners.runner.PipelineState.DONE,
-               # RUNNING means a previous job has been started and is still
-               # running.
-               runners.runner.PipelineState.RUNNING) or
-           # Or checks if we can invalidate the previous job.
-           is_source_to_cache_changed(user_pipeline)))
+  return (
+      has_source_to_cache(user_pipeline) and
+      # Checks if it's the first time running a job from the pipeline.
+      (
+          not background_caching_job_result or
+          # Or checks if there is no previous job.
+          background_caching_job_result.state not in (
+              # DONE means a previous job has completed successfully and the
+              # cached events are still valid.
+              runners.runner.PipelineState.DONE,
+              # RUNNING means a previous job has been started and is still
+              # running.
+              runners.runner.PipelineState.RUNNING) or
+          # Or checks if we can invalidate the previous job.
+          is_source_to_cache_changed(user_pipeline)))
 
 
 def has_source_to_cache(user_pipeline):
@@ -152,8 +150,9 @@ def extract_source_to_cache_signature(user_pipeline):
       user_pipeline)
   unbounded_sources_as_ptransforms = set(
       map(lambda x: x.transform, unbounded_sources_as_applied_transforms))
-  context, _ = user_pipeline.to_runner_api(
-      return_context=True, use_fake_coders=True)
-  signature = set(map(lambda transform: str(transform.to_runner_api(context)),
-                      unbounded_sources_as_ptransforms))
+  context, _ = user_pipeline.to_runner_api(return_context=True,
+                                           use_fake_coders=True)
+  signature = set(
+      map(lambda transform: str(transform.to_runner_api(context)),
+          unbounded_sources_as_ptransforms))
   return signature

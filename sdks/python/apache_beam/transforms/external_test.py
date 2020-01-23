@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit tests for the transform.external classes."""
 
 # pytype: skip-file
@@ -86,29 +85,31 @@ class PayloadBase(object):
   }
 
   args = {
-      'integer_example': ConfigValue(
-          coder_urn=['beam:coder:varint:v1'],
-          payload=VarIntCoder()
-          .get_impl().encode_nested(values['integer_example'])),
-      'boolean': ConfigValue(
-          coder_urn=['beam:coder:bool:v1'],
-          payload=BooleanCoder()
-          .get_impl().encode_nested(values['boolean'])),
-      'string_example': ConfigValue(
-          coder_urn=['beam:coder:string_utf8:v1'],
-          payload=StrUtf8Coder()
-          .get_impl().encode_nested(values['string_example'])),
-      'list_of_strings': ConfigValue(
-          coder_urn=['beam:coder:iterable:v1',
-                     'beam:coder:string_utf8:v1'],
-          payload=IterableCoder(StrUtf8Coder())
-          .get_impl().encode_nested(values['list_of_strings'])),
-      'optional_kv': ConfigValue(
-          coder_urn=['beam:coder:kv:v1',
-                     'beam:coder:string_utf8:v1',
-                     'beam:coder:double:v1'],
-          payload=TupleCoder([StrUtf8Coder(), FloatCoder()])
-          .get_impl().encode_nested(values['optional_kv'])),
+      'integer_example':
+          ConfigValue(coder_urn=['beam:coder:varint:v1'],
+                      payload=VarIntCoder().get_impl().encode_nested(
+                          values['integer_example'])),
+      'boolean':
+          ConfigValue(coder_urn=['beam:coder:bool:v1'],
+                      payload=BooleanCoder().get_impl().encode_nested(
+                          values['boolean'])),
+      'string_example':
+          ConfigValue(coder_urn=['beam:coder:string_utf8:v1'],
+                      payload=StrUtf8Coder().get_impl().encode_nested(
+                          values['string_example'])),
+      'list_of_strings':
+          ConfigValue(
+              coder_urn=['beam:coder:iterable:v1', 'beam:coder:string_utf8:v1'],
+              payload=IterableCoder(StrUtf8Coder()).get_impl().encode_nested(
+                  values['list_of_strings'])),
+      'optional_kv':
+          ConfigValue(coder_urn=[
+              'beam:coder:kv:v1', 'beam:coder:string_utf8:v1',
+              'beam:coder:double:v1'
+          ],
+                      payload=TupleCoder([
+                          StrUtf8Coder(), FloatCoder()
+                      ]).get_impl().encode_nested(values['optional_kv'])),
   }
 
   def get_payload_from_typing_hints(self, values):
@@ -156,17 +157,14 @@ class PayloadBase(object):
 class ExternalTuplePayloadTest(PayloadBase, unittest.TestCase):
 
   def get_payload_from_typing_hints(self, values):
-    TestSchema = typing.NamedTuple(
-        'TestSchema',
-        [
-            ('integer_example', int),
-            ('boolean', bool),
-            ('string_example', unicode),
-            ('list_of_strings', typing.List[unicode]),
-            ('optional_kv', typing.Optional[typing.Tuple[unicode, float]]),
-            ('optional_integer', typing.Optional[int]),
-        ]
-    )
+    TestSchema = typing.NamedTuple('TestSchema', [
+        ('integer_example', int),
+        ('boolean', bool),
+        ('string_example', unicode),
+        ('list_of_strings', typing.List[unicode]),
+        ('optional_kv', typing.Optional[typing.Tuple[unicode, float]]),
+        ('optional_integer', typing.Optional[int]),
+    ])
 
     builder = NamedTupleBasedPayloadBuilder(TestSchema(**values))
     return builder.build()
@@ -181,6 +179,7 @@ class ExternalImplicitPayloadTest(unittest.TestCase):
   ImplicitSchemaPayloadBuilder works very differently than the other payload
   builders
   """
+
   def test_implicit_payload_builder(self):
     builder = ImplicitSchemaPayloadBuilder(PayloadBase.values)
     result = builder.build()
@@ -194,29 +193,32 @@ class ExternalImplicitPayloadTest(unittest.TestCase):
     if sys.version_info[0] < 3:
       # in python 2.x bytes coder will be inferred
       args = {
-          'integer_example': ConfigValue(
-              coder_urn=['beam:coder:varint:v1'],
-              payload=VarIntCoder()
-              .get_impl().encode_nested(values['integer_example'])),
-          'boolean': ConfigValue(
-              coder_urn=['beam:coder:bool:v1'],
-              payload=BooleanCoder()
-              .get_impl().encode_nested(values['boolean'])),
-          'string_example': ConfigValue(
-              coder_urn=['beam:coder:bytes:v1'],
-              payload=StrUtf8Coder()
-              .get_impl().encode_nested(values['string_example'])),
-          'list_of_strings': ConfigValue(
-              coder_urn=['beam:coder:iterable:v1',
-                         'beam:coder:bytes:v1'],
-              payload=IterableCoder(StrUtf8Coder())
-              .get_impl().encode_nested(values['list_of_strings'])),
-          'optional_kv': ConfigValue(
-              coder_urn=['beam:coder:kv:v1',
-                         'beam:coder:bytes:v1',
-                         'beam:coder:double:v1'],
-              payload=TupleCoder([StrUtf8Coder(), FloatCoder()])
-              .get_impl().encode_nested(values['optional_kv'])),
+          'integer_example':
+              ConfigValue(coder_urn=['beam:coder:varint:v1'],
+                          payload=VarIntCoder().get_impl().encode_nested(
+                              values['integer_example'])),
+          'boolean':
+              ConfigValue(coder_urn=['beam:coder:bool:v1'],
+                          payload=BooleanCoder().get_impl().encode_nested(
+                              values['boolean'])),
+          'string_example':
+              ConfigValue(coder_urn=['beam:coder:bytes:v1'],
+                          payload=StrUtf8Coder().get_impl().encode_nested(
+                              values['string_example'])),
+          'list_of_strings':
+              ConfigValue(
+                  coder_urn=['beam:coder:iterable:v1', 'beam:coder:bytes:v1'],
+                  payload=IterableCoder(
+                      StrUtf8Coder()).get_impl().encode_nested(
+                          values['list_of_strings'])),
+          'optional_kv':
+              ConfigValue(coder_urn=[
+                  'beam:coder:kv:v1', 'beam:coder:bytes:v1',
+                  'beam:coder:double:v1'
+              ],
+                          payload=TupleCoder([
+                              StrUtf8Coder(), FloatCoder()
+                          ]).get_impl().encode_nested(values['optional_kv'])),
       }
       expected = get_payload(args)
       self.assertEqual(result, expected)
@@ -264,38 +266,28 @@ class ExternalTransformTest(unittest.TestCase):
 
   def test_pipeline_generation(self):
     pipeline = beam.Pipeline()
-    res = (pipeline
-           | beam.Create(['a', 'b'])
-           | beam.ExternalTransform(
-               'simple',
-               None,
-               expansion_service.ExpansionServiceServicer()))
+    res = (pipeline | beam.Create(['a', 'b']) | beam.ExternalTransform(
+        'simple', None, expansion_service.ExpansionServiceServicer()))
     assert_that(res, equal_to(['Simple(a)', 'Simple(b)']))
 
-    proto, _ = pipeline.to_runner_api(
-        return_context=True)
-    pipeline_from_proto = Pipeline.from_runner_api(
-        proto, pipeline.runner, pipeline._options)
+    proto, _ = pipeline.to_runner_api(return_context=True)
+    pipeline_from_proto = Pipeline.from_runner_api(proto, pipeline.runner,
+                                                   pipeline._options)
 
     # Original pipeline has the un-expanded external transform
     self.assertEqual([], pipeline.transforms_stack[0].parts[1].parts)
 
     # new pipeline has the expanded external transform
-    self.assertNotEqual(
-        [], pipeline_from_proto.transforms_stack[0].parts[1].parts)
+    self.assertNotEqual([],
+                        pipeline_from_proto.transforms_stack[0].parts[1].parts)
     self.assertEqual(
         u'ExternalTransform(simple)/TestLabel',
         pipeline_from_proto.transforms_stack[0].parts[1].parts[0].full_label)
 
   def test_simple(self):
     with beam.Pipeline() as p:
-      res = (
-          p
-          | beam.Create(['a', 'b'])
-          | beam.ExternalTransform(
-              'simple',
-              None,
-              expansion_service.ExpansionServiceServicer()))
+      res = (p | beam.Create(['a', 'b']) | beam.ExternalTransform(
+          'simple', None, expansion_service.ExpansionServiceServicer()))
       assert_that(res, equal_to(['Simple(a)', 'Simple(b)']))
 
   def test_multi(self):
@@ -310,12 +302,9 @@ class ExternalTransformTest(unittest.TestCase):
 
   def test_payload(self):
     with beam.Pipeline() as p:
-      res = (
-          p
-          | beam.Create(['a', 'bb'], reshuffle=False)
-          | beam.ExternalTransform(
-              'payload', b's',
-              expansion_service.ExpansionServiceServicer()))
+      res = (p | beam.Create(['a', 'bb'], reshuffle=False) |
+             beam.ExternalTransform(
+                 'payload', b's', expansion_service.ExpansionServiceServicer()))
       assert_that(res, equal_to(['as', 'bbs']))
 
   def test_nested(self):
@@ -327,11 +316,13 @@ class ExternalTransformTest(unittest.TestCase):
     _ = p | FibTransform(6)
     proto = p.to_runner_api()
     xforms = [x.unique_name for x in proto.components.transforms.values()]
-    self.assertEqual(
-        len(set(xforms)), len(xforms), msg='Transform names are not unique.')
+    self.assertEqual(len(set(xforms)),
+                     len(xforms),
+                     msg='Transform names are not unique.')
     pcolls = [x.unique_name for x in proto.components.pcollections.values()]
-    self.assertEqual(
-        len(set(pcolls)), len(pcolls), msg='PCollection names are not unique.')
+    self.assertEqual(len(set(pcolls)),
+                     len(pcolls),
+                     msg='PCollection names are not unique.')
 
   def test_java_expansion_portable_runner(self):
     ExternalTransformTest.expansion_service_port = os.environ.get(
@@ -347,19 +338,17 @@ class ExternalTransformTest(unittest.TestCase):
     # This test does not actually running the pipeline in Dataflow. It just
     # tests the translation to a Dataflow job request.
 
-    with patch.object(
-        apiclient.DataflowApplicationClient, 'create_job') as mock_create_job:
+    with patch.object(apiclient.DataflowApplicationClient,
+                      'create_job') as mock_create_job:
       with self._RunWithExpansion():
-        pipeline_options = PipelineOptions(
-            ['--runner=DataflowRunner',
-             '--project=dummyproject',
-             '--experiments=beam_fn_api',
-             '--temp_location=gs://dummybucket/'])
+        pipeline_options = PipelineOptions([
+            '--runner=DataflowRunner', '--project=dummyproject',
+            '--experiments=beam_fn_api', '--temp_location=gs://dummybucket/'
+        ])
 
         # Run a simple count-filtered-letters pipeline.
-        self.run_pipeline(
-            pipeline_options, ExternalTransformTest.expansion_service_port,
-            False)
+        self.run_pipeline(pipeline_options,
+                          ExternalTransformTest.expansion_service_port, False)
 
         mock_args = mock_create_job.call_args_list
         assert mock_args
@@ -376,8 +365,7 @@ class ExternalTransformTest(unittest.TestCase):
           pipeline_options, ExternalTransformTest.expansion_service_port, True)
 
   @staticmethod
-  def run_pipeline(
-      pipeline_options, expansion_service, wait_until_finish=True):
+  def run_pipeline(pipeline_options, expansion_service, wait_until_finish=True):
     # The actual definitions of these transforms is in
     # org.apache.beam.runners.core.construction.TestExpansionService.
     TEST_COUNT_URN = "beam:transforms:xlang:count"
@@ -390,13 +378,10 @@ class ExternalTransformTest(unittest.TestCase):
       # Only the port was specified.
       expansion_service = 'localhost:%s' % str(expansion_service)
 
-    res = (
-        p
-        | beam.Create(list('aaabccxyyzzz'))
-        | beam.Map(unicode)
-        | beam.ExternalTransform(TEST_FILTER_URN, b'middle', expansion_service)
-        | beam.ExternalTransform(TEST_COUNT_URN, None, expansion_service)
-        | beam.Map(lambda kv: '%s: %s' % kv))
+    res = (p | beam.Create(list('aaabccxyyzzz')) | beam.Map(unicode) |
+           beam.ExternalTransform(TEST_FILTER_URN, b'middle', expansion_service)
+           | beam.ExternalTransform(TEST_COUNT_URN, None, expansion_service) |
+           beam.Map(lambda kv: '%s: %s' % kv))
 
     assert_that(res, equal_to(['a: 3', 'b: 1', 'c: 2']))
 

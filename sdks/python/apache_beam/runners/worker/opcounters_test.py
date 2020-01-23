@@ -59,7 +59,8 @@ class TransformIoCounterTest(unittest.TestCase):
     sampler.start()
 
     with sampler.scoped_state('step1', 'stateA'):
-      counter = opcounters.SideInputReadCounter(counter_factory, sampler,
+      counter = opcounters.SideInputReadCounter(counter_factory,
+                                                sampler,
                                                 declaring_step='step1',
                                                 input_index=1)
     with sampler.scoped_state('step2', 'stateB'):
@@ -114,8 +115,7 @@ class OperationCountersTest(unittest.TestCase):
 
   def test_update_str(self):
     coder = coders.PickleCoder()
-    opcounts = OperationCounters(CounterFactory(), 'some-name',
-                                 coder, 0)
+    opcounts = OperationCounters(CounterFactory(), 'some-name', coder, 0)
     self.verify_counters(opcounts, 0, float('nan'))
     value = GlobalWindows.windowed_value('abcde')
     opcounts.update_from(value)
@@ -125,8 +125,7 @@ class OperationCountersTest(unittest.TestCase):
 
   def test_update_old_object(self):
     coder = coders.PickleCoder()
-    opcounts = OperationCounters(CounterFactory(), 'some-name',
-                                 coder, 0)
+    opcounts = OperationCounters(CounterFactory(), 'some-name', coder, 0)
     self.verify_counters(opcounts, 0, float('nan'))
     obj = OldClassThatDoesNotImplementLen()
     value = GlobalWindows.windowed_value(obj)
@@ -137,8 +136,7 @@ class OperationCountersTest(unittest.TestCase):
 
   def test_update_new_object(self):
     coder = coders.PickleCoder()
-    opcounts = OperationCounters(CounterFactory(), 'some-name',
-                                 coder, 0)
+    opcounts = OperationCounters(CounterFactory(), 'some-name', coder, 0)
     self.verify_counters(opcounts, 0, float('nan'))
 
     obj = ObjectThatDoesNotImplementLen()
@@ -151,8 +149,7 @@ class OperationCountersTest(unittest.TestCase):
   def test_update_multiple(self):
     coder = coders.PickleCoder()
     total_size = 0
-    opcounts = OperationCounters(CounterFactory(), 'some-name',
-                                 coder, 0)
+    opcounts = OperationCounters(CounterFactory(), 'some-name', coder, 0)
     self.verify_counters(opcounts, 0, float('nan'))
     value = GlobalWindows.windowed_value('abcde')
     opcounts.update_from(value)
@@ -191,16 +188,16 @@ class OperationCountersTest(unittest.TestCase):
     for i in range(10):
       self.assertEqual(total_runs, buckets[i])
     for i in range(10, len(buckets)):
-      self.assertTrue(buckets[i] > 7 * total_runs / i,
-                      'i=%d, buckets[i]=%d, expected=%d, ratio=%f' % (
-                          i, buckets[i],
-                          10 * total_runs / i,
-                          buckets[i] / (10.0 * total_runs / i)))
-      self.assertTrue(buckets[i] < 14 * total_runs / i,
-                      'i=%d, buckets[i]=%d, expected=%d, ratio=%f' % (
-                          i, buckets[i],
-                          10 * total_runs / i,
-                          buckets[i] / (10.0 * total_runs / i)))
+      self.assertTrue(
+          buckets[i] > 7 * total_runs / i,
+          'i=%d, buckets[i]=%d, expected=%d, ratio=%f' %
+          (i, buckets[i], 10 * total_runs / i, buckets[i] /
+           (10.0 * total_runs / i)))
+      self.assertTrue(
+          buckets[i] < 14 * total_runs / i,
+          'i=%d, buckets[i]=%d, expected=%d, ratio=%f' %
+          (i, buckets[i], 10 * total_runs / i, buckets[i] /
+           (10.0 * total_runs / i)))
 
 
 if __name__ == '__main__':

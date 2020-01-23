@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Deprecated and experimental annotations.
 
 Experimental: Signifies that a public API (public class, method or field) is
@@ -120,7 +119,9 @@ def annotate(label, since, current, extra_message, custom_message=None):
   Returns:
     The decorator for the API.
   """
+
   def _annotate(fnc):
+
     @wraps(fnc)
     def inner(*args, **kwargs):
       if label == 'deprecated':
@@ -146,14 +147,21 @@ def annotate(label, since, current, extra_message, custom_message=None):
         .replace('%extra%', emptyArg(extra_message))
       warnings.warn(message, warning_type, stacklevel=2)
       return fnc(*args, **kwargs)
+
     return inner
+
   return _annotate
 
 
 # Use partial application to customize each annotation.
 # 'current' will be optional in both deprecated and experimental
 # while 'since' will be mandatory for deprecated.
-deprecated = partial(annotate, label='deprecated',
-                     current=None, extra_message=None)
-experimental = partial(annotate, label='experimental',
-                       current=None, since=None, extra_message=None)
+deprecated = partial(annotate,
+                     label='deprecated',
+                     current=None,
+                     extra_message=None)
+experimental = partial(annotate,
+                       label='experimental',
+                       current=None,
+                       since=None,
+                       extra_message=None)

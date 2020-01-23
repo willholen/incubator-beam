@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit test for the TestPipeline class"""
 
 # pytype: skip-file
@@ -35,18 +34,22 @@ from apache_beam.testing.test_pipeline import TestPipeline
 
 # A simple matcher that is ued for testing extra options appending.
 class SimpleMatcher(BaseMatcher):
+
   def _matches(self, item):
     return True
 
 
 class TestPipelineTest(unittest.TestCase):
 
-  TEST_CASE = {'options':
-                   ['--test-pipeline-options', '--job=mockJob --male --age=1'],
-               'expected_list': ['--job=mockJob', '--male', '--age=1'],
-               'expected_dict': {'job': 'mockJob',
-                                 'male': True,
-                                 'age': 1}}
+  TEST_CASE = {
+      'options': ['--test-pipeline-options', '--job=mockJob --male --age=1'],
+      'expected_list': ['--job=mockJob', '--male', '--age=1'],
+      'expected_dict': {
+          'job': 'mockJob',
+          'male': True,
+          'age': 1
+      }
+  }
 
   # Used for testing pipeline option creation.
   class TestParsingOptions(PipelineOptions):
@@ -59,14 +62,12 @@ class TestPipelineTest(unittest.TestCase):
 
   def test_option_args_parsing(self):
     test_pipeline = TestPipeline(argv=self.TEST_CASE['options'])
-    self.assertListEqual(
-        sorted(test_pipeline.get_full_options_as_args()),
-        sorted(self.TEST_CASE['expected_list']))
+    self.assertListEqual(sorted(test_pipeline.get_full_options_as_args()),
+                         sorted(self.TEST_CASE['expected_list']))
 
   def test_empty_option_args_parsing(self):
     test_pipeline = TestPipeline()
-    self.assertListEqual([],
-                         test_pipeline.get_full_options_as_args())
+    self.assertListEqual([], test_pipeline.get_full_options_as_args())
 
   def test_create_test_pipeline_options(self):
     test_pipeline = TestPipeline(argv=self.TEST_CASE['options'])
@@ -74,16 +75,28 @@ class TestPipelineTest(unittest.TestCase):
     self.assertDictContainsSubset(self.TEST_CASE['expected_dict'],
                                   test_options.get_all_options())
 
-  EXTRA_OPT_CASES = [
-      {'options': {'name': 'Mark'},
-       'expected': ['--name=Mark']},
-      {'options': {'student': True},
-       'expected': ['--student']},
-      {'options': {'student': False},
-       'expected': []},
-      {'options': {'name': 'Mark', 'student': True},
-       'expected': ['--name=Mark', '--student']}
-  ]
+  EXTRA_OPT_CASES = [{
+      'options': {
+          'name': 'Mark'
+      },
+      'expected': ['--name=Mark']
+  }, {
+      'options': {
+          'student': True
+      },
+      'expected': ['--student']
+  }, {
+      'options': {
+          'student': False
+      },
+      'expected': []
+  }, {
+      'options': {
+          'name': 'Mark',
+          'student': True
+      },
+      'expected': ['--name=Mark', '--student']
+  }]
 
   def test_append_extra_options(self):
     test_pipeline = TestPipeline()

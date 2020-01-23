@@ -35,17 +35,13 @@ def combineglobally_function(test=None):
     return set.intersection(*(sets or [set()]))
 
   with beam.Pipeline() as pipeline:
-    common_items = (
-        pipeline
-        | 'Create produce' >> beam.Create([
-            {'🍓', '🥕', '🍌', '🍅', '🌶️'},
-            {'🍇', '🥕', '🥝', '🍅', '🥔'},
-            {'🍉', '🥕', '🍆', '🍅', '🍍'},
-            {'🥑', '🥕', '🌽', '🍅', '🥥'},
-        ])
-        | 'Get common items' >> beam.CombineGlobally(get_common_items)
-        | beam.Map(print)
-    )
+    common_items = (pipeline | 'Create produce' >> beam.Create([
+        {'🍓', '🥕', '🍌', '🍅', '🌶️'},
+        {'🍇', '🥕', '🥝', '🍅', '🥔'},
+        {'🍉', '🥕', '🍆', '🍅', '🍍'},
+        {'🥑', '🥕', '🌽', '🍅', '🥥'},
+    ]) | 'Get common items' >> beam.CombineGlobally(get_common_items) |
+                    beam.Map(print))
     # [END combineglobally_function]
     if test:
       test(common_items)
@@ -57,17 +53,14 @@ def combineglobally_lambda(test=None):
 
   with beam.Pipeline() as pipeline:
     common_items = (
-        pipeline
-        | 'Create produce' >> beam.Create([
+        pipeline | 'Create produce' >> beam.Create([
             {'🍓', '🥕', '🍌', '🍅', '🌶️'},
             {'🍇', '🥕', '🥝', '🍅', '🥔'},
             {'🍉', '🥕', '🍆', '🍅', '🍍'},
             {'🥑', '🥕', '🌽', '🍅', '🥥'},
-        ])
-        | 'Get common items' >> beam.CombineGlobally(
-            lambda sets: set.intersection(*(sets or [set()])))
-        | beam.Map(print)
-    )
+        ]) | 'Get common items' >>
+        beam.CombineGlobally(lambda sets: set.intersection(*(sets or [set()])))
+        | beam.Map(print))
     # [END combineglobally_lambda]
     if test:
       test(common_items)
@@ -166,19 +159,14 @@ def combineglobally_side_inputs_dict(test=None):
         ('include', {'🍇', '🌽'}),
     ])
 
-    custom_common_items = (
-        pipeline
-        | 'Create produce' >> beam.Create([
-            {'🍓', '🥕', '🍌', '🍅', '🌶️'},
-            {'🍇', '🥕', '🥝', '🍅', '🥔'},
-            {'🍉', '🥕', '🍆', '🍅', '🍍'},
-            {'🥑', '🥕', '🌽', '🍅', '🥥'},
-        ])
-        | 'Get common items' >> beam.CombineGlobally(
-            get_custom_common_items,
-            options=beam.pvalue.AsDict(options))
-        | beam.Map(print)
-    )
+    custom_common_items = (pipeline | 'Create produce' >> beam.Create([
+        {'🍓', '🥕', '🍌', '🍅', '🌶️'},
+        {'🍇', '🥕', '🥝', '🍅', '🥔'},
+        {'🍉', '🥕', '🍆', '🍅', '🍍'},
+        {'🥑', '🥕', '🌽', '🍅', '🥥'},
+    ]) | 'Get common items' >> beam.CombineGlobally(
+        get_custom_common_items, options=beam.pvalue.AsDict(options)) |
+                           beam.Map(print))
     # [END combineglobally_side_inputs_dict]
     if test:
       test(custom_common_items)
@@ -189,6 +177,7 @@ def combineglobally_combinefn(test=None):
   import apache_beam as beam
 
   class PercentagesFn(beam.CombineFn):
+
     def create_accumulator(self):
       return {}
 
@@ -197,7 +186,7 @@ def combineglobally_combinefn(test=None):
       # input == '🥕'
       if input not in accumulator:
         accumulator[input] = 0  # {'🥕': 0}
-      accumulator[input] += 1   # {'🥕': 1}
+      accumulator[input] += 1  # {'🥕': 1}
       return accumulator
 
     def merge_accumulators(self, accumulators):
@@ -223,13 +212,10 @@ def combineglobally_combinefn(test=None):
       return percentages
 
   with beam.Pipeline() as pipeline:
-    percentages = (
-        pipeline
-        | 'Create produce' >> beam.Create([
-            '🥕', '🍅', '🍅', '🥕', '🍆', '🍅', '🍅', '🍅', '🥕', '🍅'])
-        | 'Get percentages' >> beam.CombineGlobally(PercentagesFn())
-        | beam.Map(print)
-    )
+    percentages = (pipeline | 'Create produce' >> beam.Create(
+        ['🥕', '🍅', '🍅', '🥕', '🍆', '🍅', '🍅', '🍅', '🥕', '🍅']) |
+                   'Get percentages' >> beam.CombineGlobally(PercentagesFn()) |
+                   beam.Map(print))
     # [END combineglobally_combinefn]
     if test:
       test(percentages)

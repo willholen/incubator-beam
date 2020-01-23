@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Setup.py module for the workflow's worker utilities.
 
 All the workflow related code is gathered in a package that will be built as a
@@ -75,8 +74,7 @@ class build(_build):  # pylint: disable=invalid-name
 # TODO(BEAM-3237): Output from the custom commands are missing from the logs.
 # The output of custom commands (including failures) will be logged in the
 # worker-startup log.
-CUSTOM_COMMANDS = [
-    ['echo', 'Custom command worked!']]
+CUSTOM_COMMANDS = [['echo', 'Custom command worked!']]
 
 
 class CustomCommands(setuptools.Command):
@@ -90,16 +88,17 @@ class CustomCommands(setuptools.Command):
 
   def RunCustomCommand(self, command_list):
     print('Running command: %s' % command_list)
-    p = subprocess.Popen(
-        command_list,
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p = subprocess.Popen(command_list,
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
     # Can use communicate(input='y\n'.encode()) if the command run requires
     # some confirmation.
     stdout_data, _ = p.communicate()
     print('Command output: %s' % stdout_data)
     if p.returncode != 0:
-      raise RuntimeError(
-          'Command %s failed: exit code: %s' % (command_list, p.returncode))
+      raise RuntimeError('Command %s failed: exit code: %s' %
+                         (command_list, p.returncode))
 
   def run(self):
     for command in CUSTOM_COMMANDS:
@@ -112,8 +111,7 @@ class CustomCommands(setuptools.Command):
 # restriction is specified.
 REQUIRED_PACKAGES = [
     'numpy',
-    ]
-
+]
 
 setuptools.setup(
     name='juliaset',
@@ -125,5 +123,4 @@ setuptools.setup(
         # Command class instantiated and run during pip install scenarios.
         'build': build,
         'CustomCommands': CustomCommands,
-        }
-    )
+    })

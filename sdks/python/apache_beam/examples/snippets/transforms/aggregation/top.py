@@ -25,12 +25,10 @@ def top_largest(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    largest_elements = (
-        pipeline
-        | 'Create numbers' >> beam.Create([3, 4, 1, 2])
-        | 'Largest N values' >> beam.combiners.Top.Largest(2)
-        | beam.Map(print)
-    )
+    largest_elements = (pipeline |
+                        'Create numbers' >> beam.Create([3, 4, 1, 2]) |
+                        'Largest N values' >> beam.combiners.Top.Largest(2) |
+                        beam.Map(print))
     # [END top_largest]
     if test:
       test(largest_elements)
@@ -41,19 +39,15 @@ def top_largest_per_key(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    largest_elements_per_key = (
-        pipeline
-        | 'Create produce' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Largest N values per key' >> beam.combiners.Top.LargestPerKey(2)
-        | beam.Map(print)
-    )
+    largest_elements_per_key = (pipeline | 'Create produce' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Largest N values per key' >> beam.combiners.Top.LargestPerKey(2) |
+                                beam.Map(print))
     # [END top_largest_per_key]
     if test:
       test(largest_elements_per_key)
@@ -64,12 +58,10 @@ def top_smallest(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    smallest_elements = (
-        pipeline
-        | 'Create numbers' >> beam.Create([3, 4, 1, 2])
-        | 'Smallest N values' >> beam.combiners.Top.Smallest(2)
-        | beam.Map(print)
-    )
+    smallest_elements = (pipeline |
+                         'Create numbers' >> beam.Create([3, 4, 1, 2]) |
+                         'Smallest N values' >> beam.combiners.Top.Smallest(2) |
+                         beam.Map(print))
     # [END top_smallest]
     if test:
       test(smallest_elements)
@@ -80,19 +72,15 @@ def top_smallest_per_key(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    smallest_elements_per_key = (
-        pipeline
-        | 'Create produce' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Smallest N values per key' >> beam.combiners.Top.SmallestPerKey(2)
-        | beam.Map(print)
-    )
+    smallest_elements_per_key = (pipeline | 'Create produce' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Smallest N values per key' >> beam.combiners.Top.SmallestPerKey(2) |
+                                 beam.Map(print))
     # [END top_smallest_per_key]
     if test:
       test(smallest_elements_per_key)
@@ -104,21 +92,17 @@ def top_of(test=None):
 
   with beam.Pipeline() as pipeline:
     shortest_elements = (
-        pipeline
-        | 'Create produce names' >> beam.Create([
+        pipeline | 'Create produce names' >> beam.Create([
             '🍓 Strawberry',
             '🥕 Carrot',
             '🍏 Green apple',
             '🍆 Eggplant',
             '🌽 Corn',
-        ])
-        | 'Shortest names' >> beam.combiners.Top.Of(
-            2,             # number of elements
-            key=len,       # optional, defaults to the element itself
+        ]) | 'Shortest names' >> beam.combiners.Top.Of(
+            2,  # number of elements
+            key=len,  # optional, defaults to the element itself
             reverse=True,  # optional, defaults to False (largest/descending)
-        )
-        | beam.Map(print)
-    )
+        ) | beam.Map(print))
     # [END top_of]
     if test:
       test(shortest_elements)
@@ -130,8 +114,7 @@ def top_per_key(test=None):
 
   with beam.Pipeline() as pipeline:
     shortest_elements_per_key = (
-        pipeline
-        | 'Create produce names' >> beam.Create([
+        pipeline | 'Create produce names' >> beam.Create([
             ('spring', '🥕 Carrot'),
             ('spring', '🍓 Strawberry'),
             ('summer', '🥕 Carrot'),
@@ -140,14 +123,11 @@ def top_per_key(test=None):
             ('fall', '🥕 Carrot'),
             ('fall', '🍏 Green apple'),
             ('winter', '🍆 Eggplant'),
-        ])
-        | 'Shortest names per key' >> beam.combiners.Top.PerKey(
-            2,             # number of elements
-            key=len,       # optional, defaults to the value itself
+        ]) | 'Shortest names per key' >> beam.combiners.Top.PerKey(
+            2,  # number of elements
+            key=len,  # optional, defaults to the value itself
             reverse=True,  # optional, defaults to False (largest/descending)
-        )
-        | beam.Map(print)
-    )
+        ) | beam.Map(print))
     # [END top_per_key]
     if test:
       test(shortest_elements_per_key)

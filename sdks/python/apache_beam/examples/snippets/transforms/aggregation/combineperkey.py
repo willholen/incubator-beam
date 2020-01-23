@@ -28,19 +28,14 @@ def combineperkey_simple(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Sum' >> beam.CombinePerKey(sum)
-        | beam.Map(print)
-    )
+    total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Sum' >> beam.CombinePerKey(sum) | beam.Map(print))
     # [END combineperkey_simple]
     if test:
       test(total)
@@ -55,19 +50,14 @@ def combineperkey_function(test=None):
     return min(sum(values), max_value)
 
   with beam.Pipeline() as pipeline:
-    saturated_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Saturated sum' >> beam.CombinePerKey(saturated_sum)
-        | beam.Map(print)
-    )
+    saturated_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Saturated sum' >> beam.CombinePerKey(saturated_sum) | beam.Map(print))
     # [END combineperkey_function]
     if test:
       test(saturated_total)
@@ -78,20 +68,16 @@ def combineperkey_lambda(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    saturated_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Saturated sum' >> beam.CombinePerKey(
-            lambda values: min(sum(values), 8))
-        | beam.Map(print)
-    )
+    saturated_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Saturated sum' >>
+                       beam.CombinePerKey(lambda values: min(sum(values), 8)) |
+                       beam.Map(print))
     # [END combineperkey_lambda]
     if test:
       test(saturated_total)
@@ -102,21 +88,16 @@ def combineperkey_multiple_arguments(test=None):
   import apache_beam as beam
 
   with beam.Pipeline() as pipeline:
-    saturated_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Saturated sum' >> beam.CombinePerKey(
-            lambda values, max_value: min(sum(values), max_value),
-            max_value=8)
-        | beam.Map(print)
-    )
+    saturated_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Saturated sum' >> beam.CombinePerKey(
+        lambda values, max_value: min(sum(values), max_value), max_value=8) |
+                       beam.Map(print))
     # [END combineperkey_multiple_arguments]
     if test:
       test(saturated_total)
@@ -129,21 +110,16 @@ def combineperkey_side_inputs_singleton(test=None):
   with beam.Pipeline() as pipeline:
     max_value = pipeline | 'Create max_value' >> beam.Create([8])
 
-    saturated_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Saturated sum' >> beam.CombinePerKey(
-            lambda values, max_value: min(sum(values), max_value),
-            max_value=beam.pvalue.AsSingleton(max_value))
-        | beam.Map(print)
-    )
+    saturated_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Saturated sum' >> beam.CombinePerKey(
+        lambda values, max_value: min(sum(values), max_value),
+        max_value=beam.pvalue.AsSingleton(max_value)) | beam.Map(print))
     # [END combineperkey_side_inputs_singleton]
     if test:
       test(saturated_total)
@@ -166,21 +142,16 @@ def combineperkey_side_inputs_iter(test=None):
   with beam.Pipeline() as pipeline:
     data_range = pipeline | 'Create data_range' >> beam.Create([2, 4, 8])
 
-    bounded_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Bounded sum' >> beam.CombinePerKey(
-            bounded_sum,
-            data_range=beam.pvalue.AsIter(data_range))
-        | beam.Map(print)
-    )
+    bounded_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Bounded sum' >> beam.CombinePerKey(
+        bounded_sum, data_range=beam.pvalue.AsIter(data_range)) |
+                     beam.Map(print))
     # [END combineperkey_side_inputs_iter]
     if test:
       test(bounded_total)
@@ -206,30 +177,27 @@ def combineperkey_side_inputs_dict(test=None):
         ('max', 8),
     ])
 
-    bounded_total = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Bounded sum' >> beam.CombinePerKey(
-            bounded_sum,
-            data_range=beam.pvalue.AsDict(data_range))
-        | beam.Map(print)
-    )
+    bounded_total = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Bounded sum' >> beam.CombinePerKey(
+        bounded_sum, data_range=beam.pvalue.AsDict(data_range)) |
+                     beam.Map(print))
     # [END combineperkey_side_inputs_dict]
     if test:
       test(bounded_total)
+
 
 def combineperkey_combinefn(test=None):
   # [START combineperkey_combinefn]
   import apache_beam as beam
 
   class AverageFn(beam.CombineFn):
+
     def create_accumulator(self):
       sum = 0.0
       count = 0
@@ -254,19 +222,14 @@ def combineperkey_combinefn(test=None):
       return sum / count
 
   with beam.Pipeline() as pipeline:
-    average = (
-        pipeline
-        | 'Create plant counts' >> beam.Create([
-            ('🥕', 3),
-            ('🥕', 2),
-            ('🍆', 1),
-            ('🍅', 4),
-            ('🍅', 5),
-            ('🍅', 3),
-        ])
-        | 'Average' >> beam.CombinePerKey(AverageFn())
-        | beam.Map(print)
-    )
+    average = (pipeline | 'Create plant counts' >> beam.Create([
+        ('🥕', 3),
+        ('🥕', 2),
+        ('🍆', 1),
+        ('🍅', 4),
+        ('🍅', 5),
+        ('🍅', 3),
+    ]) | 'Average' >> beam.CombinePerKey(AverageFn()) | beam.Map(print))
     # [END combineperkey_combinefn]
     if test:
       test(average)

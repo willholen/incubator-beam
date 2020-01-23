@@ -43,9 +43,10 @@ def check_plants(actual):
 
 
 @mock.patch('apache_beam.Pipeline', TestPipeline)
-@mock.patch(
-    'apache_beam.examples.snippets.transforms.elementwise.kvswap.print', str)
+@mock.patch('apache_beam.examples.snippets.transforms.elementwise.kvswap.print',
+            str)
 class KvSwapTest(unittest.TestCase):
+
   def test_kvswap(self):
     kvswap.kvswap(check_plants)
 

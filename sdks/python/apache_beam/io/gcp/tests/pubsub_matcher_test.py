@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Unit test for PubSub verifier."""
 
 # pytype: skip-file
@@ -55,11 +54,16 @@ class PubSubMatcherTest(unittest.TestCase):
   def setUp(self):
     self.mock_presult = mock.MagicMock()
 
-  def init_matcher(self, expected_msg=None,
-                   with_attributes=False, strip_attributes=None):
+  def init_matcher(self,
+                   expected_msg=None,
+                   with_attributes=False,
+                   strip_attributes=None):
     self.pubsub_matcher = PubSubMessageMatcher(
-        'mock_project', 'mock_sub_name', expected_msg,
-        with_attributes=with_attributes, strip_attributes=strip_attributes)
+        'mock_project',
+        'mock_sub_name',
+        expected_msg,
+        with_attributes=with_attributes,
+        strip_attributes=strip_attributes)
 
   def init_counter_matcher(self, expected_msg_len=1):
     self.pubsub_matcher = PubSubMessageMatcher(
@@ -105,9 +109,15 @@ class PubSubMatcherTest(unittest.TestCase):
                       with_attributes=True,
                       strip_attributes=['id', 'timestamp'])
     mock_sub = mock_get_sub.return_value
-    mock_sub.pull.side_effect = [create_pull_response([
-        PullResponseMessage(b'a', {'id': 'foo', 'timestamp': 'bar', 'k': 'v'})
-    ])]
+    mock_sub.pull.side_effect = [
+        create_pull_response([
+            PullResponseMessage(b'a', {
+                'id': 'foo',
+                'timestamp': 'bar',
+                'k': 'v'
+            })
+        ])
+    ]
     hc_assert_that(self.mock_presult, self.pubsub_matcher)
     self.assertEqual(mock_sub.pull.call_count, 1)
     self.assertEqual(mock_sub.acknowledge.call_count, 1)
@@ -118,9 +128,13 @@ class PubSubMatcherTest(unittest.TestCase):
                       strip_attributes=['id', 'timestamp'])
     mock_sub = mock_get_sub.return_value
     # Message is missing attribute 'timestamp'.
-    mock_sub.pull.side_effect = [create_pull_response([
-        PullResponseMessage(b'a', {'id': 'foo', 'k': 'v'})
-    ])]
+    mock_sub.pull.side_effect = [
+        create_pull_response(
+            [PullResponseMessage(b'a', {
+                'id': 'foo',
+                'k': 'v'
+            })])
+    ]
     with self.assertRaisesRegex(AssertionError, r'Stripped attributes'):
       hc_assert_that(self.mock_presult, self.pubsub_matcher)
     self.assertEqual(mock_sub.pull.call_count, 1)
@@ -130,16 +144,16 @@ class PubSubMatcherTest(unittest.TestCase):
     self.init_matcher(expected_msg=[b'a'])
     mock_sub = mock_get_sub.return_value
     mock_sub.pull.side_effect = [
-        create_pull_response([PullResponseMessage(b'c', {}),
-                              PullResponseMessage(b'd', {})]),
+        create_pull_response(
+            [PullResponseMessage(b'c', {}),
+             PullResponseMessage(b'd', {})]),
     ]
     with self.assertRaises(AssertionError) as error:
       hc_assert_that(self.mock_presult, self.pubsub_matcher)
     self.assertEqual(mock_sub.pull.call_count, 1)
     self.assertCountEqual([b'c', b'd'], self.pubsub_matcher.messages)
-    self.assertIn(
-        '\nExpected: Expected 1 messages.\n     but: Got 2 messages.',
-        str(error.exception.args[0]))
+    self.assertIn('\nExpected: Expected 1 messages.\n     but: Got 2 messages.',
+                  str(error.exception.args[0]))
     self.assertEqual(mock_sub.pull.call_count, 1)
     self.assertEqual(mock_sub.acknowledge.call_count, 1)
 
@@ -157,15 +171,15 @@ class PubSubMatcherTest(unittest.TestCase):
     self.init_counter_matcher(expected_msg_len=1)
     mock_sub = mock_get_sub.return_value
     mock_sub.pull.side_effect = [
-        create_pull_response([PullResponseMessage(b'c', {}),
-                              PullResponseMessage(b'd', {})]),
+        create_pull_response(
+            [PullResponseMessage(b'c', {}),
+             PullResponseMessage(b'd', {})]),
     ]
     with self.assertRaises(AssertionError) as error:
       hc_assert_that(self.mock_presult, self.pubsub_matcher)
     self.assertEqual(mock_sub.pull.call_count, 1)
-    self.assertIn(
-        '\nExpected: Expected 1 messages.\n     but: Got 2 messages.',
-        str(error.exception.args[0]))
+    self.assertIn('\nExpected: Expected 1 messages.\n     but: Got 2 messages.',
+                  str(error.exception.args[0]))
 
   def test_message_count_matcher_above_fail(self, mock_get_sub, unused_mock):
     self.init_counter_matcher(expected_msg_len=1)
@@ -179,11 +193,10 @@ class PubSubMatcherTest(unittest.TestCase):
   def test_message_count_matcher_success(self, mock_get_sub, unused_mock):
     self.init_counter_matcher(expected_msg_len=15)
     mock_sub = mock_get_sub.return_value
-    mock_sub.pull.side_effect = [create_pull_response(
-        [PullResponseMessage(
-            b'a', {'foo': 'bar'})
-         for _ in range(15)]
-        )]
+    mock_sub.pull.side_effect = [
+        create_pull_response(
+            [PullResponseMessage(b'a', {'foo': 'bar'}) for _ in range(15)])
+    ]
     hc_assert_that(self.mock_presult, self.pubsub_matcher)
     self.assertEqual(mock_sub.pull.call_count, 1)
     self.assertEqual(mock_sub.acknowledge.call_count, 1)

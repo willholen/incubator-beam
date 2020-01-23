@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Utilities for handling side inputs."""
 
 # pytype: skip-file
@@ -36,7 +35,6 @@ from apache_beam.transforms import window
 
 # This module is experimental. No backwards-compatibility guarantees.
 
-
 # Maximum number of reader threads for reading side input sources, per side
 # input.
 MAX_SOURCE_READER_THREADS = 15
@@ -53,7 +51,6 @@ READER_THREAD_IS_DONE_SENTINEL = object()
 
 # Used to efficiently window the values of non-windowed side inputs.
 _globally_windowed = window.GlobalWindows.windowed_value(None).with_value
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +89,7 @@ class PrefetchingSourceSetIterable(object):
       reader: A reader that should inherit from ObservableMixin to have
         bytes tracked.
     """
+
     def update_bytes_read(record_size, is_record_size=False, **kwargs):
       # Let the reader report block size.
       if is_record_size:
@@ -141,8 +139,9 @@ class PrefetchingSourceSetIterable(object):
         except queue.Empty:
           return
     except Exception as e:  # pylint: disable=broad-except
-      _LOGGER.error('Encountered exception in PrefetchingSourceSetIterable '
-                    'reader thread: %s', traceback.format_exc())
+      _LOGGER.error(
+          'Encountered exception in PrefetchingSourceSetIterable '
+          'reader thread: %s', traceback.format_exc())
       self.reader_exceptions.put(e)
       self.has_errored = True
     finally:
@@ -190,12 +189,12 @@ def get_iterator_fn_for_sources(sources,
                                 max_reader_threads=MAX_SOURCE_READER_THREADS,
                                 read_counter=None):
   """Returns callable that returns iterator over elements for given sources."""
+
   def _inner():
     return iter(
-        PrefetchingSourceSetIterable(
-            sources,
-            max_reader_threads=max_reader_threads,
-            read_counter=read_counter))
+        PrefetchingSourceSetIterable(sources,
+                                     max_reader_threads=max_reader_threads,
+                                     read_counter=read_counter))
 
   return _inner
 

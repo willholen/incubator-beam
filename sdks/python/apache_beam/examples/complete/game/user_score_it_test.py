@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """End-to-end test for the user score example.
 
 Code: beam/sdks/python/apache_beam/examples/complete/game/user_score.py
@@ -58,9 +57,8 @@ class UserScoreIT(unittest.TestCase):
     self.test_pipeline = TestPipeline(is_integration_test=True)
     self.uuid = str(uuid.uuid4())
 
-    self.output = '/'.join([self.test_pipeline.get_option('output'),
-                            self.uuid,
-                            'results'])
+    self.output = '/'.join(
+        [self.test_pipeline.get_option('output'), self.uuid, 'results'])
 
   @attr('IT')
   def test_user_score_it(self):
@@ -72,19 +70,19 @@ class UserScoreIT(unittest.TestCase):
                                         self.DEFAULT_EXPECTED_CHECKSUM,
                                         sleep_secs)
 
-    extra_opts = {'input': self.DEFAULT_INPUT_FILE,
-                  'output': self.output + '/user-score',
-                  'on_success_matcher': all_of(state_verifier,
-                                               file_verifier)}
+    extra_opts = {
+        'input': self.DEFAULT_INPUT_FILE,
+        'output': self.output + '/user-score',
+        'on_success_matcher': all_of(state_verifier, file_verifier)
+    }
 
     # Register clean up before pipeline execution
     self.addCleanup(delete_files, [self.output + '*'])
 
     # Get pipeline options from command argument: --test-pipeline-options,
     # and start pipeline job by calling pipeline main function.
-    user_score.run(
-        self.test_pipeline.get_full_options_as_args(**extra_opts),
-        save_main_session=False)
+    user_score.run(self.test_pipeline.get_full_options_as_args(**extra_opts),
+                   save_main_session=False)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Internal side input transforms and implementations.
 
 For internal use only; no backwards-compatibility guarantees.
@@ -42,6 +41,7 @@ if TYPE_CHECKING:
 
 WindowMappingFn = Callable[[window.BoundedWindow], window.BoundedWindow]
 
+
 # Top-level function so we can identify it later.
 def _global_window_mapping_fn(w, global_window=window.GlobalWindow()):
   # type: (...) -> window.GlobalWindow
@@ -55,16 +55,16 @@ def default_window_mapping_fn(target_window_fn):
 
   def map_via_end(source_window):
     # type: (window.BoundedWindow) -> window.BoundedWindow
-    return list(target_window_fn.assign(
-        window.WindowFn.AssignContext(source_window.max_timestamp())))[-1]
+    return list(
+        target_window_fn.assign(
+            window.WindowFn.AssignContext(source_window.max_timestamp())))[-1]
 
   return map_via_end
 
 
 def get_sideinput_index(tag):
   # type: (str) -> int
-  match = re.match('side([0-9]+)(-.*)?$', tag,
-                   re.DOTALL)
+  match = re.match('side([0-9]+)(-.*)?$', tag, re.DOTALL)
   if match:
     return int(match.group(1))
   else:
@@ -74,13 +74,13 @@ def get_sideinput_index(tag):
 class SideInputMap(object):
   """Represents a mapping of windows to side input values."""
 
-  def __init__(self,
-               view_class,  # type: pvalue.AsSideInput
-               view_options,
-               iterable
-              ):
-    self._window_mapping_fn = view_options.get(
-        'window_mapping_fn', _global_window_mapping_fn)
+  def __init__(
+      self,
+      view_class,  # type: pvalue.AsSideInput
+      view_options,
+      iterable):
+    self._window_mapping_fn = view_options.get('window_mapping_fn',
+                                               _global_window_mapping_fn)
     self._view_class = view_class
     self._view_options = view_options
     self._iterable = iterable
