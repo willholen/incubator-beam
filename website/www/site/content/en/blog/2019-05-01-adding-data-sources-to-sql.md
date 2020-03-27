@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Adding new Data Sources to Beam SQL CLI"
+slug: "adding-data-sources-to-sql.html"
 date:   2019-06-04 00:00:01 -0800
 excerpt_separator: <!--more-->
 categories: blog
@@ -29,7 +30,7 @@ in Java pipelines.
 
 Beam also has a fancy new SQL command line that you can use to query your
 data interactively, be it Batch or Streaming. If you haven't tried it, check out
-[https://bit.ly/ExploreBeamSQL](https://bit.ly/ExploreBeamSQL).
+[http://bit.ly/ExploreBeamSQL](http://bit.ly/ExploreBeamSQL).
 
 A nice feature of the SQL CLI is that you can use `CREATE EXTERNAL TABLE`
 commands to *add* data sources to be accessed in the CLI. Currently, the CLI

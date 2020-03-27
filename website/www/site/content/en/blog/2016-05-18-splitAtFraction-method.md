@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Dynamic work rebalancing for Beam"
+slug: "splitAtFraction-method.html"
 date:   2016-05-18 11:00:00 -0700
 excerpt_separator: <!--more-->
 categories: blog

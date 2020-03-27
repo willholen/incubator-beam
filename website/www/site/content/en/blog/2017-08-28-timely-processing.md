@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Timely (and Stateful) Processing with Apache Beam"
+slug: "timely-processing.html"
 date:   2017-08-28 00:00:01 -0800
 excerpt_separator: <!--more-->
 categories: blog
@@ -22,7 +23,7 @@ limitations under the License.
 -->
 
 In a [prior blog
-post]({{ site.baseurl }}/blog/2017/02/13/stateful-processing.html), I
+post](/blog/2017/02/13/stateful-processing.html), I
 introduced the basics of stateful processing in Apache Beam, focusing on the
 addition of state to per-element processing. So-called _timely_ processing
 complements stateful processing in Beam by letting you set timers to request a
@@ -76,7 +77,7 @@ distributed across computers in any way, yielding essentially limitless
 parallelism.
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/timely-processing/ParDo.png"
+    src="/images/blog/timely-processing/ParDo.png"
     alt="ParDo offers limitless parallelism"
     width="600">
 
@@ -104,7 +105,7 @@ green squares, etc. In a real application, you may have millions of keys, so
 the parallelism is still massive.
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/timely-processing/CombinePerKey.png"
+    src="/images/blog/timely-processing/CombinePerKey.png"
     alt="Gathering elements per key then combining them"
     width="600">
 
@@ -158,7 +159,7 @@ access to state (the color-partitioned cylinder on the right) and can set
 timers to receive callbacks (the colorful clocks on the left).
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/timely-processing/StateAndTimers.png"
+    src="/images/blog/timely-processing/StateAndTimers.png"
     alt="Gathering elements per key then timely, stateful processing"
     width="600">
 
@@ -282,7 +283,7 @@ class StatefulBufferingFn(beam.DoFn):
 Here is an illustration to accompany the code:
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/timely-processing/BatchedRpcState.png"
+    src="/images/blog/timely-processing/BatchedRpcState.png"
     alt="Batching elements in state, then performing RPCs"
     width="600">
 
@@ -404,7 +405,7 @@ Let's unpack the pieces of this snippet:
 Illustrating this logic, we have the diagram below:
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/timely-processing/BatchedRpcExpiry.png"
+    src="/images/blog/timely-processing/BatchedRpcExpiry.png"
     alt="Batched RPCs with window expiration"
     width="600">
 
@@ -517,7 +518,7 @@ class StatefulBufferingFn(beam.DoFn):
 Here is an illustration of the final code:
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/timely-processing/BatchedRpcStale.png"
+    src="/images/blog/timely-processing/BatchedRpcStale.png"
     alt="Batching elements in state, then performing RPCs"
     width="600">
 
@@ -561,7 +562,7 @@ minutes sliding by 10 minutes, the stateful, timely transform should
 transparently work correctly.
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/timely-processing/WindowingChoices.png"
+    src="/images/blog/timely-processing/WindowingChoices.png"
     alt="Two windowing strategies for the same stateful and timely transform"
     width="600">
 
@@ -589,7 +590,7 @@ processing logic be applicable to archived events just as easily as incoming
 near-real-time data.
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/timely-processing/UnifiedModel.png"
+    src="/images/blog/timely-processing/UnifiedModel.png"
     alt="Unified stateful processing over streams and file archives"
     width="600">
 
@@ -603,10 +604,9 @@ falls within documented allowances.
 I'll end this post in the same way I ended the last. I hope you will go try out
 Beam with stateful, timely processing. If it opens up new possibilities for
 you, then great! If not, we want to hear about it. Since this is a new feature,
-please check the [capability matrix]({{ site.baseurl
-}}/documentation/runners/capability-matrix/) to see the level of support for
+please check the [capability matrix](/documentation/runners/capability-matrix/) to see the level of support for
 your preferred Beam backend(s).
 
 And please do join the Beam community at
-[user@beam.apache.org]({{ site.baseurl }}/get-started/support) and follow
+[user@beam.apache.org](/get-started/support) and follow
 [@ApacheBeam](https://twitter.com/ApacheBeam) on Twitter.

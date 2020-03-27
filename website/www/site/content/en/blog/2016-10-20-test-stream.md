@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Testing Unbounded Pipelines in Apache Beam"
+slug: "test-stream.html"
 date:   2016-10-20 10:00:00 -0800
 excerpt_separator: <!--more-->
 categories: blog
@@ -60,7 +61,7 @@ from the Mobile Gaming example series.
 
 [LeaderBoard](https://github.com/apache/beam/blob/master/examples/java/src/main/java/org/apache/beam/examples/complete/game/LeaderBoard.java#L177)
 is part of the [Beam mobile gaming examples](https://github.com/apache/beam/tree/master/examples/java/src/main/java/org/apache/beam/examples/complete/game)
-(and [walkthroughs]({{ site.baseurl }}/get-started/mobile-gaming-example/))
+(and [walkthroughs](/get-started/mobile-gaming-example/))
 which produces a continuous accounting of user and team scores. User scores are
 calculated over the lifetime of the program, while team scores are calculated
 within fixed windows with a default duration of one hour. The LeaderBoard
@@ -73,7 +74,7 @@ be controlled within a test.
 ## Writing Deterministic Tests to Emulate Nondeterminism
 
 The Beam testing infrastructure provides the
-[PAssert](https://beam.apache.org/releases/javadoc/{{ site.release_latest }}/org/apache/beam/sdk/testing/PAssert.html)
+[PAssert](https://beam.apache.org/releases/javadoc/{{< param release_latest >}}/org/apache/beam/sdk/testing/PAssert.html)
 methods, which assert properties about the contents of a PCollection from within
 a pipeline. We have expanded this infrastructure to include
 [TestStream](https://github.com/apache/beam/blob/master/sdks/java/core/src/main/java/org/apache/beam/sdk/testing/TestStream.java),
@@ -116,7 +117,7 @@ receives them progresses as the graph goes upwards. The watermark is represented
 by the squiggly red line, and each starburst is the firing of a trigger and the
 associated pane.
 
-<img class="center-block" src="{{ "/images/blog/test-stream/elements-all-on-time.png" | prepend: site.baseurl }}" alt="Elements on the Event and Processing time axes, with the Watermark and produced panes" width="442">
+<img class="center-block" src="/images/blog/test-stream/elements-all-on-time.png" alt="Elements on the Event and Processing time axes, with the Watermark and produced panes" width="442">
 
 ### Everything arrives on-time
 
@@ -140,7 +141,7 @@ PCollection<KV<String, Integer>> teamScores = p.apply(createEvents)
 
 we can then assert that the result PCollection contains elements that arrived:
 
-<img class="center-block" src="{{ "/images/blog/test-stream/elements-all-on-time.png" | prepend: site.baseurl }}" alt="Elements all arrive before the watermark, and are produced in the on-time pane" width="442">
+<img class="center-block" src="/images/blog/test-stream/elements-all-on-time.png" alt="Elements all arrive before the watermark, and are produced in the on-time pane" width="442">
 
 ```java
 // Only one value is emitted for the blue team
@@ -172,7 +173,7 @@ PCollection<KV<String, Integer>> teamScores = p.apply(createEvents)
     .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS));
 ```
 
-<img class="center-block" src="{{ "/images/blog/test-stream/elements-unobservably-late.png" | prepend: site.baseurl }}" alt="An element arrives late, but before the watermark passes the end of the window, and is produced in the on-time pane" width="442">
+<img class="center-block" src="/images/blog/test-stream/elements-unobservably-late.png" alt="An element arrives late, but before the watermark passes the end of the window, and is produced in the on-time pane" width="442">
 
 ```java
 // Only one value is emitted for the blue team
@@ -202,7 +203,7 @@ PCollection<KV<String, Integer>> teamScores = p.apply(createEvents)
     .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS));
 ```
 
-<img class="center-block" src="{{ "/images/blog/test-stream/elements-observably-late.png" | prepend: site.baseurl }}" alt="Elements all arrive before the watermark, and are produced in the on-time pane" width="442">
+<img class="center-block" src="/images/blog/test-stream/elements-observably-late.png" alt="Elements all arrive before the watermark, and are produced in the on-time pane" width="442">
 
 ```java
 // An on-time pane is emitted with the events that arrived before the window closed
@@ -241,7 +242,7 @@ PCollection<KV<String, Integer>> teamScores = p.apply(createEvents)
     .apply(new CalculateTeamScores(TEAM_WINDOW_DURATION, ALLOWED_LATENESS));
 ```
 
-<img class="center-block" src="{{ "/images/blog/test-stream/elements-droppably-late.png" | prepend: site.baseurl }}" alt="Elements all arrive before the watermark, and are produced in the on-time pane" width="442">
+<img class="center-block" src="/images/blog/test-stream/elements-droppably-late.png" alt="Elements all arrive before the watermark, and are produced in the on-time pane" width="442">
 
 ```java
 // An on-time pane is emitted with the events that arrived before the window closed
@@ -272,7 +273,7 @@ PCollection<KV<String, Integer>> userScores =
     p.apply(infos).apply(new CalculateUserScores(ALLOWED_LATENESS));
 ```
 
-<img class="center-block" src="{{ "/images/blog/test-stream/elements-processing-speculative.png" | prepend: site.baseurl }}" alt="Elements all arrive before the watermark, and are produced in the on-time pane" width="442">
+<img class="center-block" src="/images/blog/test-stream/elements-processing-speculative.png" alt="Elements all arrive before the watermark, and are produced in the on-time pane" width="442">
 
 ```java
 PAssert.that(userScores)
@@ -319,4 +320,4 @@ The addition of TestStream alongside window and pane-specific matchers in PAsser
 has enabled the testing of Pipelines which produce speculative and late panes.
 This permits tests for all styles of pipeline to be expressed directly within the
 Java SDK. If you have questions or comments, we’d love to hear them on the
-[mailing lists]({{ site.baseurl }}/get-started/support/).
+[mailing lists](/get-started/support/).

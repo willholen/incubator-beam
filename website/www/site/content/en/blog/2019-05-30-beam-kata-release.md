@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Apache Beam Katas"
+slug: "beam-kata-release.html"
 date:   2019-05-30 00:00:01 -0800
 excerpt_separator: <!--more-->
 categories: blog
@@ -52,8 +53,8 @@ useful for people to learn more about Apache Beam, and eventually become Beam Ma
 
 <br/>
 
-<img src="{{ "/images/blog/beam-kata/beam-kata-intellij-edu-1.png" | prepend: site.baseurl }}" alt="Beam Kata - IntelliJ Edu" width="363" height="350">
-<img src="{{ "/images/blog/beam-kata/beam-kata-intellij-edu-2.png" | prepend: site.baseurl }}" alt="Beam Kata - IntelliJ Edu" width="455" height="350">
+<img src="/images/blog/beam-kata/beam-kata-intellij-edu-1.png" alt="Beam Kata - IntelliJ Edu" width="363" height="350">
+<img src="/images/blog/beam-kata/beam-kata-intellij-edu-2.png" alt="Beam Kata - IntelliJ Edu" width="455" height="350">
 
-<img src="{{ "/images/blog/beam-kata/beam-kata-pycharm-edu-1.png" | prepend: site.baseurl }}" alt="Beam Kata - PyCharm Edu" width="363" height="350">
-<img src="{{ "/images/blog/beam-kata/beam-kata-pycharm-edu-2.png" | prepend: site.baseurl }}" alt="Beam Kata - PyCharm Edu" width="459" height="350">
+<img src="/images/blog/beam-kata/beam-kata-pycharm-edu-1.png" alt="Beam Kata - PyCharm Edu" width="363" height="350">
+<img src="/images/blog/beam-kata/beam-kata-pycharm-edu-2.png" alt="Beam Kata - PyCharm Edu" width="459" height="350">

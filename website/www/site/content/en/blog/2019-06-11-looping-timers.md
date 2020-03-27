@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Looping timers in Apache Beam"
+slug: "looping-timers.html"
 date:   2019-06-11 00:00:01 -0800
 excerpt_separator: <!--more-->
 categories: blog
@@ -27,7 +28,7 @@ variety of use cases. One specific use case is the analysis of time series data
 in which continuous sequences across window boundaries are important. A few fun
 challenges arise as you tackle this type of data and in this blog we will
 explore one of those in more detail and make use of the Timer API
-([blog post]({{ site.baseurl }}/blog/2017/08/28/timely-processing.html))
+([blog post](/blog/2017/08/28/timely-processing.html))
 using the "looping timer" pattern.
 
 <!--more-->
@@ -342,7 +343,7 @@ feature sets. You can experiment with this pattern today using the
 DirectRunner. For other runners, please look out for their release notes on
 support for dealing with this use case in production.
 
-([Capability Matrix]({{ site.baseurl }}/documentation/runners/capability-matrix/))
+([Capability Matrix](/documentation/runners/capability-matrix/))
 
 
 Runner specific notes:

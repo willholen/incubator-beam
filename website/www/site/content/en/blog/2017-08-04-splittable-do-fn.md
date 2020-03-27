@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Powerful and modular IO connectors with Splittable DoFn in Apache Beam"
+slug: "splittable-do-fn.html"
 date:   2017-08-16 00:00:01 -0800
 excerpt_separator: <!--more-->
 categories: blog
@@ -24,7 +25,7 @@ limitations under the License.
 One of the most important parts of the Apache Beam ecosystem is its quickly
 growing set of connectors that allow Beam pipelines to read and write data to
 various data storage systems ("IOs"). Currently, Beam ships [over 20 IO
-connectors]({{ site.baseurl }}/documentation/io/built-in/) with many more in
+connectors](/documentation/io/built-in/) with many more in
 active development. As user demands for IO connectors grew, our work on
 improving the related Beam APIs (in particular, the Source API) produced an
 unexpected result: a generalization of Beam's most basic primitive, `DoFn`.
@@ -48,7 +49,7 @@ and `ParDo(execute sub-query)`.  Some IOs
 considerably more complicated pipelines.
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/splittable-do-fn/jdbcio-expansion.png"
+    src="/images/blog/splittable-do-fn/jdbcio-expansion.png"
     alt="Expansion of the JdbcIO.read() composite transform"
     width="600">
 
@@ -78,32 +79,28 @@ result, the pipeline can suffer from poor performance due to stragglers.
 
 * In the Kafka example, implementing the second `ParDo` is *simply impossible*
 with a regular `DoFn`, because it would need to output an infinite number of
-records per each input element `topic, partition` *([stateful processing]({{
-site.baseurl }}/blog/2017/02/13/stateful-processing.html) comes close, but it
+records per each input element `topic, partition` *([stateful processing](/blog/2017/02/13/stateful-processing.html) comes close, but it
 has other limitations that make it insufficient for this task*).
 
 ## Beam Source API
 
 Apache Beam historically provides a Source API
-([BoundedSource](https://beam.apache.org/releases/javadoc/{{ site.release_latest }}/org/apache/beam/sdk/io/BoundedSource.html)
+([BoundedSource](https://beam.apache.org/releases/javadoc/{{< param release_latest >}}/org/apache/beam/sdk/io/BoundedSource.html)
 and
-[UnboundedSource](https://beam.apache.org/releases/javadoc/{{
-site.release_latest }}/org/apache/beam/sdk/io/UnboundedSource.html)) which does
+[UnboundedSource](https://beam.apache.org/releases/javadoc/{{< param release_latest >}}/org/apache/beam/sdk/io/UnboundedSource.html)) which does
 not have these limitations and allows development of efficient data sources for
 batch and streaming systems. Pipelines use this API via the
-[`Read.from(Source)`](https://beam.apache.org/releases/javadoc/{{
-site.release_latest }}/org/apache/beam/sdk/io/Read.html) built-in `PTransform`.
+[`Read.from(Source)`](https://beam.apache.org/releases/javadoc/{{< param release_latest >}}/org/apache/beam/sdk/io/Read.html) built-in `PTransform`.
 
 The Source API is largely similar to that of most other data processing
 frameworks, and allows the system to read data in parallel using multiple
 workers, as well as checkpoint and resume reading from an unbounded data source.
 Additionally, the Beam
-[`BoundedSource`](https://beam.apache.org/releases/javadoc/{{ site.release_latest }}/org/apache/beam/sdk/io/BoundedSource.html)
+[`BoundedSource`](https://beam.apache.org/releases/javadoc/{{< param release_latest >}}/org/apache/beam/sdk/io/BoundedSource.html)
 API provides advanced features such as progress reporting and [dynamic
-rebalancing]({{ site.baseurl }}/blog/2016/05/18/splitAtFraction-method.html)
+rebalancing](/blog/2016/05/18/splitAtFraction-method.html)
 (which together enable autoscaling), and
-[`UnboundedSource`](https://beam.apache.org/releases/javadoc/{{
-site.release_latest }}/org/apache/beam/sdk/io/UnboundedSource.html) supports
+[`UnboundedSource`](https://beam.apache.org/releases/javadoc/{{< param release_latest >}}/org/apache/beam/sdk/io/UnboundedSource.html) supports
 reporting the source's watermark and backlog *(until SDF, we believed that
 "batch" and "streaming" data sources are fundamentally different and thus
 require fundamentally different APIs)*. 
@@ -155,7 +152,7 @@ the Source API, and ended up, surprisingly, addressing the limitations of
 
 ## Enter Splittable DoFn
 
-[Splittable DoFn](https://s.apache.org/splittable-do-fn) (SDF) is a
+[Splittable DoFn](http://s.apache.org/splittable-do-fn) (SDF) is a
 generalization of `DoFn` that gives it the core capabilities of `Source` while
 retaining `DoFn`'s syntax, flexibility, modularity, and ease of coding.  As a
 result, it becomes possible to develop more powerful IO connectors than before,
@@ -215,7 +212,7 @@ offset, and `ReadFn` may interpret it as *read records whose starting offsets
 are in the given range*.
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/splittable-do-fn/restrictions.png"
+    src="/images/blog/splittable-do-fn/restrictions.png"
     alt="Specifying parts of work for an element using restrictions"
     width="600">
 
@@ -245,7 +242,7 @@ inf)* to be processed later, effectively checkpointing and resuming the call;
 this can be repeated forever.
 
 <img class="center-block" 
-    src="{{ site.baseurl }}/images/blog/splittable-do-fn/kafka-splitting.png" 
+    src="/images/blog/splittable-do-fn/kafka-splitting.png" 
     alt="Splitting an infinite restriction into a finite primary and infinite residual"
     width="400">
 
@@ -261,7 +258,7 @@ following diagram, where "magic" stands for the runner-specific ability to split
 the restrictions and schedule processing of residuals.
 
 <img class="center-block" 
-    src="{{ site.baseurl }}/images/blog/splittable-do-fn/transform-expansion.png" 
+    src="/images/blog/splittable-do-fn/transform-expansion.png" 
     alt="Execution of an SDF - pairing with a restriction, splitting
     restrictions, processing element/restriction pairs"
     width="600">
@@ -288,7 +285,7 @@ an element/restriction pair.
 An overwhelming majority of `DoFn`s found in user pipelines do not need to be
 made splittable: SDF is an advanced, powerful API, primarily targeting authors
 of new IO connectors *(though it has interesting non-IO applications as well:
-see [Non-IO examples](https://s.apache.org/splittable-do-fn#heading=h.5cep9s8k4fxv))*.
+see [Non-IO examples](http://s.apache.org/splittable-do-fn#heading=h.5cep9s8k4fxv))*.
 
 ### Execution of a restriction and data consistency
 
@@ -314,12 +311,12 @@ If a block is claimed successfully, then the call outputs all records in this
 data block, otherwise, it terminates.
 
 <img class="center-block"
-    src="{{ site.baseurl }}/images/blog/splittable-do-fn/blocks.png"
+    src="/images/blog/splittable-do-fn/blocks.png"
     alt="Processing a restriction by claiming blocks inside it"
     width="400">
 
 For more details, see [Restrictions, blocks and
-positions](https://s.apache.org/splittable-do-fn#heading=h.vjs7pzbb7kw) in the
+positions](http://s.apache.org/splittable-do-fn#heading=h.vjs7pzbb7kw) in the
 design proposal document.
 
 ### Code example
@@ -328,7 +325,7 @@ Let us look at some examples of SDF code. The examples use the Beam Java SDK,
 which [represents splittable
 `DoFn`s](https://github.com/apache/beam/blob/f7e8f886c91ea9d0b51e00331eeb4484e2f6e000/sdks/java/core/src/main/java/org/apache/beam/sdk/transforms/DoFn.java#L527)
 as part of the flexible [annotation-based
-`DoFn`](https://s.apache.org/a-new-dofn) machinery, and the [proposed SDF syntax
+`DoFn`](http://s.apache.org/a-new-dofn) machinery, and the [proposed SDF syntax
 for Python](https://s.apache.org/splittable-do-fn-python).
 
 * A splittable `DoFn` is a `DoFn` - no new base class needed. Any SDF derives
@@ -475,8 +472,7 @@ IO connectors. However, a large amount of work is in progress or planned.
 
 As of August 2017, SDF is available for use in the Beam Java Direct runner and
 Dataflow Streaming runner, and implementation is in progress in the Flink and
-Apex runners; see [capability matrix]({{ site.baseurl
-}}/documentation/runners/capability-matrix/) for the current status. Support
+Apex runners; see [capability matrix]({/documentation/runners/capability-matrix/) for the current status. Support
 for SDF in the Python SDK is [in active
 development](https://s.apache.org/splittable-do-fn-python).
 
@@ -491,8 +487,8 @@ cases.
 
 To enable more flexible use cases for IOs currently based on the Source API, we
 will change them to use SDF. This transition is [pioneered by
-TextIO](https://s.apache.org/textio-sdf) and involves temporarily [executing SDF
-via the Source API](https://s.apache.org/sdf-via-source) to support runners
+TextIO](http://s.apache.org/textio-sdf) and involves temporarily [executing SDF
+via the Source API](http://s.apache.org/sdf-via-source) to support runners
 lacking the ability to run SDF directly.
 
 In addition to enabling new IOs, work on SDF has influenced our thinking about
@@ -503,9 +499,9 @@ not batch/streaming agnostic (the `Source` API). This led us to consider use
 cases that cannot be described as purely batch or streaming (for example,
 ingesting a large amount of historical data and carrying on with more data
 arriving in real time) and to develop a [unified notion of "progress" and
-"backlog"](https://s.apache.org/beam-fn-api-progress-reporting).
+"backlog"](http://s.apache.org/beam-fn-api-progress-reporting).
 
-* The [Fn API](https://s.apache.org/beam-fn-api) - the foundation of Beam's
+* The [Fn API](http://s.apache.org/beam-fn-api) - the foundation of Beam's
 future support for cross-language pipelines - uses SDF as *the only* concept
 representing data ingestion.
 

@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Apache Beam + Kotlin = ❤️"
+slug: "beam-kotlin.html"
 date:   2019-04-25 00:00:01 -0800
 excerpt_separator: <!--more-->
 categories: blog
@@ -27,7 +28,7 @@ Apache Beam samples are now available in Kotlin!
 
 <!--more-->
 
-<img src="{{ "/images/blog/kotlin.png" | prepend: site.baseurl }}" alt="Kotlin" height="320" width="800" >
+<img src="/images/blog/kotlin.png" alt="Kotlin" height="320" width="800" >
 
 If you are someone who's been working with Java in your professional career; there's a good chance that you've also heard of [Kotlin](https://kotlinlang.org/), which is an Open Sourced, statically typed language for JVM and is mostly being favoured by Android Developers due to the many myriad features which enable more concise and cleaner code than Java without sacrificing performance or safety.
 

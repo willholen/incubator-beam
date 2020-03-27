@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Announcing Beam Summit Site"
+slug: "beam-summit-site.html"
 date:   2019-03-18 00:00:01 -0800
 excerpt_separator: <!--more-->
 categories: blog
@@ -36,3 +37,4 @@ See you in Berlin!
 
 #beamsummit2019.
 
+<!--more-->
