@@ -1,8 +1,5 @@
 ---
-layout: section
 title: "Built-in I/O Transforms"
-section_menu: section-menu/documentation.html
-permalink: /documentation/io/built-in/
 ---
 <!--
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +19,7 @@ limitations under the License.
 
 This table contains the currently available I/O transforms.
 
-Consult the [Programming Guide I/O section]({{site.baseurl }}/documentation/programming-guide#pipeline-io) for general usage instructions, and see the javadoc/pydoc for the particular I/O transforms.
+Consult the [Programming Guide I/O section](/documentation/programming-guide#pipeline-io) for general usage instructions, and see the javadoc/pydoc for the particular I/O transforms.
 
 
 <table class="table table-bordered">
@@ -75,7 +72,7 @@ Consult the [Programming Guide I/O section]({{site.baseurl }}/documentation/prog
 <tr>
   <td>Python/Batch</td>
   <td>
-    <p>Beam Python supports Apache HDFS, Amazon S3, Google Cloud Storage, and local filesystems.</p>
+    <p>Beam Python supports Apache HDFS, Google Cloud Storage, and local filesystems.</p>
     <p><a href="https://github.com/apache/beam/blob/master/sdks/python/apache_beam/io/avroio.py">avroio</a></p>
     <p><a href="{{site.baseurl}}/documentation/io/built-in/parquet">parquetio.py</a></p>
     <p><a href="https://github.com/apache/beam/blob/master/sdks/python/apache_beam/io/textio.py">textio</a></p>

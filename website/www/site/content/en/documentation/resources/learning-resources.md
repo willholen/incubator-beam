@@ -1,8 +1,5 @@
 ---
-layout: section
 title: "Learning Resources"
-section_menu: section-menu/documentation.html
-permalink: /documentation/resources/learning-resources/
 ---
 <!--
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,8 +21,7 @@ Welcome to our learning resources. This page contains a collection of resources 
 
 If you have additional material that you would like to see here, please let us know at [user@beam.apache.org](mailto:user@beam.apache.org)!
 
-* TOC
-{:toc}
+{{< toc >}}
 
 ## Getting Started {#getting-started}
 
@@ -75,7 +71,7 @@ If you have additional material that you would like to see here, please let us k
 
 ### Advanced Concepts
 
-*   **[Running on AppEngine](https://amygdala.github.io/dataflow/app_engine/2017/10/24/gae_dataflow.html)** - Use a Dataflow template to launch a pipeline from Google AppEngine, and how to run the pipeline periodically via a cron job.
+*   **[Running on AppEngine](http://amygdala.github.io/dataflow/app_engine/2017/10/24/gae_dataflow.html)** - Use a Dataflow template to launch a pipeline from Google AppEngine, and how to run the pipeline periodically via a cron job.
 *   **[Stateful Processing](https://beam.apache.org/blog/2017/02/13/stateful-processing.html)** - Learn how to access a persistent mutable state while processing input elements, this allows for _side effects_ in a `DoFn`. This can be used for arbitrary-but-consistent index assignment, if you want to assign a unique incrementing index to each incoming element where order doesn't matter.
 *   **[Timely and Stateful Processing](https://beam.apache.org/blog/2017/08/28/timely-processing.html)** - An example on how to do batched RPC calls. The call requests are stored in a mutable state as they are received. Once there are either enough requests or a certain time has passed, the batch of requests is triggered to be sent.
 *   **[Running External Libraries](https://cloud.google.com/blog/products/gcp/running-external-libraries-with-cloud-dataflow-for-grid-computing-workloads)** - Call an external library written in a language that does not have a native SDK in Apache Beam such as C++.

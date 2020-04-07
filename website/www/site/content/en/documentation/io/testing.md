@@ -1,8 +1,5 @@
 ---
-layout: section
 title: "Testing I/O Transforms"
-section_menu: section-menu/documentation.html
-permalink: /documentation/io/testing/
 ---
 <!--
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,13 +19,7 @@ limitations under the License.
 
 *Examples and design patterns for testing Apache Beam I/O transforms*
 
-<nav class="language-switcher">
-  <strong>Adapt for:</strong>
-  <ul>
-    <li data-type="language-java" class="active">Java SDK</li>
-    <li data-type="language-py">Python SDK</li>
-  </ul>
-</nav>
+{{< language-switcher java py >}}
 
 > Note: This guide is still in progress. There is an open issue to finish the guide: [BEAM-1025](https://issues.apache.org/jira/browse/BEAM-1025).
 
@@ -394,7 +385,7 @@ Guidelines for creating a Beam data store Kubernetes script:
     *   You should prefer images in this order:
         1.  An image provided by the creator of the data source/sink (if they officially maintain it). For Apache projects, this would be the official Apache repository.
         1.  Official Docker images, because they have security fixes and guaranteed maintenance.
-        1.  Non-official Docker images, or images from other providers that have good maintainers (e.g. [quay.io](https://quay.io/)).
+        1.  Non-official Docker images, or images from other providers that have good maintainers (e.g. [quay.io](http://quay.io/)).
 
 #### Jenkins jobs {#jenkins-jobs}
 
