@@ -1,9 +1,7 @@
 ---
-layout: section
+type: languages
 title: "Beam Calcite SQL data types"
-section_menu: section-menu/sdks.html
-permalink: /documentation/dsls/sql/calcite/data-types/
-redirect_from: /documentation/dsls/sql/data-types/
+aliases: /documentation/dsls/sql/data-types/
 ---
 <!--
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,11 +21,12 @@ limitations under the License.
 
 Beam SQL supports standard SQL scalar data types as well as extensions
 including arrays, maps, and nested rows. This page documents supported
-[Apache Calcite data types](https://calcite.apache.org/docs/reference.html#data-types) supported by Beam Calcite SQL.
+[Apache Calcite data types](http://calcite.apache.org/docs/reference.html#data-types) supported by Beam Calcite SQL.
 
 In Java, these types are mapped to Java types large enough to hold the
 full range of values.
 
+{{< table >}}
 | SQL Type  | Description  | Java class |
 | --------- | ------------ | ---------- |
 | TINYINT   | 1 byte signed integer in range -128 to 127                                 | java.lang.Byte    |
@@ -42,4 +41,4 @@ full range of values.
 | ARRAY<type>     | Ordered list of values      | java.util.List |
 | MAP<type, type> | Finite unordered map        | java.util.Map  |
 | ROW<fields>     | Nested row                  | org.apache.beam.sdk.values.Row |
-{:.table}
+{{< /table >}}

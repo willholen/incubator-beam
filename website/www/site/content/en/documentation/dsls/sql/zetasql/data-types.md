@@ -1,8 +1,6 @@
 ---
-layout: section
+type: languages
 title: "Beam ZetaSQL data types"
-section_menu: section-menu/sdks.html
-permalink: /documentation/dsls/sql/zetasql/data-types/
 ---
 <!--
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +27,7 @@ Beam ZetaSQL supports standard SQL scalar data types as well as extensions inclu
 <p>The following table contains data type properties and the data types that
 each property applies to:</p>
 
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -88,14 +87,13 @@ supported.
 <br/><br/>
 All types that support comparisons
 can be used in a <code>JOIN</code> condition. See
-<a href="{{ site.baseurl
-}}/documentation/dsls/sql/zetasql/query-syntax#join_types">JOIN
+<a href="/documentation/dsls/sql/zetasql/query-syntax#join_types">JOIN
 Types</a> for an explanation of join conditions.
 </td>
 </tr>
 </tbody>
 </table>
-{:.table}
+{{< /table >}}
 
 <h2 id="numeric-types">Numeric types</h2>
 
@@ -105,6 +103,7 @@ Types</a> for an explanation of join conditions.
 
 <p>Integers are numeric values that do not have fractional components.</p>
 
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -121,12 +120,13 @@ Types</a> for an explanation of join conditions.
 </tr>
 </tbody>
 </table>
-{:.table}
+{{< /table >}}
 
 <h3 id="floating-point-type">Floating point type</h3>
 
 <p>Floating point values are approximate numeric values with fractional components.</p>
 
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -143,9 +143,11 @@ Types</a> for an explanation of join conditions.
 </tr>
 </tbody>
 </table>
-{:.table}
+{{< /table >}}
 
 <h2 id="boolean-type">Boolean type</h2>
+
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -161,8 +163,11 @@ Types</a> for an explanation of join conditions.
 </tr>
 </tbody>
 </table>
-{:.table}
+{{< /table >}}
+
 <h2 id="string-type">String type</h2>
+
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -177,7 +182,8 @@ Types</a> for an explanation of join conditions.
 </tr>
 </tbody>
 </table>
-{:.table}
+{{< /table >}}
+
 <p>Input STRING values must be UTF-8 encoded and output STRING values will be UTF-8
 encoded. Alternate encodings like CESU-8 and Modified UTF-8 are not treated as
 valid UTF-8.</p>
@@ -190,6 +196,7 @@ characters.</p>
 
 <h2 id="bytes-type">Bytes type</h2>
 
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -204,17 +211,18 @@ characters.</p>
 </tr>
 </tbody>
 </table>
-{:.table}
+{{< /table >}}
 
 <p>STRING and BYTES are separate types that cannot be used interchangeably. Casts between STRING and BYTES enforce
 that the bytes are encoded using UTF-8.</p>
 
 <h2 id="timestamp-type">Timestamp type</h2>
 
-Caution: {{product_name_short}} SQL has millisecond `TIMESTAMP` precision. If a
-`TIMESTAMP` field has sub-millisecond precision, {{product_name_short}} SQL
+Caution: SQL has millisecond `TIMESTAMP` precision. If a
+`TIMESTAMP` field has sub-millisecond precision, SQL
 throws an `IllegalArgumentException`.
 
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -233,7 +241,8 @@ precision.</td>
 </tr>
 </tbody>
 </table>
-{:.table}
+{{< /table >}}
+
 <p>A timestamp represents an absolute point in time, independent of any time zone
 or convention such as Daylight Savings Time.</p>
 
@@ -259,7 +268,7 @@ explicitly specified, the default time zone, UTC, is used.</p>
 <p>Time zones are represented by strings in one of these two canonical formats:</p>
 <ul>
 <li>Offset from Coordinated Universal Time (UTC), or the letter <code>Z</code> for UTC</li>
-<li>Time zone name from the <a href="https://www.iana.org/time-zones">tz database</a></li>
+<li>Time zone name from the <a href="http://www.iana.org/time-zones">tz database</a></li>
 </ul>
 <h4 id="offset-from-coordinated-universal-time-utc">Offset from Coordinated Universal Time (UTC)</h4>
 <h5 id="offset-format">Offset Format</h5>
@@ -277,9 +286,9 @@ of the timestamp.</p>
 <pre class="codehilite"><code>2014-09-27 12:30:00.45-8:00
 2014-09-27T12:30:00.45Z</code></pre>
 <h4 id="time-zone-name">Time zone name</h4>
-<p>Time zone names are from the <a href="https://www.iana.org/time-zones">tz database</a>. For a
+<p>Time zone names are from the <a href="http://www.iana.org/time-zones">tz database</a>. For a
 less comprehensive but simpler reference, see the
-<a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">List of tz database time zones</a>
+<a href="http://en.wikipedia.org/wiki/List_of_tz_database_time_zones">List of tz database time zones</a>
 on Wikipedia.</p>
 <h5 id="format">Format</h5>
 <pre class="codehilite"><code>continent/[region/]city</code></pre>
@@ -309,6 +318,8 @@ seconds are only observable through functions that measure real-world time. In
 these functions, it is possible for a timestamp second to be skipped or repeated
 when there is a leap second.</p>
 <h2 id="array-type">Array type</h2>
+
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -323,7 +334,8 @@ when there is a leap second.</p>
 </tr>
 </tbody>
 </table>
-{:.table}
+{{< /table >}}
+
 <p>An ARRAY is an ordered list of zero or more elements of non-ARRAY values.
 ARRAYs of ARRAYs are not allowed. Queries that would produce an ARRAY of
 ARRAYs will return an error. Instead a STRUCT must be inserted between the
@@ -337,6 +349,8 @@ an ARRAY cannot directly contain another ARRAY.</p>
 <h4 id="format_1">Format</h4>
 <pre class="codehilite"><code>ARRAY&lt;T&gt;</code></pre>
 <h4 id="examples_2">Examples</h4>
+
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -382,8 +396,11 @@ ARRAY&lt;STRUCT&lt;ARRAY&lt;INT64&gt;&gt;&gt;
 the two ARRAYs because ARRAYs cannot hold other ARRAYs directly.</td>
 </tr>
 </tbody></table>
-{:.table}
+{{< /table >}}
+
 <h2 id="struct-type">Struct type</h2>
+
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -399,13 +416,16 @@ the two ARRAYs because ARRAYs cannot hold other ARRAYs directly.</td>
 </tr>
 </tbody>
 </table>
-{:.table}
+{{< /table >}}
+
 <h3 id="declaring-a-struct-type">Declaring a STRUCT type</h3>
 <p>STRUCT types are declared using the angle brackets (<code>&lt;</code> and <code>&gt;</code>). The type of
 the elements of a STRUCT can be arbitrarily complex.</p>
 <h4 id="format_2">Format</h4>
 <pre class="codehilite"><code>STRUCT&lt;T&gt;</code></pre>
 <h4 id="examples_3">Examples</h4>
+
+{{< table >}}
 <table>
 <thead>
 <tr>
@@ -442,7 +462,7 @@ STRUCT&lt;inner_array ARRAY&lt;INT64&gt;&gt;
 64-bit integer elements.</td>
 </tr>
 </tbody></table>
-{:.table}
+{{< /table >}}
 
 <h3 id="limited-comparisons-for-struct">Limited comparisons for STRUCT</h3>
 <p>STRUCTs can be directly compared using equality operators:</p>

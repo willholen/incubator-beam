@@ -1,9 +1,9 @@
 ---
-layout: section
+type: languages
 title: "Beam Calcite SQL lexical structure"
-section_menu: section-menu/sdks.html
-permalink: /documentation/dsls/sql/calcite/lexical/
-redirect_from: /documentation/dsls/sql/lexical/
+aliases: 
+  - /documentation/dsls/sql/lexical/
+  - /documentation/dsls/sql/calcite/lexical/
 ---
 <!--
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -1046,4 +1046,4 @@ nested comment that renders the query invalid.
 > Portions of this page are modifications based on work created and
 > [shared by Google](https://developers.google.com/terms/site-policies)
 > and used according to terms described in the [Creative Commons 3.0
-> Attribution License](https://creativecommons.org/licenses/by/3.0/).
+> Attribution License](http://creativecommons.org/licenses/by/3.0/).
