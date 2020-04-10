@@ -1,9 +1,7 @@
 ---
-layout: section
+type: runners
 title: "Apache Nemo Runner"
-section_menu: section-menu/runners.html
-permalink: /documentation/runners/nemo/
-redirect_from: /learn/runners/nemo/
+aliases: /learn/runners/nemo/
 ---
 <!--
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +18,7 @@ limitations under the License.
 -->
 # Using the Apache Nemo Runner
 
-The Apache Nemo Runner can be used to execute Beam pipelines using [Apache Nemo](https://nemo.apache.org).
+The Apache Nemo Runner can be used to execute Beam pipelines using [Apache Nemo](http://nemo.apache.org).
 The Nemo Runner can optimize Beam pipelines with the Nemo compiler through various optimization passes
 and execute them in a distributed fashion using the Nemo runtime. You can also deploy a self-contained application
 for local mode or run using resource managers like YARN or Mesos.
@@ -32,7 +30,7 @@ The Nemo Runner executes Beam pipelines on top of Apache Nemo, providing:
 * Integration with YARN and other components of the Apache Hadoop ecosystem
 * Support for the various optimizations provided by the Nemo optimizer
 
-The [Beam Capability Matrix]({{ site.baseurl }}/documentation/runners/capability-matrix/) documents the
+The [Beam Capability Matrix](/documentation/runners/capability-matrix/) documents the
 supported capabilities of the Nemo Runner.
 
 ## Nemo Runner prerequisites and setup
