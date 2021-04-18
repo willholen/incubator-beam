@@ -182,7 +182,8 @@ public class WordCount {
         .apply(MapElements.via(new FormatAsTextFn()))
         .apply("WriteCounts", TextIO.write().to(options.getOutput()));
 
-    p.run().waitUntilFinish();
+    p.run();
+    // .waitUntilFinish();
   }
 
   public static void main(String[] args) {
