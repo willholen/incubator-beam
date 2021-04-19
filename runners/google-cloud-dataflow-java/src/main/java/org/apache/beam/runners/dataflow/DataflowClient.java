@@ -33,7 +33,6 @@ import com.google.api.services.dataflow.model.Step;
 import java.io.IOException;
 import javax.annotation.Nonnull;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
-import org.apache.beam.vendor.grpc.v1p26p0.com.google.protobuf.TextFormat;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +44,7 @@ import org.slf4j.LoggerFactory;
 public class DataflowClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(DataflowClient.class);
+
   public static DataflowClient create(DataflowPipelineOptions options) {
     return new DataflowClient(options.getDataflowClient(), options);
   }
@@ -68,10 +68,12 @@ public class DataflowClient {
             .create(options.getProject(), options.getRegion(), job);
 
     LOG.info("Dataflow v1 job request:\n");
-    for (Step step:job.getSteps()) {
+    for (Step step : job.getSteps()) {
       Object resource_hints = step.getProperties().get("resource_hints");
       if (resource_hints == null) {
-        LOG.info("Hints for step {}: {}.", step.getName(),
+        LOG.info(
+            "Hints for step {}: {}.",
+            step.getName(),
             resource_hints == null ? "None" : resource_hints.toString());
       }
     }

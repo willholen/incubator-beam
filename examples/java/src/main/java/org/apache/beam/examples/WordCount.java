@@ -20,7 +20,6 @@ package org.apache.beam.examples;
 import java.util.Arrays;
 import org.apache.beam.examples.common.ExampleUtils;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Distribution;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -182,9 +181,13 @@ public class WordCount {
     // Concepts #2 and #3: Our pipeline applies the composite CountWords transform, and passes the
     // static FormatAsTextFn() to the ParDo transform.
     p.apply(Create.of(Arrays.asList(1, 2, 3)))
-        .apply(MapElements.into(TypeDescriptors.integers()).via((Integer x) -> {
-          return x;
-        }).setResourceHints(ResourceHints.create().withMemory(2147483648L)));
+        .apply(
+            MapElements.into(TypeDescriptors.integers())
+                .via(
+                    (Integer x) -> {
+                      return x;
+                    })
+                .setResourceHints(ResourceHints.create().withMemory(2147483648L)));
     // p.apply("ReadLines", TextIO.read().from(options.getInputFile()))
     //     .apply(new CountWords().setResourceHints(ResourceHints.create().withMemory(2147483648L)))
     //     .apply(MapElements.via(new FormatAsTextFn()))

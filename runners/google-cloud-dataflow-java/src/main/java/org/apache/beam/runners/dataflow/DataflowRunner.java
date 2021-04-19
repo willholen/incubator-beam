@@ -887,8 +887,7 @@ public class DataflowRunner extends PipelineRunner<DataflowPipelineJob> {
   }
 
   private List<RunnerApi.ArtifactInformation> getDefaultArtifacts() {
-    if (true)
-      return new ArrayList<>();
+    if (true) return new ArrayList<>();
     ImmutableList.Builder<String> pathsToStageBuilder = ImmutableList.builder();
     String windmillBinary =
         options.as(DataflowPipelineDebugOptions.class).getOverrideWindmillBinary();
