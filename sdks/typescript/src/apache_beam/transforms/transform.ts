@@ -49,12 +49,7 @@ export function extractName<T>(withName: T): string {
     if (stringified.length < 60) {
       return stringified;
     } else {
-      throw new Error(
-        "Unable to deduce name, please use withName(...). + '" +
-          stringified +
-          "' " +
-          stringified.length
-      );
+      throw new Error("Unable to deduce name, please use withName(...).");
     }
   }
 }
