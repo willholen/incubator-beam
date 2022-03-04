@@ -44,6 +44,7 @@ export function extractName<T>(withName: T): string {
       // Remove injected code coverage boilerplate.
       .replace(/__cov_.*?[+][+]/g, " ")
       // Normalize whitespace.
+      .replace(/\r/gm, " ")
       .replace(/s+/gm, " ")
       .trim();
     if (stringified.length < 60) {
