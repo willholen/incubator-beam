@@ -28,6 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +37,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.beam.model.expansion.v1.ExpansionApi;
 import org.apache.beam.model.expansion.v1.ExpansionServiceGrpc;
+import org.apache.beam.model.expansion.v1.TransformServiceGrpc;
 import org.apache.beam.model.pipeline.v1.ExternalTransforms.ExpansionMethods;
 import org.apache.beam.model.pipeline.v1.ExternalTransforms.ExternalConfigurationPayload;
 import org.apache.beam.model.pipeline.v1.RunnerApi;
@@ -63,11 +65,14 @@ import org.apache.beam.sdk.schemas.Schema.Field;
 import org.apache.beam.sdk.schemas.SchemaCoder;
 import org.apache.beam.sdk.schemas.SchemaRegistry;
 import org.apache.beam.sdk.schemas.SchemaTranslation;
+import org.apache.beam.sdk.schemas.transforms.SchemaTransformProvider;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ExternalTransformBuilder;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
+import org.apache.beam.sdk.values.PCollectionRowTuple;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PDone;
 import org.apache.beam.sdk.values.PInput;
@@ -627,6 +632,7 @@ public class ExpansionService extends ExpansionServiceGrpc.ExpansionServiceImplB
         ServerBuilder.forPort(port)
             .addService(service)
             .addService(new ArtifactRetrievalService())
+            .addService(new TransformService())
             .build();
     server.start();
     server.awaitTermination();
@@ -640,6 +646,164 @@ public class ExpansionService extends ExpansionServiceGrpc.ExpansionServiceImplB
     @Override
     public PipelineResult run(Pipeline pipeline) {
       throw new UnsupportedOperationException();
+    }
+  }
+
+  static class TransformService extends TransformServiceGrpc.TransformServiceImplBase {
+    private Map<String, SchemaTransformProvider> schemaTransforms;
+
+    public static Map<String, SchemaTransformProvider> loadSchemaTransforms() {
+      ImmutableMap.Builder<String, SchemaTransformProvider> builder = ImmutableMap.builder();
+      for (SchemaTransformProvider provider : ServiceLoader.load(SchemaTransformProvider.class)) {
+        builder.put(provider.identifier(), provider);
+      }
+      return builder.build();
+    }
+
+    public TransformService() {
+      this(loadSchemaTransforms());
+    }
+
+    public TransformService(Map<String, SchemaTransformProvider> schemaTransforms) {
+      this.schemaTransforms = schemaTransforms;
+    }
+
+    @Override
+    public void listTransforms(
+        ExpansionApi.ListTransformRequest request,
+        StreamObserver<ExpansionApi.ListTransformResponse> responseObserver) {
+      ExpansionApi.ListTransformResponse.Builder response =
+          ExpansionApi.ListTransformResponse.newBuilder();
+      for (SchemaTransformProvider provider : schemaTransforms.values()) {
+        response.addTransformSpecs(
+            ExpansionApi.TransformSpec.newBuilder()
+                .setUrn(provider.identifier())
+                .setConfigSchema(
+                    SchemaTranslation.schemaToProto(provider.configurationSchema(), true))
+                .addAllExpectedInputs(provider.inputCollectionNames())
+                .build());
+      }
+      responseObserver.onNext(response.build());
+      responseObserver.onCompleted();
+    }
+
+    private PTransform<PCollectionRowTuple, PCollectionRowTuple> createTransform(
+        ExpansionApi.ConfiguredTransform config) {
+      SchemaTransformProvider provider = schemaTransforms.get(config.getUrn());
+      // TODO: Ensure config schemas are compatible.
+      Row configRow;
+      try {
+        configRow = SchemaCoder.of(provider.configurationSchema())
+                .decode(config.getConfigValues().newInput());
+      } catch (IOException exn) {
+        // This is more a decoding error than an IOException.
+        throw new RuntimeException(exn);
+      }
+      return provider
+          .from(configRow)
+          .buildTransform();
+    }
+
+    @Override
+    public void validateTransform(
+        ExpansionApi.ValidateTransformRequest request,
+        StreamObserver<ExpansionApi.ValidateTransformResponse> responseObserver) {
+      try {
+        PipelineOptions options = PipelineOptionsFactory.create();
+        options.setRunner(NotRunnableRunner.class);
+        Pipeline p = Pipeline.create(options);
+        PCollectionRowTuple inputs = PCollectionRowTuple.empty(p);
+        for (Map.Entry<String, SchemaApi.Schema> input : request.getInputs().entrySet()) {
+          inputs =
+              inputs.and(
+                  input.getKey(),
+                  p.apply(
+                      Create.empty(
+                          SchemaCoder.of(SchemaTranslation.schemaFromProto(input.getValue())))));
+        }
+        PCollectionRowTuple outputs =
+            inputs.apply(createTransform(request.getTransform()));
+        ExpansionApi.ValidateTransformResponse.Builder response =
+            ExpansionApi.ValidateTransformResponse.newBuilder();
+        for (Map.Entry<String, PCollection<Row>> output : outputs.getAll().entrySet()) {
+          response.putOutputs(
+              output.getKey(),
+              SchemaTranslation.schemaToProto(output.getValue().getSchema(), true));
+        }
+        responseObserver.onNext(response.build());
+        responseObserver.onCompleted();
+      } catch (RuntimeException exn) {
+        responseObserver.onNext(
+            ExpansionApi.ValidateTransformResponse.newBuilder()
+                .setError(Throwables.getStackTraceAsString(exn))
+                .build());
+        responseObserver.onCompleted();
+      }
+    }
+
+    private static final HashMap<String, PCollection<Row>> UNCOMPUTED = new HashMap();
+
+    private PCollection<Row> getInput(
+        String transformId,
+        String outputId,
+        Map<String, ExpansionApi.AppliedTransform> transforms,
+        Map<String, Map<String, PCollection<Row>>> computed,
+        Pipeline pipeline) {
+      ensureApplied(transformId, transforms, computed, pipeline);
+      return computed.get(transformId).get(outputId);
+    }
+
+    private void ensureApplied(
+        String transformId,
+        Map<String, ExpansionApi.AppliedTransform> transforms,
+        Map<String, Map<String, PCollection<Row>>> computed,
+        Pipeline pipeline) {
+      if (computed.containsKey(transformId)) {
+        if (computed.get(transformId) == UNCOMPUTED) {
+          throw new RuntimeException("Circular graph at " + transformId);
+        }
+        return;
+      }
+      computed.put(transformId, UNCOMPUTED);
+      ExpansionApi.AppliedTransform transform = transforms.get(transformId);
+      PCollectionRowTuple inputs = PCollectionRowTuple.empty(pipeline);
+      for (Map.Entry<String, ExpansionApi.TransformInput> input :
+          transform.getInputs().entrySet()) {
+        inputs =
+            inputs.and(
+                input.getKey(),
+                getInput(input.getValue().getProducerId(), input.getValue().getProducerOutput(),
+                        transforms, computed, pipeline));
+      }
+      computed.put(transformId, inputs.apply(createTransform(transform.getTransform())).getAll());
+    }
+
+    @Override
+    public void runPipeline(
+        ExpansionApi.RunPipelineRequest request,
+        StreamObserver<ExpansionApi.RunPipelineResponse> responseObserver) {
+      try {
+        PipelineOptions options =
+            PipelineOptionsFactory.fromArgs(request.getPipelineOptionsList().toArray(new String[0])).create();
+        System.out.println(request.getPipelineOptionsList());
+        System.out.println(options);
+        Pipeline p = Pipeline.create(options);
+        Map<String, Map<String, PCollection<Row>>> computed = new HashMap<>();
+        for (String transformId : request.getTransforms().keySet()) {
+          ensureApplied(transformId, request.getTransforms(), computed, p);
+        }
+        p.run().waitUntilFinish();
+        ExpansionApi.RunPipelineResponse.Builder response =
+            ExpansionApi.RunPipelineResponse.newBuilder();
+        responseObserver.onNext(response.build());
+        responseObserver.onCompleted();
+      } catch (RuntimeException exn) {
+        responseObserver.onNext(
+            ExpansionApi.RunPipelineResponse.newBuilder()
+                .setError(Throwables.getStackTraceAsString(exn))
+                .build());
+        responseObserver.onCompleted();
+      }
     }
   }
 }

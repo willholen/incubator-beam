@@ -406,6 +406,9 @@ public class PythonExternalTransform<InputT extends PInput, OutputT extends POut
     }
   }
 
+  // TODO: Give this a finite lifetime, and lift to a higher level.
+  private static String cachedServiceAddress;
+
   @Override
   public OutputT expand(InputT input) {
     try {
@@ -417,18 +420,20 @@ public class PythonExternalTransform<InputT extends PInput, OutputT extends POut
             15000);
         return apply(input, expansionService, payload);
       } else {
-        int port = PythonService.findAvailablePort();
-        PythonService service =
-            new PythonService(
-                "apache_beam.runners.portability.expansion_service_main",
-                "--port",
-                "" + port,
-                "--fully_qualified_name_glob",
-                "*");
-        try (AutoCloseable p = service.start()) {
+        if (cachedServiceAddress == null) {
+          int port = PythonService.findAvailablePort();
+          PythonService service =
+                  new PythonService(
+                          "apache_beam.runners.portability.expansion_service_main",
+                          "--port",
+                          "" + port,
+                          "--fully_qualified_name_glob",
+                          "*");
+          service.start();
           PythonService.waitForPort("localhost", port, 15000);
-          return apply(input, String.format("localhost:%s", port), payload);
+          cachedServiceAddress = String.format("localhost:%s", port);
         }
+        return apply(input, cachedServiceAddress, payload);
       }
     } catch (Exception exn) {
       throw new RuntimeException(exn);
